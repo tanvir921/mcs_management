@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "474484831866",
+    "project_id": "mcs-management",
+    "storage_bucket": "mcs-management.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:474484831866:android:58d93344181273a0c3edc3",
+        "android_client_info": {
+          "package_name": "com.example.mcs_management"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiPWzg_Y_SFva6ftwj3JmJXD9qFQcZU3Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

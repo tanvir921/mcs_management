@@ -1,0 +1,1 @@
+No, notification is not wotking. but from firebase console it works fine. you may check official documantation for sending notification https://firebase.google.com/docs/cloud-messaging/flutter/get-started and fix problems
