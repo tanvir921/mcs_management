@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/sale.dart';
 import '../providers/sales_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/config/environment.dart';
 import 'qr_scanner_screen.dart';
 import 'sale_invoice_screen.dart';
 
@@ -109,14 +110,8 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     );
 
     if (result != null && result.isNotEmpty) {
-      // Parse QR data: "INVOICE:id:saleNumber"
-      String searchTerm = result;
-      if (result.startsWith('INVOICE:')) {
-        final parts = result.split(':');
-        if (parts.length >= 3) {
-          searchTerm = parts[2]; // saleNumber
-        }
-      }
+      // QR code contains saleNumber directly (e.g., SAL-00001-26)
+      final searchTerm = result.trim();
 
       setState(() {
         _isSearching = true;
@@ -124,17 +119,43 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         _searchQuery = searchTerm;
       });
 
-      // Try to find and show the specific sale
+      // Try to find and show the specific sale by saleNumber
       final salesProvider = Provider.of<SalesProvider>(context, listen: false);
       final matchingSale = salesProvider.sales.firstWhere(
-        (s) => s.saleNumber.toLowerCase() == searchTerm.toLowerCase() ||
-               s.id == searchTerm,
-        orElse: () => salesProvider.sales.first,
+        (s) => s.saleNumber.toLowerCase() == searchTerm.toLowerCase(),
+        orElse: () => Sale(
+          id: '',
+          saleNumber: '',
+          saleDate: DateTime.now(),
+          items: [],
+          totalCost: 0,
+          totalSelling: 0,
+          totalProfit: 0,
+          discountAmount: 0,
+          paidAmount: 0,
+          dueAmount: 0,
+          realizedProfit: 0,
+          potentialProfit: 0,
+          paymentMethod: '',
+          createdBy: '',
+          createdByName: '',
+          createdAt: DateTime.now(),
+          isActive: false,
+        ),
       );
 
-      if (matchingSale.saleNumber.toLowerCase() == searchTerm.toLowerCase() ||
-          matchingSale.id == searchTerm) {
+      if (matchingSale.id.isNotEmpty &&
+          matchingSale.saleNumber.toLowerCase() == searchTerm.toLowerCase()) {
         _showSaleInvoice(matchingSale);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invoice "$searchTerm" not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -145,9 +166,10 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
       MaterialPageRoute(
         builder: (_) => SaleInvoiceScreen(
           sale: sale,
-          shopName: 'MCS Shop', // You can get this from settings
-          shopAddress: 'Your Shop Address',
-          shopPhone: '+880 1234-567890',
+          shopName: Environment.shopName,
+          shopAddress: Environment.shopAddress,
+          shopPhone: Environment.shopPhone,
+          shopEmail: Environment.shopEmail,
         ),
       ),
     );
@@ -156,9 +178,14 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
   List<Sale> _filterSales(List<Sale> sales) {
     if (_searchQuery.isEmpty) return sales;
     return sales.where((sale) {
-      return sale.saleNumber.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             sale.id.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             (sale.customerName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+      return sale.saleNumber.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          sale.id.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          (sale.customerName?.toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ??
+              false);
     }).toList();
   }
 
@@ -333,13 +360,15 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            _searchQuery.isNotEmpty ? Icons.search_off : Icons.receipt_long,
+                            _searchQuery.isNotEmpty
+                                ? Icons.search_off
+                                : Icons.receipt_long,
                             size: 64,
                             color: Colors.grey[400],
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            _searchQuery.isNotEmpty 
+                            _searchQuery.isNotEmpty
                                 ? 'No sales matching "$_searchQuery"'
                                 : 'No sales found',
                             style: TextStyle(

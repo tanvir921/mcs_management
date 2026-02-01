@@ -10,7 +10,9 @@ import '../../customer/providers/customer_provider.dart';
 import '../../customer/models/customer_model.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import '../../inventory/models/inventory_item.dart';
+import '../../../core/config/environment.dart';
 import 'barcode_scanner_screen.dart';
+import 'sale_invoice_screen.dart';
 
 class AddSaleScreen extends StatefulWidget {
   const AddSaleScreen({super.key});
@@ -66,9 +68,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       context.read<CustomerProvider>().loadCustomers();
       final authProvider = context.read<AuthProvider>();
       if (authProvider.currentUser != null) {
+        // Load both products and services
         context.read<InventoryProvider>().loadItems(
           authProvider.currentUser!.id,
-          type: ItemType.product,
         );
       }
 
@@ -361,13 +363,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
   void _addItemFromInventory() {
     final inventory = context.read<InventoryProvider>();
+    // Include products with stock > 0 and all services (services don't need stock)
     final products = inventory.items
-        .where((item) => item.isProduct && item.stock > 0)
+        .where((item) => (item.isProduct && item.stock > 0) || item.isService)
         .toList();
 
     if (products.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No products available in inventory')),
+        const SnackBar(content: Text('No products or services available in inventory')),
       );
       return;
     }
@@ -492,7 +495,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       }
 
       final inventoryProvider = context.read<InventoryProvider>();
-      await inventoryProvider.loadItems(currentUser.id, type: ItemType.product);
+      // Load both products and services for validation
+      await inventoryProvider.loadItems(currentUser.id);
 
       // Validate stock availability for products
       final inventoryItems = inventoryProvider.items;
@@ -633,8 +637,20 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sale created successfully')),
         );
-        // Navigate back to sales screen
-        Navigator.pop(context, true);
+        
+        // Navigate to invoice screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SaleInvoiceScreen(
+              sale: createdSale,
+              shopName: Environment.shopName,
+              shopAddress: Environment.shopAddress,
+              shopPhone: Environment.shopPhone,
+              shopEmail: Environment.shopEmail,
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -2226,6 +2242,8 @@ class _ProductTileState extends State<_ProductTile> {
 
   @override
   Widget build(BuildContext context) {
+    final isService = widget.product.isService;
+    
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       leading: Container(
@@ -2245,15 +2263,14 @@ class _ProductTileState extends State<_ProductTile> {
                     return Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            Colors.orange.shade400,
-                            Colors.orange.shade600,
-                          ],
+                          colors: isService
+                              ? [Colors.blue.shade400, Colors.blue.shade600]
+                              : [Colors.orange.shade400, Colors.orange.shade600],
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
-                        Icons.inventory_2,
+                      child: Icon(
+                        isService ? Icons.design_services : Icons.inventory_2,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -2264,42 +2281,76 @@ class _ProductTileState extends State<_ProductTile> {
             : Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.orange.shade400, Colors.orange.shade600],
+                    colors: isService
+                        ? [Colors.blue.shade400, Colors.blue.shade600]
+                        : [Colors.orange.shade400, Colors.orange.shade600],
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.inventory_2,
+                child: Icon(
+                  isService ? Icons.design_services : Icons.inventory_2,
                   color: Colors.white,
                   size: 20,
                 ),
               ),
       ),
-      title: Text(
-        widget.product.name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.product.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (isService)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'Service',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.blue.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+        ],
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 4),
           Text(
-            'Cost: ৳${widget.product.costPrice.toStringAsFixed(2)} | Sell: ৳${widget.product.sellingPrice.toStringAsFixed(2)}',
+            'Cost: ৳${widget.product.costPrice.toStringAsFixed(2)} | Sell: ৳${widget.product.sellingPrice.toStringAsFixed(2)} | Profit: ৳${widget.product.profit.toStringAsFixed(2)}',
             style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Stock: ${widget.product.stock} ${widget.product.unit}',
-            style: TextStyle(
-              fontSize: 12,
-              color: widget.product.stock > 0
-                  ? Colors.green.shade600
-                  : Colors.red.shade600,
-              fontWeight: FontWeight.w500,
+          if (!isService)
+            Text(
+              'Stock: ${widget.product.stock} ${widget.product.unit}',
+              style: TextStyle(
+                fontSize: 12,
+                color: widget.product.stock > 0
+                    ? Colors.green.shade600
+                    : Colors.red.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            )
+          else
+            Text(
+              'Unit: ${widget.product.unit}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.blue.shade600,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
         ],
       ),
       trailing: SizedBox(
@@ -2328,7 +2379,8 @@ class _ProductTileState extends State<_ProductTile> {
                   setState(() {
                     _selectedQuantity = double.tryParse(value) ?? 1;
                     if (_selectedQuantity < 1) _selectedQuantity = 1;
-                    if (_selectedQuantity > widget.product.stock) {
+                    // Only limit by stock for products, not services
+                    if (!isService && _selectedQuantity > widget.product.stock) {
                       _selectedQuantity = widget.product.stock.toDouble();
                     }
                   });
@@ -2339,7 +2391,7 @@ class _ProductTileState extends State<_ProductTile> {
             FilledButton(
               onPressed: () => widget.onSelect(_selectedQuantity),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.purple.shade600,
+                backgroundColor: isService ? Colors.blue.shade600 : Colors.purple.shade600,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               child: const Icon(Icons.add, size: 18),
@@ -2441,7 +2493,7 @@ class _ProductPickerModalState extends State<_ProductPickerModal> {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'Select Product',
+                      'Select Product / Service',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

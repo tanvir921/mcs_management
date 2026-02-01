@@ -61,10 +61,9 @@ class InventoryService {
     String description,
   ) async {
     try {
-      await _firestore.collection(_categoriesCollection).doc(categoryId).update({
-        'name': name,
-        'description': description,
-      });
+      await _firestore.collection(_categoriesCollection).doc(categoryId).update(
+        {'name': name, 'description': description},
+      );
     } catch (e) {
       throw Exception('Failed to update category: $e');
     }
@@ -73,9 +72,9 @@ class InventoryService {
   /// Delete a category (soft delete)
   Future<void> deleteCategory(String categoryId) async {
     try {
-      await _firestore.collection(_categoriesCollection).doc(categoryId).update({
-        'isActive': false,
-      });
+      await _firestore.collection(_categoriesCollection).doc(categoryId).update(
+        {'isActive': false},
+      );
     } catch (e) {
       throw Exception('Failed to delete category: $e');
     }

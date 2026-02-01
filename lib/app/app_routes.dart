@@ -21,7 +21,7 @@ import '../modules/daily_closing/screens/daily_closing_screen.dart';
 import '../modules/daily_closing/screens/profit_deduction_screen.dart';
 import '../modules/inventory/screens/inventory_list_screen.dart';
 import '../modules/reports/screens/reports_screen.dart';
-import '../modules/admin/screens/database_cleanup_screen.dart';
+import '../modules/admin/screens/admin_tools_screen.dart';
 
 class AppRoutes {
   // Route names
@@ -46,7 +46,7 @@ class AppRoutes {
   static const String userEdit = '/user/edit';
   static const String reports = '/reports';
   static const String profitDeduction = '/profit-deduction';
-  static const String databaseCleanup = '/admin/database-cleanup';
+  static const String adminTools = '/admin/tools';
 
   // Route generator
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -175,9 +175,9 @@ class AppRoutes {
           builder: (_) => const InventoryListScreen(),
           settings: settings,
         );
-      case databaseCleanup:
+      case adminTools:
         return MaterialPageRoute(
-          builder: (_) => const DatabaseCleanupScreen(),
+          builder: (_) => const AdminToolsScreen(),
           settings: settings,
         );
       case profitDeduction:

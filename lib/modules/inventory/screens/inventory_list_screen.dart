@@ -9,6 +9,7 @@ import '../../../app/app_routes.dart';
 import 'add_inventory_screen.dart';
 import 'inventory_detail_screen.dart';
 import 'product_barcode_print_screen.dart';
+import 'inventory_category_screen.dart';
 
 class InventoryListScreen extends StatefulWidget {
   const InventoryListScreen({super.key});
@@ -87,7 +88,9 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
 
   void _showPrintBarcodesDialog() {
     final inventory = Provider.of<InventoryProvider>(context, listen: false);
-    final items = inventory.items.where((item) => item.type == _selectedType).toList();
+    final items = inventory.items
+        .where((item) => item.type == _selectedType)
+        .toList();
 
     if (items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -267,7 +270,10 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
 
               try {
                 final auth = Provider.of<AuthProvider>(context, listen: false);
-                final inventory = Provider.of<InventoryProvider>(context, listen: false);
+                final inventory = Provider.of<InventoryProvider>(
+                  context,
+                  listen: false,
+                );
 
                 if (auth.currentUser != null) {
                   await inventory.createCategory(
@@ -281,7 +287,9 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Category "${nameController.text}" created!'),
+                        content: Text(
+                          'Category "${nameController.text}" created!',
+                        ),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -318,6 +326,18 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
           centerTitle: true,
           elevation: 0,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.category),
+              tooltip: 'Manage Categories',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const InventoryCategoryScreen(),
+                  ),
+                ).then((_) => _loadInitialData()); // Reload after returning
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.qr_code_scanner),
               tooltip: 'Scan Barcode',
@@ -419,7 +439,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                   final categories = _selectedType == ItemType.product
                       ? inventory.productCategories
                       : inventory.serviceCategories;
-                  
+
                   return SizedBox(
                     height: 50,
                     child: ListView(
@@ -438,21 +458,29 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                           ),
                         ),
                         // Category chips
-                        ...categories.map((category) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(category.name),
-                            selected: inventory.currentCategoryFilter == category.id,
-                            onSelected: (_) => _filterByCategory(category.id),
-                            selectedColor: Colors.teal.shade100,
-                            checkmarkColor: Colors.teal.shade700,
+                        ...categories.map(
+                          (category) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(category.name),
+                              selected:
+                                  inventory.currentCategoryFilter ==
+                                  category.id,
+                              onSelected: (_) => _filterByCategory(category.id),
+                              selectedColor: Colors.teal.shade100,
+                              checkmarkColor: Colors.teal.shade700,
+                            ),
                           ),
-                        )),
+                        ),
                         // Add Category button
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ActionChip(
-                            avatar: Icon(Icons.add, size: 18, color: Colors.teal.shade700),
+                            avatar: Icon(
+                              Icons.add,
+                              size: 18,
+                              color: Colors.teal.shade700,
+                            ),
                             label: const Text('Add Category'),
                             onPressed: () => _showAddCategoryDialog(),
                             backgroundColor: Colors.teal.shade50,
@@ -646,9 +674,8 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ProductBarcodePrintScreen(
-                                  items: [item],
-                                ),
+                                builder: (_) =>
+                                    ProductBarcodePrintScreen(items: [item]),
                               ),
                             );
                           },

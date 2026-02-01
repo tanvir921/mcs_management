@@ -618,11 +618,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
           Colors.purple,
         ),
         _buildDivider(),
-        _buildBreakdownRow(
-          'Expenses',
-          closing.todaysExpenses,
-          Colors.amber,
-        ),
+        _buildBreakdownRow('Expenses', closing.todaysExpenses, Colors.amber),
       ],
     );
   }

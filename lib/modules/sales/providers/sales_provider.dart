@@ -41,7 +41,11 @@ class SalesProvider extends ChangeNotifier {
   }
 
   // Load sales for user
-  Future<void> loadSales(String userId, {DateTime? startDate, DateTime? endDate}) async {
+  Future<void> loadSales(
+    String userId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       _isLoading = true;
       _error = null;
@@ -101,10 +105,22 @@ class SalesProvider extends ChangeNotifier {
     }
 
     final totalSales = _sales.length;
-    final totalAmount = _sales.fold<double>(0, (sum, sale) => sum + sale.totalSelling);
-    final totalCost = _sales.fold<double>(0, (sum, sale) => sum + sale.totalCost);
-    final totalProfit = _sales.fold<double>(0, (sum, sale) => sum + sale.realizedProfit);
-    final totalPotentialProfit = _sales.fold<double>(0, (sum, sale) => sum + sale.potentialProfit);
+    final totalAmount = _sales.fold<double>(
+      0,
+      (sum, sale) => sum + sale.totalSelling,
+    );
+    final totalCost = _sales.fold<double>(
+      0,
+      (sum, sale) => sum + sale.totalCost,
+    );
+    final totalProfit = _sales.fold<double>(
+      0,
+      (sum, sale) => sum + sale.realizedProfit,
+    );
+    final totalPotentialProfit = _sales.fold<double>(
+      0,
+      (sum, sale) => sum + sale.potentialProfit,
+    );
 
     _stats = {
       'totalSales': totalAmount,

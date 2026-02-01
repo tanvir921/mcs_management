@@ -71,7 +71,9 @@ class HomeScreen extends StatelessWidget {
                         const Icon(Icons.security, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          authProvider.currentUser?.role.name ?? '',
+                          _formatRoleName(
+                            authProvider.currentUser?.role.name ?? '',
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -230,15 +232,15 @@ class HomeScreen extends StatelessWidget {
                 ),
               );
             }
-            // Database Cleanup (Master Admin only)
+            // Admin Tools (Master Admin only)
             if (user.isMasterAdmin) {
               moduleCards.add(
                 _ModuleCardData(
-                  title: 'Database Cleanup',
-                  icon: Icons.delete_sweep,
-                  color: Colors.redAccent,
+                  title: 'Admin Tools',
+                  icon: Icons.admin_panel_settings,
+                  color: Colors.red.shade700,
                   onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.databaseCleanup),
+                      Navigator.pushNamed(context, AppRoutes.adminTools),
                 ),
               );
             }
@@ -305,13 +307,6 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Modules',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       GridView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
@@ -322,7 +317,9 @@ class HomeScreen extends StatelessWidget {
                               mainAxisSpacing: 12,
                               childAspectRatio: 0.9,
                             ),
-                        itemCount: moduleCards.length,
+                        itemCount: moduleCards.length.isOdd
+                            ? moduleCards.length - 1
+                            : moduleCards.length,
                         itemBuilder: (context, index) {
                           final card = moduleCards[index];
                           return _ModuleCard(
@@ -333,6 +330,19 @@ class HomeScreen extends StatelessWidget {
                           );
                         },
                       ),
+                      // If odd number of items, show last item full width
+                      if (moduleCards.length.isOdd) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.width / 2 * 0.9,
+                          child: _ModuleCard(
+                            title: moduleCards.last.title,
+                            icon: moduleCards.last.icon,
+                            color: moduleCards.last.color,
+                            onTap: moduleCards.last.onTap,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

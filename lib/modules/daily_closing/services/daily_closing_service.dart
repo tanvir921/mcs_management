@@ -45,13 +45,24 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+      final endOfDay = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+        999,
+      );
 
       debugPrint('🔍 MSF: Querying from $startOfDay to $endOfDay');
 
       final snapshot = await _firestore
           .collection('due_transactions')
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
           .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
@@ -61,13 +72,15 @@ class DailyClosingService {
       for (final doc in snapshot.docs) {
         final data = doc.data();
         debugPrint('🔍 MSF: Doc ID=${doc.id}, data=$data');
-        
+
         // Safe access with null checks
         final dueType = data['dueType'];
         final amount = data['amount'];
         final isAddition = data['isAddition'];
-        
-        debugPrint('🔍 MSF: dueType=$dueType (${dueType.runtimeType}), amount=$amount (${amount.runtimeType}), isAddition=$isAddition (${isAddition.runtimeType})');
+
+        debugPrint(
+          '🔍 MSF: dueType=$dueType (${dueType.runtimeType}), amount=$amount (${amount.runtimeType}), isAddition=$isAddition (${isAddition.runtimeType})',
+        );
 
         if (dueType is String && amount is num) {
           // Today's MSF/Recharge dues
@@ -92,13 +105,24 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+      final endOfDay = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+        999,
+      );
 
       debugPrint('🔍 CashBorrow: Querying from $startOfDay to $endOfDay');
 
       final snapshot = await _firestore
           .collection('due_transactions')
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
           .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
@@ -107,7 +131,7 @@ class DailyClosingService {
       double totalCashBorrow = 0;
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        
+
         // Safe access with null checks
         final dueType = data['dueType'];
         final amount = data['amount'];
@@ -138,7 +162,15 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+      final endOfDay = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+        999,
+      );
 
       Query query = _firestore
           .collection('expenses')
@@ -165,11 +197,22 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+      final endOfDay = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+        999,
+      );
 
       final snapshot = await _firestore
           .collection('due_transactions')
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
           .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
@@ -188,7 +231,9 @@ class DailyClosingService {
       debugPrint('✅ TotalDueCollections: $totalCollections');
       return totalCollections;
     } catch (e) {
-      throw ValidationException('Failed to calculate total due collections: $e');
+      throw ValidationException(
+        'Failed to calculate total due collections: $e',
+      );
     }
   }
 
@@ -477,18 +522,16 @@ class DailyClosingService {
       final expenseBreakdown = await getExpenseBreakdown(userId);
 
       // Calculate subtotal using new formula:
-      // Subtotal = (Wallets + HandCash + MSF Due + CashBorrow Due + Expenses) 
+      // Subtotal = (Wallets + HandCash + MSF Due + CashBorrow Due + Expenses)
       //          - (Temporary + Sales + Collections)
       // Note: Sales deduction is temporary for balancing with yesterday's subtotal
       final subtotal =
           (walletPermanent +
-          todaysHandCash +
-          todaysMSF +
-          todaysCashBorrow +
-          todaysExpenses) -
-          (walletTemporary +
-          todaysSalesTotal +
-          totalDueCollections);
+              todaysHandCash +
+              todaysMSF +
+              todaysCashBorrow +
+              todaysExpenses) -
+          (walletTemporary + todaysSalesTotal + totalDueCollections);
 
       // Calculate remaining cash
       final yesterdaySubtotal = yesterdayClosing?.subtotal ?? 0;
@@ -502,12 +545,12 @@ class DailyClosingService {
       final totalProfit = todaysSalesProfit + optionalProfit;
 
       // Final closing balance includes sales (sales deduction is only for subtotal balancing)
-      final finalClosingBalanceBase = 
+      final finalClosingBalanceBase =
           (walletPermanent +
-          todaysHandCash +
-          todaysMSF +
-          todaysCashBorrow +
-          todaysExpenses) -
+              todaysHandCash +
+              todaysMSF +
+              todaysCashBorrow +
+              todaysExpenses) -
           (walletTemporary + totalDueCollections);
 
       // Create model (not yet uploaded to server)
@@ -531,7 +574,8 @@ class DailyClosingService {
         profitEntries: profitEntries,
         totalProfit: totalProfit,
         deductedProfit: 0,
-        finalClosingBalance: finalClosingBalanceBase,  // Correct balance without sales deduction
+        finalClosingBalance:
+            finalClosingBalanceBase, // Correct balance without sales deduction
         walletBreakdown: walletBreakdown,
         temporaryBalanceBreakdown: temporaryBalanceBreakdown,
         msfBreakdown: msfBreakdown,

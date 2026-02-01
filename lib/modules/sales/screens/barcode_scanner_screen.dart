@@ -30,10 +30,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     }
 
     final inventory = context.read<InventoryProvider>();
+    // Search both products and services by SKU or ID
     final product = inventory.items.firstWhere(
       (item) =>
-          item.isProduct &&
-          item.stock > 0 &&
+          ((item.isProduct && item.stock > 0) || item.isService) &&
           (item.sku.toLowerCase() == barcode.toLowerCase() ||
               item.id.toLowerCase() == barcode.toLowerCase()),
       orElse: () => InventoryItem(
@@ -55,7 +55,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
     if (product.id.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product not found or out of stock')),
+        const SnackBar(content: Text('Item not found or product out of stock')),
       );
       _barcodeController.clear();
       return;
@@ -70,9 +70,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       setState(() {
         _scannedProducts.add(product);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${product.name} added')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${product.name} added')));
     }
 
     _barcodeController.clear();
@@ -129,8 +129,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 Text(
                   'Scan or Enter Barcode/SKU',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -233,9 +233,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

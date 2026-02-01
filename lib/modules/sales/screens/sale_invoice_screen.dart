@@ -106,14 +106,24 @@ class SaleInvoiceScreen extends StatelessWidget {
                                   ),
                                 ),
                               ],
+                              if (shopEmail != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Email: $shopEmail',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
-                        // QR Code
+                        // QR Code - contains sale/invoice number
                         Column(
                           children: [
                             QrImageView(
-                              data: 'INVOICE:${sale.id}:${sale.saleNumber}',
+                              data: sale.saleNumber,
                               version: QrVersions.auto,
                               size: 80,
                               backgroundColor: Colors.white,
@@ -338,14 +348,14 @@ class SaleInvoiceScreen extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    '৳${item.sellingPrice.toStringAsFixed(0)}',
+                                    'Tk. ${item.sellingPrice.toStringAsFixed(0)}',
                                     style: const TextStyle(fontSize: 12),
                                     textAlign: TextAlign.right,
                                   ),
                                 ),
                                 Expanded(
                                   child: Text(
-                                    '৳${item.totalSelling.toStringAsFixed(0)}',
+                                    'Tk. ${item.totalSelling.toStringAsFixed(0)}',
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
@@ -371,29 +381,29 @@ class SaleInvoiceScreen extends StatelessWidget {
                             children: [
                               _buildTotalRow(
                                 'Subtotal',
-                                '৳${sale.totalSelling.toStringAsFixed(2)}',
+                                'Tk. ${sale.totalSelling.toStringAsFixed(2)}',
                               ),
                               if (sale.discountAmount > 0)
                                 _buildTotalRow(
                                   'Discount',
-                                  '-৳${sale.discountAmount.toStringAsFixed(2)}',
+                                  '-Tk. ${sale.discountAmount.toStringAsFixed(2)}',
                                   isDiscount: true,
                                 ),
                               const Divider(),
                               _buildTotalRow(
                                 'Total',
-                                '৳${sale.finalAmount.toStringAsFixed(2)}',
+                                'Tk. ${sale.finalAmount.toStringAsFixed(2)}',
                                 isTotal: true,
                               ),
                               if (sale.paidAmount > 0)
                                 _buildTotalRow(
                                   'Paid',
-                                  '৳${sale.paidAmount.toStringAsFixed(2)}',
+                                  'Tk. ${sale.paidAmount.toStringAsFixed(2)}',
                                 ),
                               if (sale.dueAmount > 0)
                                 _buildTotalRow(
                                   'Due',
-                                  '৳${sale.dueAmount.toStringAsFixed(2)}',
+                                  'Tk. ${sale.dueAmount.toStringAsFixed(2)}',
                                   isDue: true,
                                 ),
                             ],
@@ -429,6 +439,35 @@ class SaleInvoiceScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // Sold By
+                    if (sale.createdByName != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.purple.shade200),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              color: Colors.purple.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Sold by: ${sale.createdByName}',
+                              style: TextStyle(
+                                color: Colors.purple.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 24),
 
                     // Footer
@@ -519,8 +558,8 @@ class SaleInvoiceScreen extends StatelessWidget {
               color: isDue
                   ? Colors.red.shade600
                   : isDiscount
-                      ? Colors.green.shade600
-                      : null,
+                  ? Colors.green.shade600
+                  : null,
             ),
           ),
           Text(
@@ -531,8 +570,8 @@ class SaleInvoiceScreen extends StatelessWidget {
               color: isDue
                   ? Colors.red.shade600
                   : isDiscount
-                      ? Colors.green.shade600
-                      : null,
+                  ? Colors.green.shade600
+                  : null,
             ),
           ),
         ],
@@ -589,8 +628,8 @@ class SaleInvoiceScreen extends StatelessWidget {
   Future<pw.Document> _generatePdf() async {
     final pdf = pw.Document();
 
-    // Generate QR code data
-    final qrData = 'INVOICE:${sale.id}:${sale.saleNumber}';
+    // QR code data - sale/invoice number (SAL-*****-**)
+    final qrData = sale.saleNumber;
 
     pdf.addPage(
       pw.Page(
@@ -627,6 +666,14 @@ class SaleInvoiceScreen extends StatelessWidget {
                       if (shopPhone != null)
                         pw.Text(
                           'Tel: $shopPhone',
+                          style: const pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
+                      if (shopEmail != null)
+                        pw.Text(
+                          'Email: $shopEmail',
                           style: const pw.TextStyle(
                             fontSize: 10,
                             color: PdfColors.grey600,
@@ -717,12 +764,26 @@ class SaleInvoiceScreen extends StatelessWidget {
                 children: [
                   // Header
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.blue600),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.blue600,
+                    ),
                     children: [
                       _buildPdfTableCell('Item', isHeader: true),
-                      _buildPdfTableCell('Qty', isHeader: true, align: pw.TextAlign.center),
-                      _buildPdfTableCell('Price', isHeader: true, align: pw.TextAlign.right),
-                      _buildPdfTableCell('Total', isHeader: true, align: pw.TextAlign.right),
+                      _buildPdfTableCell(
+                        'Qty',
+                        isHeader: true,
+                        align: pw.TextAlign.center,
+                      ),
+                      _buildPdfTableCell(
+                        'Price',
+                        isHeader: true,
+                        align: pw.TextAlign.right,
+                      ),
+                      _buildPdfTableCell(
+                        'Total',
+                        isHeader: true,
+                        align: pw.TextAlign.right,
+                      ),
                     ],
                   ),
                   // Items
@@ -730,9 +791,18 @@ class SaleInvoiceScreen extends StatelessWidget {
                     (item) => pw.TableRow(
                       children: [
                         _buildPdfTableCell(item.itemName),
-                        _buildPdfTableCell('${item.quantity}', align: pw.TextAlign.center),
-                        _buildPdfTableCell('৳${item.sellingPrice.toStringAsFixed(0)}', align: pw.TextAlign.right),
-                        _buildPdfTableCell('৳${item.totalSelling.toStringAsFixed(0)}', align: pw.TextAlign.right),
+                        _buildPdfTableCell(
+                          '${item.quantity}',
+                          align: pw.TextAlign.center,
+                        ),
+                        _buildPdfTableCell(
+                          'Tk. ${item.sellingPrice.toStringAsFixed(0)}',
+                          align: pw.TextAlign.right,
+                        ),
+                        _buildPdfTableCell(
+                          'Tk. ${item.totalSelling.toStringAsFixed(0)}',
+                          align: pw.TextAlign.right,
+                        ),
                       ],
                     ),
                   ),
@@ -747,15 +817,31 @@ class SaleInvoiceScreen extends StatelessWidget {
                   width: 200,
                   child: pw.Column(
                     children: [
-                      _buildPdfTotalRow('Subtotal', '৳${sale.totalSelling.toStringAsFixed(2)}'),
+                      _buildPdfTotalRow(
+                        'Subtotal',
+                        'Tk. ${sale.totalSelling.toStringAsFixed(2)}',
+                      ),
                       if (sale.discountAmount > 0)
-                        _buildPdfTotalRow('Discount', '-৳${sale.discountAmount.toStringAsFixed(2)}'),
+                        _buildPdfTotalRow(
+                          'Discount',
+                          '-Tk. ${sale.discountAmount.toStringAsFixed(2)}',
+                        ),
                       pw.Divider(),
-                      _buildPdfTotalRow('Total', '৳${sale.finalAmount.toStringAsFixed(2)}', isTotal: true),
+                      _buildPdfTotalRow(
+                        'Total',
+                        'Tk. ${sale.finalAmount.toStringAsFixed(2)}',
+                        isTotal: true,
+                      ),
                       if (sale.paidAmount > 0)
-                        _buildPdfTotalRow('Paid', '৳${sale.paidAmount.toStringAsFixed(2)}'),
+                        _buildPdfTotalRow(
+                          'Paid',
+                          'Tk. ${sale.paidAmount.toStringAsFixed(2)}',
+                        ),
                       if (sale.dueAmount > 0)
-                        _buildPdfTotalRow('Due', '৳${sale.dueAmount.toStringAsFixed(2)}'),
+                        _buildPdfTotalRow(
+                          'Due',
+                          'Tk. ${sale.dueAmount.toStringAsFixed(2)}',
+                        ),
                     ],
                   ),
                 ),
@@ -781,6 +867,28 @@ class SaleInvoiceScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              pw.SizedBox(height: 12),
+
+              // Sold By
+              if (sale.createdByName != null)
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.purple50,
+                    borderRadius: pw.BorderRadius.circular(8),
+                    border: pw.Border.all(color: PdfColors.purple200),
+                  ),
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Sold by: ${sale.createdByName}',
+                      style: pw.TextStyle(
+                        color: PdfColors.purple800,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               pw.Spacer(),
 
               // Footer
@@ -833,7 +941,11 @@ class SaleInvoiceScreen extends StatelessWidget {
     );
   }
 
-  pw.Widget _buildPdfTotalRow(String label, String value, {bool isTotal = false}) {
+  pw.Widget _buildPdfTotalRow(
+    String label,
+    String value, {
+    bool isTotal = false,
+  }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4),
       child: pw.Row(

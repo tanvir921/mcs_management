@@ -67,7 +67,9 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _skuController.text = DateTime.now().millisecondsSinceEpoch.toString().substring(5);
+          _skuController.text = DateTime.now().millisecondsSinceEpoch
+              .toString()
+              .substring(5);
           _isLoadingSku = false;
         });
       }

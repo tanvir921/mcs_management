@@ -75,9 +75,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue.shade600,
-            ),
+            colorScheme: ColorScheme.light(primary: Colors.blue.shade600),
           ),
           child: child!,
         );
@@ -163,13 +161,25 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   children: [
                     _buildCategoryChip(null, 'All Categories', Colors.grey),
                     const SizedBox(width: 10),
-                    _buildCategoryChip('personal', 'Personal', const Color(0xFF5856D6)),
+                    _buildCategoryChip(
+                      'personal',
+                      'Personal',
+                      const Color(0xFF5856D6),
+                    ),
                     const SizedBox(width: 10),
                     _buildCategoryChip('shop', 'Shop', const Color(0xFFFF9500)),
                     const SizedBox(width: 10),
-                    _buildCategoryChip('repair', 'Repair', const Color(0xFFFF3B30)),
+                    _buildCategoryChip(
+                      'repair',
+                      'Repair',
+                      const Color(0xFFFF3B30),
+                    ),
                     const SizedBox(width: 10),
-                    _buildCategoryChip('other', 'Other', const Color(0xFF007AFF)),
+                    _buildCategoryChip(
+                      'other',
+                      'Other',
+                      const Color(0xFF007AFF),
+                    ),
                   ],
                 ),
               ),
@@ -182,9 +192,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               child: Consumer<ExpenseProvider>(
                 builder: (context, provider, child) {
                   if (provider.isLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (provider.error != null) {
@@ -327,10 +335,7 @@ class _ExpenseCard extends StatelessWidget {
   final Expense expense;
   final VoidCallback onTap;
 
-  const _ExpenseCard({
-    required this.expense,
-    required this.onTap,
-  });
+  const _ExpenseCard({required this.expense, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -372,11 +377,7 @@ class _ExpenseCard extends StatelessWidget {
                       color: categoryColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
-                      categoryIcon,
-                      color: categoryColor,
-                      size: 24,
-                    ),
+                    child: Icon(categoryIcon, color: categoryColor, size: 24),
                   ),
                   const SizedBox(width: 12),
 
@@ -437,8 +438,8 @@ class _ExpenseCard extends StatelessWidget {
                         expense.paymentMethod == 'cash'
                             ? 'Cash'
                             : expense.paymentMethod == 'card'
-                                ? 'Card'
-                                : 'Mobile',
+                            ? 'Card'
+                            : 'Mobile',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,

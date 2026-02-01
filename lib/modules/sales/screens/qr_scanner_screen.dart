@@ -5,11 +5,7 @@ class QrScannerScreen extends StatefulWidget {
   final String? title;
   final String? subtitle;
 
-  const QrScannerScreen({
-    super.key,
-    this.title,
-    this.subtitle,
-  });
+  const QrScannerScreen({super.key, this.title, this.subtitle});
 
   @override
   State<QrScannerScreen> createState() => _QrScannerScreenState();
@@ -38,7 +34,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     for (final barcode in barcodes) {
       if (barcode.rawValue != null) {
         setState(() => _isScanned = true);
-        
+
         // Return the scanned value
         Navigator.pop(context, barcode.rawValue);
         break;
@@ -83,16 +79,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       body: Stack(
         children: [
           // Scanner
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
 
           // Overlay with scanning frame
           Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
-            ),
+            decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
             child: Stack(
               children: [
                 // Center scanning area (transparent)
@@ -101,10 +92,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     width: 280,
                     height: 280,
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 2,
-                      ),
+                      border: Border.all(color: Colors.white, width: 2),
                       borderRadius: BorderRadius.circular(20),
                       color: Colors.transparent,
                     ),
@@ -237,10 +225,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
         ],
       ),
@@ -266,9 +251,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           decoration: InputDecoration(
             labelText: 'Invoice ID or Code',
             hintText: 'Enter the code manually',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             prefixIcon: const Icon(Icons.qr_code),
           ),
           autofocus: true,
@@ -335,7 +318,12 @@ class _CornerPainter extends CustomPainter {
     } else if (isBottomRight) {
       path.moveTo(size.width - 20, size.height);
       path.lineTo(size.width - 8, size.height);
-      path.quadraticBezierTo(size.width, size.height, size.width, size.height - 8);
+      path.quadraticBezierTo(
+        size.width,
+        size.height,
+        size.width,
+        size.height - 8,
+      );
       path.lineTo(size.width, size.height - 20);
     }
 

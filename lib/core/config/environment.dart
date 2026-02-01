@@ -1,7 +1,7 @@
 enum EnvironmentType { dev, prod }
 
 class Environment {
-  static EnvironmentType _current = EnvironmentType.dev;
+  static EnvironmentType _current = EnvironmentType.prod;
 
   static EnvironmentType get current => _current;
 
@@ -35,9 +35,36 @@ class Environment {
   static String get shopName {
     switch (_current) {
       case EnvironmentType.dev:
-        return 'MCS Shop (Dev)';
+        return 'Master Computer And Stationeries';
       case EnvironmentType.prod:
-        return 'MCS Shop';
+        return 'Master Computer And Stationeries';
+    }
+  }
+
+  static String get shopAddress {
+    switch (_current) {
+      case EnvironmentType.dev:
+        return 'Binahali Boroitola Bazar, Adamdighi, Bogura';
+      case EnvironmentType.prod:
+        return 'Binahali Boroitola Bazar, Adamdighi, Bogura'; // TODO: Update with actual address
+    }
+  }
+
+  static String get shopPhone {
+    switch (_current) {
+      case EnvironmentType.dev:
+        return '+880177-332235, +8801323-172800';
+      case EnvironmentType.prod:
+        return '+880177-332235, +8801323-172800'; // TODO: Update with actual phone
+    }
+  }
+
+  static String? get shopEmail {
+    switch (_current) {
+      case EnvironmentType.dev:
+        return 'mcstopu@gmail.com.com';
+      case EnvironmentType.prod:
+        return 'mcstopu@gmail.com.com'; // TODO: Update with actual email
     }
   }
 }

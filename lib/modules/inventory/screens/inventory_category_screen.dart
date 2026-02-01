@@ -9,7 +9,8 @@ class InventoryCategoryScreen extends StatefulWidget {
   const InventoryCategoryScreen({super.key});
 
   @override
-  State<InventoryCategoryScreen> createState() => _InventoryCategoryScreenState();
+  State<InventoryCategoryScreen> createState() =>
+      _InventoryCategoryScreenState();
 }
 
 class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
@@ -44,7 +45,9 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
 
   void _showAddCategoryDialog({InventoryCategory? category, ItemType? type}) {
     final nameController = TextEditingController(text: category?.name ?? '');
-    final descriptionController = TextEditingController(text: category?.description ?? '');
+    final descriptionController = TextEditingController(
+      text: category?.description ?? '',
+    );
     final isEditing = category != null;
     final categoryType = type ?? (category?.type ?? ItemType.product);
 
@@ -113,7 +116,11 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue.shade600, size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue.shade600,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -152,7 +159,10 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
 
               try {
                 final auth = Provider.of<AuthProvider>(context, listen: false);
-                final inventory = Provider.of<InventoryProvider>(context, listen: false);
+                final inventory = Provider.of<InventoryProvider>(
+                  context,
+                  listen: false,
+                );
 
                 if (auth.currentUser != null) {
                   if (isEditing) {
@@ -272,10 +282,16 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
             onPressed: () async {
               try {
                 final auth = Provider.of<AuthProvider>(context, listen: false);
-                final inventory = Provider.of<InventoryProvider>(context, listen: false);
+                final inventory = Provider.of<InventoryProvider>(
+                  context,
+                  listen: false,
+                );
 
                 if (auth.currentUser != null) {
-                  await inventory.deleteCategory(auth.currentUser!.id, category.id);
+                  await inventory.deleteCategory(
+                    auth.currentUser!.id,
+                    category.id,
+                  );
 
                   if (context.mounted) {
                     Navigator.pop(context);
@@ -300,21 +316,25 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
             },
             icon: const Icon(Icons.delete),
             label: const Text('Delete'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
           ),
         ],
       ),
     );
   }
 
-  List<InventoryCategory> _filterCategories(List<InventoryCategory> categories) {
+  List<InventoryCategory> _filterCategories(
+    List<InventoryCategory> categories,
+  ) {
     if (_searchQuery.isEmpty) return categories;
     return categories
-        .where((cat) =>
-            cat.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            cat.description.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .where(
+          (cat) =>
+              cat.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              cat.description.toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ),
+        )
         .toList();
   }
 
@@ -339,14 +359,8 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           tabs: const [
-            Tab(
-              icon: Icon(Icons.inventory_2),
-              text: 'Products',
-            ),
-            Tab(
-              icon: Icon(Icons.handshake),
-              text: 'Services',
-            ),
+            Tab(icon: Icon(Icons.inventory_2), text: 'Products'),
+            Tab(icon: Icon(Icons.handshake), text: 'Services'),
           ],
         ),
       ),
@@ -404,7 +418,9 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          final type = _tabController.index == 0 ? ItemType.product : ItemType.service;
+          final type = _tabController.index == 0
+              ? ItemType.product
+              : ItemType.service;
           _showAddCategoryDialog(type: type);
         },
         icon: const Icon(Icons.add),
@@ -454,10 +470,7 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
                   _searchQuery.isNotEmpty
                       ? 'Try a different search term'
                       : 'Tap + to create your first category',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -500,9 +513,7 @@ class _CategoryCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onEdit,
         borderRadius: BorderRadius.circular(16),
