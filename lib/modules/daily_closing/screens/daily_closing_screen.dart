@@ -15,8 +15,11 @@ class DailyClosingScreen extends StatefulWidget {
 class _DailyClosingScreenState extends State<DailyClosingScreen> {
   final _handCashController = TextEditingController();
   final _deductedProfitController = TextEditingController();
+  final _cashoutChargeController = TextEditingController();
   final _remarksController = TextEditingController();
   bool _showCalculations = false;
+  bool _expandedIncomeSection = false;
+  bool _expandedExpensesSection = false;
 
   @override
   void initState() {
@@ -142,6 +145,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
   void dispose() {
     _handCashController.dispose();
     _deductedProfitController.dispose();
+    _cashoutChargeController.dispose();
     _remarksController.dispose();
     super.dispose();
   }
@@ -349,186 +353,120 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Modern Header with Gradient
+        // Professional Header with Gradient and Shadow
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blue.shade600, Colors.blue.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blue.shade600, Colors.blue.shade800],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(26),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Daily Closing Report',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat(
-                          'EEEE, MMMM d, yyyy',
-                        ).format(closing.closingDate),
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: const Icon(
-                      Icons.assessment,
+                  Text(
+                    'Daily Closing Report',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
-                      size: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    DateFormat(
+                      'EEEE, MMMM d, yyyy',
+                    ).format(closing.closingDate),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ],
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                padding: const EdgeInsets.all(14),
+                child: const Icon(
+                  Icons.summarize_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 24),
 
-        // Summary Cards (3-column grid)
+        // SECTION 1: Key Summary (3 Important Numbers)
         _buildSummaryCards(closing),
         const SizedBox(height: 24),
 
-        // Income Components with Breakdown
-        _buildSectionCardWithBreakdown(
-          title: 'Wallet Balances',
-          breakdown: closing.walletBreakdown,
-          total: closing.walletBalancesTotal,
-          icon: Icons.account_balance_wallet,
-          color: Colors.blue,
-        ),
-        const SizedBox(height: 16),
-
-        // Hand Cash
-        _buildModernItemCard(
-          title: 'Hand Cash',
-          amount: closing.todaysHandCash,
-          icon: Icons.attach_money,
+        // SECTION 2: Income Breakdown (Collapsible)
+        _buildCollapsibleSection(
+          title: 'Income',
+          icon: Icons.arrow_upward,
           color: Colors.green,
+          isExpanded: _expandedIncomeSection,
+          onToggle: () =>
+              setState(() => _expandedIncomeSection = !_expandedIncomeSection),
+          children: [_buildIncomeBreakdown(closing)],
         ),
         const SizedBox(height: 16),
 
-        // Total Sales
-        _buildModernItemCard(
-          title: 'Total Sales',
-          amount: closing.todaysSalesTotal,
-          icon: Icons.point_of_sale,
-          color: Colors.indigo,
-        ),
-        const SizedBox(height: 16),
-
-        // MSF/Recharge with Breakdown
-        _buildSectionCardWithBreakdown(
-          title: 'MSF/Recharge Due',
-          breakdown: closing.msfBreakdown,
-          total: closing.todaysMSFRecharge,
-          icon: Icons.phone_in_talk,
-          color: Colors.orange,
-        ),
-        const SizedBox(height: 16),
-
-        // Cash Borrow with Breakdown
-        _buildSectionCardWithBreakdown(
-          title: 'Cash Borrow Due',
-          breakdown: closing.cashBorrowBreakdown,
-          total: closing.todaysCashBorrowDue,
-          icon: Icons.money_off,
-          color: Colors.purple,
-        ),
-        const SizedBox(height: 16),
-
-        // Expenses with Breakdown
-        _buildSectionCardWithBreakdown(
-          title: 'Expenses',
-          breakdown: closing.expenseBreakdown,
-          total: closing.todaysExpenses,
-          icon: Icons.shopping_cart,
+        // SECTION 3: Expenses Breakdown (Collapsible)
+        _buildCollapsibleSection(
+          title: 'Deductions',
+          icon: Icons.arrow_downward,
           color: Colors.red,
-          isNegative: true,
-        ),
-        const SizedBox(height: 16),
-
-        // Temporary Balance with Breakdown
-        _buildSectionCardWithBreakdown(
-          title: 'Temporary Balance',
-          breakdown: closing.temporaryBalanceBreakdown,
-          total: closing.temporaryBalancesTotal,
-          icon: Icons.schedule,
-          color: Colors.teal,
-          isNegative: true,
+          isExpanded: _expandedExpensesSection,
+          onToggle: () => setState(
+            () => _expandedExpensesSection = !_expandedExpensesSection,
+          ),
+          children: [_buildExpensesBreakdown(closing)],
         ),
         const SizedBox(height: 24),
 
-        // Subtotal
+        // SECTION 4: Subtotal Card
         _buildSubtotalCard('Today\'s Subtotal', closing.subtotal, Colors.blue),
         const SizedBox(height: 16),
 
-        // Comparison with Yesterday
-        if (closing.yesterdaySubtotal > 0)
-          _buildComparisonCard(context, closing)
-        else
-          _buildInfoCard(
-            'No previous closing found (first closing)',
-            Colors.amber,
-          ),
-        const SizedBox(height: 16),
-
-        // Optional Profits Section
-        _buildProfitsSection(context, closing),
-        const SizedBox(height: 16),
-
-        // Profit Deduction (Optional)
-        _buildProfitDeductionSection(context, closing),
+        // SECTION 5: Balancing Section
+        _buildBalancingSection(context, closing),
         const SizedBox(height: 24),
 
-        // Final Balance - Large and Prominent
+        // SECTION 6: Adjustments
+        _buildAdjustmentsSection(context, closing),
+        const SizedBox(height: 24),
+
+        // SECTION 7: Final Balance - Large and Prominent
         _buildFinalBalanceCard(closing),
         const SizedBox(height: 24),
 
-        // Remarks
-        Card(
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _remarksController,
-              decoration: InputDecoration(
-                labelText: 'Remarks (Optional)',
-                border: InputBorder.none,
-                hintText: 'Add any notes about today\'s closing...',
-                prefixIcon: const Icon(Icons.note),
-              ),
-              maxLines: 3,
-            ),
-          ),
-        ),
+        // SECTION 8: Remarks
+        _buildRemarksCard(),
         const SizedBox(height: 24),
 
-        // Action Buttons
+        // SECTION 9: Action Buttons
         Row(
           children: [
             Expanded(
@@ -538,15 +476,18 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   setState(() => _showCalculations = false);
                   _handCashController.clear();
                   _deductedProfitController.clear();
+                  _cashoutChargeController.clear();
                   _remarksController.clear();
                 },
-                icon: const Icon(Icons.close),
+                icon: const Icon(Icons.close_rounded),
                 label: const Text('Cancel'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: Colors.grey.shade300, width: 1.5),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  foregroundColor: Colors.grey.shade700,
                 ),
               ),
             ),
@@ -554,14 +495,15 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             Expanded(
               child: FilledButton.icon(
                 onPressed: _saveDailyClosing,
-                icon: const Icon(Icons.check_circle),
+                icon: const Icon(Icons.check_circle_outline_rounded),
                 label: const Text('Approve & Save'),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.green.shade600,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 2,
                 ),
               ),
             ),
@@ -569,6 +511,268 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
         ),
         const SizedBox(height: 32),
       ],
+    );
+  }
+
+  // Collapsible Section Widget - Professional Design
+  Widget _buildCollapsibleSection({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required bool isExpanded,
+    required VoidCallback onToggle,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: color, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: color,
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Column(
+              children: [
+                Container(height: 1, color: Colors.grey.shade100),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(14),
+                      bottomRight: Radius.circular(14),
+                    ),
+                  ),
+                  child: Column(children: children),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Income Breakdown (ADDED items)
+  Widget _buildIncomeBreakdown(DailyClosing closing) {
+    return Column(
+      children: [
+        _buildBreakdownRow(
+          'Wallet Balances',
+          closing.walletBalancesTotal,
+          Colors.blue,
+        ),
+        _buildDivider(),
+        _buildBreakdownRow('Hand Cash', closing.todaysHandCash, Colors.green),
+        _buildDivider(),
+        _buildBreakdownRow(
+          'MSF/Recharge Due Added',
+          closing.todaysMSFRecharge,
+          Colors.orange,
+        ),
+        _buildDivider(),
+        _buildBreakdownRow(
+          'Cash Borrow Added',
+          closing.todaysCashBorrowDue,
+          Colors.purple,
+        ),
+        _buildDivider(),
+        _buildBreakdownRow(
+          'Expenses',
+          closing.todaysExpenses,
+          Colors.amber,
+        ),
+      ],
+    );
+  }
+
+  // Deductions Breakdown (SUBTRACTED items)
+  Widget _buildExpensesBreakdown(DailyClosing closing) {
+    return Column(
+      children: [
+        _buildBreakdownRow(
+          'Temporary Balance',
+          closing.temporaryBalancesTotal,
+          Colors.teal,
+          isNegative: true,
+        ),
+        _buildDivider(),
+        _buildBreakdownRow(
+          'Product Sales Balance',
+          closing.todaysSalesTotal,
+          Colors.indigo,
+          isNegative: true,
+        ),
+        _buildDivider(),
+        _buildBreakdownRow(
+          'Total Due Collections',
+          closing.totalDueCollections,
+          Colors.green,
+          isNegative: true,
+        ),
+      ],
+    );
+  }
+
+  // NEW: Balancing Section
+  Widget _buildBalancingSection(BuildContext context, DailyClosing closing) {
+    return Column(
+      children: [
+        _buildCashoutChargeSection(context, closing),
+        const SizedBox(height: 16),
+        if (closing.yesterdaySubtotal > 0)
+          _buildComparisonCard(context, closing)
+        else
+          _buildInfoCard(
+            'No previous closing found (first closing)',
+            Colors.amber,
+          ),
+      ],
+    );
+  }
+
+  // NEW: Adjustments Section
+  Widget _buildAdjustmentsSection(BuildContext context, DailyClosing closing) {
+    return Column(
+      children: [
+        _buildProfitsSection(context, closing),
+        const SizedBox(height: 16),
+        _buildProfitDeductionSection(context, closing),
+      ],
+    );
+  }
+
+  // NEW: Remarks Card
+  Widget _buildRemarksCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: TextField(
+          controller: _remarksController,
+          decoration: InputDecoration(
+            labelText: 'Remarks (Optional)',
+            labelStyle: TextStyle(
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+            border: InputBorder.none,
+            hintText: 'Add any notes about today\'s closing...',
+            hintStyle: TextStyle(color: Colors.grey.shade400),
+            prefixIcon: Icon(Icons.note_outlined, color: Colors.blue.shade400),
+          ),
+          maxLines: 3,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        ),
+      ),
+    );
+  }
+
+  // Breakdown Row Helper - Professional Design
+  Widget _buildBreakdownRow(
+    String label,
+    double amount,
+    Color color, {
+    bool isNegative = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 5,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            '${isNegative ? '−' : '+'}৳${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: isNegative ? Colors.red.shade600 : Colors.green.shade600,
+              fontSize: 15,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Divider Helper - Professional Design
+  Widget _buildDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Container(
+        height: 1,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey[200]!, Colors.grey[100]!, Colors.grey[200]!],
+          ),
+        ),
+      ),
     );
   }
 
@@ -709,29 +913,34 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
   }
 
   Widget _buildSummaryCards(DailyClosing closing) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildSummaryCard(
-            label: 'Wallet Balance',
-            amount: closing.walletBalancesTotal,
-            icon: Icons.account_balance_wallet,
-            color: Colors.blue,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildProfessionalSummaryCard(
+                label: 'Wallet Balance',
+                amount: closing.walletBalancesTotal,
+                icon: Icons.account_balance_wallet,
+                color: Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildProfessionalSummaryCard(
+                label: 'Total Expenses',
+                amount: closing.todaysExpenses,
+                icon: Icons.trending_down,
+                color: Colors.red,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildSummaryCard(
-            label: 'Total Expenses',
-            amount: closing.todaysExpenses,
-            icon: Icons.shopping_cart,
-            color: Colors.red,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildSummaryCard(
-            label: 'Subtotal',
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: _buildProfessionalSummaryCard(
+            label: 'Today\'s Subtotal',
             amount: closing.subtotal,
             icon: Icons.calculate,
             color: Colors.green,
@@ -741,7 +950,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     );
   }
 
-  Widget _buildSummaryCard({
+  Widget _buildProfessionalSummaryCard({
     required String label,
     required double amount,
     required IconData icon,
@@ -749,30 +958,52 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color.withOpacity(0.8), color]),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withOpacity(0.85), color.withOpacity(0.65)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white, size: 24),
-          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.all(8),
+            width: 40,
+            height: 40,
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(height: 12),
           Text(
             label,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             '৳${amount.toStringAsFixed(2)}',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -831,17 +1062,26 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color.shade600, color.shade700]),
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.shade600, color.shade700],
+        ),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: color.withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -853,42 +1093,60 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 children: [
                   Text(
                     'Final Closing Balance',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(color: Colors.white70),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     '৳${closing.finalClosingBalance.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-              Icon(
-                isPositive ? Icons.trending_up : Icons.trending_down,
-                color: Colors.white,
-                size: 40,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Icon(
+                  isPositive ? Icons.trending_up : Icons.trending_down,
+                  color: Colors.white,
+                  size: 44,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              'Final Profit: ৳${closing.totalProfit.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white70, size: 18),
+                const SizedBox(width: 10),
+                Text(
+                  'Total Profit: ৳${closing.totalProfit.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -898,16 +1156,21 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
 
   Widget _buildSubtotalCard(String title, double amount, Color color) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: color.withOpacity(0.2)),
+      ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.08), color.withOpacity(0.02)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [color.withOpacity(0.05), color.withOpacity(0.02)],
           ),
         ),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -918,28 +1181,30 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                    fontSize: 14,
                     color: Colors.grey.shade600,
+                    letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   '৳${amount.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                    color: color,
+                    fontSize: 24,
+                    color: color.withOpacity(0.8),
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
             ),
             Container(
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(12),
-              child: Icon(Icons.attach_money, color: color, size: 24),
+              child: Icon(Icons.currency_exchange, color: color, size: 28),
             ),
           ],
         ),
@@ -950,43 +1215,104 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
   Widget _buildComparisonCard(BuildContext context, DailyClosing closing) {
     final difference = closing.remainingCash;
     final isPositive = difference >= 0;
+    final subtotalForComparison = closing.subtotal - closing.cashoutCharge;
+    final color = isPositive ? Colors.green : Colors.red;
 
     return Card(
-      color: isPositive
-          ? Colors.green.withOpacity(0.1)
-          : Colors.red.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: color.withOpacity(0.2)),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.06), color.withOpacity(0.02)],
+          ),
+        ),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Small Sales (Difference from Yesterday)',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    isPositive ? Icons.trending_up : Icons.trending_down,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Daily Balance Check (For Balancing Only)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: Colors.black87,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Yesterday\'s Subtotal',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      'Yesterday',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    Text('৳${closing.yesterdaySubtotal.toStringAsFixed(2)}'),
+                    const SizedBox(height: 4),
+                    Text(
+                      '৳${closing.yesterdaySubtotal.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
-                const Icon(Icons.arrow_forward),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.arrow_forward, color: color, size: 20),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text(
-                      'Today\'s Subtotal',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      'Today (Adjusted)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    Text('৳${closing.subtotal.toStringAsFixed(2)}'),
+                    const SizedBox(height: 4),
+                    Text(
+                      '৳${subtotalForComparison.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -994,21 +1320,44 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isPositive
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.red.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: color.withOpacity(0.3)),
               ),
               child: Center(
-                child: Text(
-                  '${isPositive ? '+' : ''}৳${difference.toStringAsFixed(2)} ${isPositive ? '(Difference(Small Sales Or Card))' : '(Loss (Someting went wrong))'}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: isPositive ? Colors.green : Colors.red,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Difference',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: color.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${isPositive ? '+' : ''}৳${difference.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: color.shade700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isPositive ? '(Small Sales / Card)' : '(Loss)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: color.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1192,6 +1541,148 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCashoutChargeSection(
+    BuildContext context,
+    DailyClosing closing,
+  ) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.amber.withOpacity(0.3)),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.amber.shade50, Colors.orange.shade50],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade600,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.attach_money,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Text(
+                    'Extra Cash / Cashout Charge',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'For balancing only (e.g., 1015 tk received for 1000 tk)',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _cashoutChargeController,
+                decoration: InputDecoration(
+                  labelText: 'Amount (৳)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: Colors.orange,
+                      width: 2,
+                    ),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.currency_exchange,
+                    color: Colors.orange,
+                  ),
+                  hintText: '0',
+                  filled: true,
+                  fillColor: Colors.white,
+                  suffixText: closing.cashoutCharge > 0 ? '✓ Applied' : '',
+                  suffixStyle: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (value) {
+                  final amount = double.tryParse(value) ?? 0;
+                  context.read<DailyClosingProvider>().updateCashoutCharge(
+                    amount,
+                  );
+                },
+              ),
+              if (closing.cashoutCharge > 0) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'For Balancing Only:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Colors.orange.shade900,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      Text(
+                        '৳${(closing.subtotal - closing.cashoutCharge).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.orange.shade900,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

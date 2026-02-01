@@ -95,6 +95,46 @@ class InventoryProvider extends ChangeNotifier {
     }
   }
 
+  /// Update a category
+  Future<void> updateCategory(
+    String userId,
+    String categoryId,
+    String name,
+    String description,
+  ) async {
+    try {
+      await _service.updateCategory(categoryId, name, description);
+      await loadCategories(userId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Delete a category
+  Future<void> deleteCategory(String userId, String categoryId) async {
+    try {
+      await _service.deleteCategory(categoryId);
+      await loadCategories(userId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Generate next SKU
+  Future<String> generateNextSku(String userId) async {
+    try {
+      return await _service.generateNextSku(userId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return DateTime.now().millisecondsSinceEpoch.toString().substring(5);
+    }
+  }
+
   /// Add a new inventory item
   Future<void> addItem(InventoryItem item) async {
     try {

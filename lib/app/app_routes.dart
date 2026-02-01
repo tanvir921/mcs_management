@@ -11,7 +11,6 @@ import '../modules/customer/screens/edit_customer_screen.dart';
 import '../modules/customer/models/customer_model.dart';
 import '../modules/sales/screens/sales_screen.dart';
 import '../modules/sales/screens/add_sale_screen.dart';
-import '../modules/sales/screens/sale_detail_screen.dart';
 import '../modules/sales/screens/sales_history_screen.dart';
 import '../modules/wallet/screens/wallets_screen.dart';
 import '../modules/expense/screens/expense_screen.dart';
@@ -22,6 +21,7 @@ import '../modules/daily_closing/screens/daily_closing_screen.dart';
 import '../modules/daily_closing/screens/profit_deduction_screen.dart';
 import '../modules/inventory/screens/inventory_list_screen.dart';
 import '../modules/reports/screens/reports_screen.dart';
+import '../modules/admin/screens/database_cleanup_screen.dart';
 
 class AppRoutes {
   // Route names
@@ -46,6 +46,7 @@ class AppRoutes {
   static const String userEdit = '/user/edit';
   static const String reports = '/reports';
   static const String profitDeduction = '/profit-deduction';
+  static const String databaseCleanup = '/admin/database-cleanup';
 
   // Route generator
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -125,7 +126,7 @@ class AppRoutes {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => SaleDetailScreen(saleId: saleId),
+          builder: (_) => const SalesHistoryScreen(),
           settings: settings,
         );
       case wallets:
@@ -172,6 +173,11 @@ class AppRoutes {
       case inventory:
         return MaterialPageRoute(
           builder: (_) => const InventoryListScreen(),
+          settings: settings,
+        );
+      case databaseCleanup:
+        return MaterialPageRoute(
+          builder: (_) => const DatabaseCleanupScreen(),
           settings: settings,
         );
       case profitDeduction:

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/daily_closing_model.dart';
 import '../../wallet/models/wallet.dart';
 import '../../wallet/models/wallet_type.dart';
@@ -44,29 +45,44 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+
+      debugPrint('🔍 MSF: Querying from $startOfDay to $endOfDay');
 
       final snapshot = await _firestore
-          .collection('customers')
-          .where('userId', isEqualTo: userId)
+          .collection('due_transactions')
+          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
-      double totalMSF = 0;
-      for (var customerDoc in snapshot.docs) {
-        final dueTransactions = await customerDoc.reference
-            .collection('due_transactions')
-            .where('type', isEqualTo: 'msfRecharge')
-            .where('date', isGreaterThanOrEqualTo: startOfDay)
-            .where('date', isLessThanOrEqualTo: endOfDay)
-            .get();
+      debugPrint('🔍 MSF: Found ${snapshot.docs.length} documents');
 
-        for (var transaction in dueTransactions.docs) {
-          totalMSF += (transaction['amount'] as num?)?.toDouble() ?? 0;
+      double totalMSF = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        debugPrint('🔍 MSF: Doc ID=${doc.id}, data=$data');
+        
+        // Safe access with null checks
+        final dueType = data['dueType'];
+        final amount = data['amount'];
+        final isAddition = data['isAddition'];
+        
+        debugPrint('🔍 MSF: dueType=$dueType (${dueType.runtimeType}), amount=$amount (${amount.runtimeType}), isAddition=$isAddition (${isAddition.runtimeType})');
+
+        if (dueType is String && amount is num) {
+          // Today's MSF/Recharge dues
+          if (dueType == 'msfRecharge') {
+            totalMSF += amount.toDouble();
+            debugPrint('✅ MSF: Added ${amount.toDouble()} to totalMSF');
+          }
         }
       }
 
+      debugPrint('✅ MSF: Final totalMSF = $totalMSF');
       return totalMSF;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('❌ MSF ERROR: $e');
+      debugPrint('❌ MSF STACK: $stackTrace');
       throw ValidationException('Failed to calculate today MSF recharge: $e');
     }
   }
@@ -76,29 +92,41 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+
+      debugPrint('🔍 CashBorrow: Querying from $startOfDay to $endOfDay');
 
       final snapshot = await _firestore
-          .collection('customers')
-          .where('userId', isEqualTo: userId)
+          .collection('due_transactions')
+          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
-      double totalCashBorrow = 0;
-      for (var customerDoc in snapshot.docs) {
-        final dueTransactions = await customerDoc.reference
-            .collection('due_transactions')
-            .where('type', isEqualTo: 'cashBorrow')
-            .where('date', isGreaterThanOrEqualTo: startOfDay)
-            .where('date', isLessThanOrEqualTo: endOfDay)
-            .get();
+      debugPrint('🔍 CashBorrow: Found ${snapshot.docs.length} documents');
 
-        for (var transaction in dueTransactions.docs) {
-          totalCashBorrow += (transaction['amount'] as num?)?.toDouble() ?? 0;
+      double totalCashBorrow = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        
+        // Safe access with null checks
+        final dueType = data['dueType'];
+        final amount = data['amount'];
+        final isAddition = data['isAddition'];
+
+        if (dueType is String && amount is num) {
+          // Today's Cash Borrow dues
+          if (dueType == 'cashBorrow') {
+            totalCashBorrow += amount.toDouble();
+            debugPrint('✅ CashBorrow: Added ${amount.toDouble()}');
+          }
         }
       }
 
+      debugPrint('✅ CashBorrow: Final total = $totalCashBorrow');
       return totalCashBorrow;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('❌ CashBorrow ERROR: $e');
+      debugPrint('❌ CashBorrow STACK: $stackTrace');
       throw ValidationException(
         'Failed to calculate today cash borrow due: $e',
       );
@@ -110,14 +138,16 @@ class DailyClosingService {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
 
-      final snapshot = await _firestore
+      Query query = _firestore
           .collection('expenses')
-          .where('userId', isEqualTo: userId)
-          .where('date', isGreaterThanOrEqualTo: startOfDay)
-          .where('date', isLessThanOrEqualTo: endOfDay)
-          .get();
+          .where('isActive', isEqualTo: true);
+
+      query = query.where('expenseDate', isGreaterThanOrEqualTo: startOfDay);
+      query = query.where('expenseDate', isLessThanOrEqualTo: endOfDay);
+
+      final snapshot = await query.get();
 
       double totalExpenses = 0;
       for (var doc in snapshot.docs) {
@@ -127,6 +157,38 @@ class DailyClosingService {
       return totalExpenses;
     } catch (e) {
       throw ValidationException('Failed to calculate today expenses: $e');
+    }
+  }
+
+  /// Calculate today's total due collections (payments received from customers)
+  Future<double> calculateTotalDueCollections(String userId) async {
+    try {
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day);
+      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+
+      final snapshot = await _firestore
+          .collection('due_transactions')
+          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .get();
+
+      double totalCollections = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final amount = data['amount'];
+        final isAddition = data['isAddition'];
+
+        // Collections: payments received (isAddition=false)
+        if (amount is num && isAddition == false) {
+          totalCollections += amount.toDouble();
+        }
+      }
+
+      debugPrint('✅ TotalDueCollections: $totalCollections');
+      return totalCollections;
+    } catch (e) {
+      throw ValidationException('Failed to calculate total due collections: $e');
     }
   }
 
@@ -394,10 +456,11 @@ class DailyClosingService {
   }) async {
     try {
       // Get all required data
-        final todaysMSF = await calculateTodaysMSFRecharge(userId);
-        final todaysCashBorrow = await calculateTodaysCashBorrowDue(userId);
-        final todaysExpenses = await calculateTodaysExpenses(userId);
-        final (todaysSalesTotal, todaysSalesProfit) =
+      final todaysMSF = await calculateTodaysMSFRecharge(userId);
+      final todaysCashBorrow = await calculateTodaysCashBorrowDue(userId);
+      final todaysExpenses = await calculateTodaysExpenses(userId);
+      final totalDueCollections = await calculateTotalDueCollections(userId);
+      final (todaysSalesTotal, todaysSalesProfit) =
           await calculateTodaysSalesSummary(userId);
       final (walletPermanent, walletTemporary) = await calculateWalletBalances(
         userId,
@@ -413,15 +476,19 @@ class DailyClosingService {
       final cashBorrowBreakdown = await getCashBorrowBreakdown(userId);
       final expenseBreakdown = await getExpenseBreakdown(userId);
 
-      // Calculate subtotal
+      // Calculate subtotal using new formula:
+      // Subtotal = (Wallets + HandCash + MSF Due + CashBorrow Due + Expenses) 
+      //          - (Temporary + Sales + Collections)
+      // Note: Sales deduction is temporary for balancing with yesterday's subtotal
       final subtotal =
-          walletPermanent +
+          (walletPermanent +
           todaysHandCash +
-          todaysSalesTotal +
           todaysMSF +
-          todaysCashBorrow -
-          todaysExpenses -
-          walletTemporary;
+          todaysCashBorrow +
+          todaysExpenses) -
+          (walletTemporary +
+          todaysSalesTotal +
+          totalDueCollections);
 
       // Calculate remaining cash
       final yesterdaySubtotal = yesterdayClosing?.subtotal ?? 0;
@@ -433,6 +500,15 @@ class DailyClosingService {
         (sum, entry) => sum + entry.amount,
       );
       final totalProfit = todaysSalesProfit + optionalProfit;
+
+      // Final closing balance includes sales (sales deduction is only for subtotal balancing)
+      final finalClosingBalanceBase = 
+          (walletPermanent +
+          todaysHandCash +
+          todaysMSF +
+          todaysCashBorrow +
+          todaysExpenses) -
+          (walletTemporary + totalDueCollections);
 
       // Create model (not yet uploaded to server)
       final closing = DailyClosing(
@@ -446,6 +522,7 @@ class DailyClosingService {
         todaysMSFRecharge: todaysMSF,
         todaysCashBorrowDue: todaysCashBorrow,
         todaysExpenses: todaysExpenses,
+        totalDueCollections: totalDueCollections,
         walletBalancesTotal: walletPermanent,
         temporaryBalancesTotal: walletTemporary,
         subtotal: subtotal,
@@ -454,7 +531,7 @@ class DailyClosingService {
         profitEntries: profitEntries,
         totalProfit: totalProfit,
         deductedProfit: 0,
-        finalClosingBalance: subtotal,
+        finalClosingBalance: finalClosingBalanceBase,  // Correct balance without sales deduction
         walletBreakdown: walletBreakdown,
         temporaryBalanceBreakdown: temporaryBalanceBreakdown,
         msfBreakdown: msfBreakdown,
@@ -542,8 +619,7 @@ class DailyClosingService {
       String profitWalletId;
       if (profitWalletQuery.docs.isEmpty) {
         // Create new profit deduction wallet
-        profitWalletId =
-            _firestore.collection('wallets').doc().id;
+        profitWalletId = _firestore.collection('wallets').doc().id;
         final newWallet = Wallet(
           id: profitWalletId,
           userId: userId,
@@ -562,23 +638,21 @@ class DailyClosingService {
       } else {
         profitWalletId = profitWalletQuery.docs.first.id;
         // Add to existing wallet permanent balance
-        final wallet =
-            Wallet.fromJson(profitWalletQuery.docs.first.data());
+        final wallet = Wallet.fromJson(profitWalletQuery.docs.first.data());
         final newBalance = wallet.permanentBalance + amount;
-        await _firestore
-            .collection('wallets')
-            .doc(profitWalletId)
-            .update({'permanentBalance': newBalance, 'updatedAt': DateTime.now()});
+        await _firestore.collection('wallets').doc(profitWalletId).update({
+          'permanentBalance': newBalance,
+          'updatedAt': DateTime.now(),
+        });
       }
 
       // Create balance history record
-      final historyId =
-          _firestore
-              .collection('wallets')
-              .doc(profitWalletId)
-              .collection('balance_history')
-              .doc()
-              .id;
+      final historyId = _firestore
+          .collection('wallets')
+          .doc(profitWalletId)
+          .collection('balance_history')
+          .doc()
+          .id;
       final existingWallet = await _firestore
           .collection('wallets')
           .doc(profitWalletId)
@@ -740,38 +814,33 @@ class DailyClosingService {
           .get();
 
       if (profitWalletQuery.docs.isEmpty) {
-        throw ValidationException(
-            'No profit deduction wallet found');
+        throw ValidationException('No profit deduction wallet found');
       }
 
       final profitWalletId = profitWalletQuery.docs.first.id;
-      final wallet =
-          Wallet.fromJson(profitWalletQuery.docs.first.data());
+      final wallet = Wallet.fromJson(profitWalletQuery.docs.first.data());
 
       // Check if sufficient balance
       if (wallet.permanentBalance < amount) {
         throw ValidationException(
-            'Insufficient profit deduction balance. Available: ${wallet.permanentBalance}');
+          'Insufficient profit deduction balance. Available: ${wallet.permanentBalance}',
+        );
       }
 
       // Deduct from wallet
       final newBalance = wallet.permanentBalance - amount;
-      await _firestore
-          .collection('wallets')
-          .doc(profitWalletId)
-          .update({
+      await _firestore.collection('wallets').doc(profitWalletId).update({
         'permanentBalance': newBalance,
         'updatedAt': DateTime.now(),
       });
 
       // Create balance history record (negative change for withdrawal)
-      final historyId =
-          _firestore
-              .collection('wallets')
-              .doc(profitWalletId)
-              .collection('balance_history')
-              .doc()
-              .id;
+      final historyId = _firestore
+          .collection('wallets')
+          .doc(profitWalletId)
+          .collection('balance_history')
+          .doc()
+          .id;
 
       final history = BalanceHistory(
         id: historyId,

@@ -5,10 +5,7 @@ class CartItem {
   final InventoryItem product;
   double quantity;
 
-  CartItem({
-    required this.product,
-    required this.quantity,
-  });
+  CartItem({required this.product, required this.quantity});
 
   double get totalCost => product.costPrice * quantity;
   double get totalSelling => product.sellingPrice * quantity;
@@ -22,7 +19,8 @@ class CartProvider extends ChangeNotifier {
 
   int get itemCount => _items.length;
 
-  double get totalQuantity => _items.fold(0, (sum, item) => sum + item.quantity);
+  double get totalQuantity =>
+      _items.fold(0, (sum, item) => sum + item.quantity);
 
   double get totalCost => _items.fold(0, (sum, item) => sum + item.totalCost);
 
@@ -38,8 +36,9 @@ class CartProvider extends ChangeNotifier {
   /// Add item to cart
   void addItem(InventoryItem product, double quantity) {
     // Check if product already in cart
-    final existingIndex =
-        _items.indexWhere((item) => item.product.id == product.id);
+    final existingIndex = _items.indexWhere(
+      (item) => item.product.id == product.id,
+    );
 
     if (existingIndex >= 0) {
       // Update quantity if already in cart

@@ -38,7 +38,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     setState(() {
       _filterPeriod = period;
       final now = DateTime.now();
-      
+
       switch (period) {
         case 'today':
           _startDate = DateTime(now.year, now.month, now.day);
@@ -72,6 +72,16 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       initialDateRange: _startDate != null && _endDate != null
           ? DateTimeRange(start: _startDate!, end: _endDate!)
           : null,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.blue.shade600,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (range != null) {
@@ -96,169 +106,219 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expense History'),
+        backgroundColor: Colors.blue.shade600,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.date_range),
+            icon: const Icon(Icons.date_range_rounded),
             onPressed: _pickDateRange,
             tooltip: 'Custom Date Range',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadData,
             tooltip: 'Refresh',
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Period Filter
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  FilterChip(
-                    label: const Text('All'),
-                    selected: _filterPeriod == 'all',
-                    onSelected: (_) => _applyFilter('all'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Today'),
-                    selected: _filterPeriod == 'today',
-                    onSelected: (_) => _applyFilter('today'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('This Week'),
-                    selected: _filterPeriod == 'week',
-                    onSelected: (_) => _applyFilter('week'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('This Month'),
-                    selected: _filterPeriod == 'month',
-                    onSelected: (_) => _applyFilter('month'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('This Year'),
-                    selected: _filterPeriod == 'year',
-                    onSelected: (_) => _applyFilter('year'),
-                  ),
-                ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.grey.shade50, Colors.white],
+          ),
+        ),
+        child: Column(
+          children: [
+            // Period Filter
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip('All', 'all'),
+                    const SizedBox(width: 10),
+                    _buildFilterChip('Today', 'today'),
+                    const SizedBox(width: 10),
+                    _buildFilterChip('This Week', 'week'),
+                    const SizedBox(width: 10),
+                    _buildFilterChip('This Month', 'month'),
+                    const SizedBox(width: 10),
+                    _buildFilterChip('This Year', 'year'),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Category Filter
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  FilterChip(
-                    label: const Text('All Categories'),
-                    selected: _categoryFilter == null,
-                    onSelected: (_) => _applyCategoryFilter(null),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Shop'),
-                    selected: _categoryFilter == 'shop',
-                    onSelected: (_) => _applyCategoryFilter('shop'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Personal'),
-                    selected: _categoryFilter == 'personal',
-                    onSelected: (_) => _applyCategoryFilter('personal'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Other'),
-                    selected: _categoryFilter == 'other',
-                    onSelected: (_) => _applyCategoryFilter('other'),
-                  ),
-                ],
+            // Category Filter
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildCategoryChip(null, 'All Categories', Colors.grey),
+                    const SizedBox(width: 10),
+                    _buildCategoryChip('personal', 'Personal', const Color(0xFF5856D6)),
+                    const SizedBox(width: 10),
+                    _buildCategoryChip('shop', 'Shop', const Color(0xFFFF9500)),
+                    const SizedBox(width: 10),
+                    _buildCategoryChip('repair', 'Repair', const Color(0xFFFF3B30)),
+                    const SizedBox(width: 10),
+                    _buildCategoryChip('other', 'Other', const Color(0xFF007AFF)),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          const Divider(height: 1),
+            const Divider(height: 1),
 
-          // Expense List
-          Expanded(
-            child: Consumer<ExpenseProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            // Expense List
+            Expanded(
+              child: Consumer<ExpenseProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
 
-                if (provider.error != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                        const SizedBox(height: 16),
-                        Text('Error: ${provider.error}'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadData,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final expenses = provider.expenses;
-
-                if (expenses.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.receipt_long, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No expenses found',
-                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async => _loadData(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: expenses.length,
-                    itemBuilder: (context, index) {
-                      final expense = expenses[index];
-                      return _ExpenseCard(
-                        expense: expense,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ExpenseDetailScreen(expenseId: expense.id),
+                  if (provider.error != null) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            size: 64,
+                            color: Colors.red,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error: ${provider.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: _loadData,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Retry'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.blue.shade600,
                             ),
-                          ).then((_) => _loadData());
-                        },
-                      );
-                    },
-                  ),
-                );
-              },
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final expenses = provider.expenses;
+
+                  if (expenses.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_rounded,
+                            size: 72,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No expenses found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add a new expense to get started',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: () async => _loadData(),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: expenses.length,
+                      itemBuilder: (context, index) {
+                        final expense = expenses[index];
+                        return _ExpenseCard(
+                          expense: expense,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ExpenseDetailScreen(expenseId: expense.id),
+                              ),
+                            ).then((_) => _loadData());
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _filterPeriod == value;
+    return FilterChip(
+      onSelected: (_) => _applyFilter(value),
+      selected: isSelected,
+      label: Text(label),
+      backgroundColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? Colors.blue.shade600 : Colors.grey.shade300,
+        width: isSelected ? 1.5 : 1,
+      ),
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.blue.shade600 : Colors.grey.shade700,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+      ),
+      selectedColor: Colors.blue.shade100,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    );
+  }
+
+  Widget _buildCategoryChip(String? category, String label, Color color) {
+    final isSelected = _categoryFilter == category;
+    return FilterChip(
+      onSelected: (_) => _applyCategoryFilter(category),
+      selected: isSelected,
+      label: Text(label),
+      backgroundColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? color : Colors.grey.shade300,
+        width: isSelected ? 1.5 : 1,
+      ),
+      labelStyle: TextStyle(
+        color: isSelected ? color : Colors.grey.shade700,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+      ),
+      selectedColor: color.withOpacity(0.15),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 }
@@ -272,59 +332,55 @@ class _ExpenseCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _getCategoryColor() {
-    switch (expense.category) {
-      case 'shop':
-        return Colors.blue;
-      case 'personal':
-        return Colors.purple;
-      case 'other':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getCategoryIcon() {
-    switch (expense.category) {
-      case 'shop':
-        return Icons.store;
-      case 'personal':
-        return Icons.person;
-      case 'other':
-        return Icons.category;
-      default:
-        return Icons.receipt;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final currencyFormat = NumberFormat('#,##0.00');
-    final categoryColor = _getCategoryColor();
+    final categoryColor = Expense.getCategoryColor(expense.category);
+    final categoryIcon = Expense.getCategoryIcon(expense.category);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.white, Colors.grey.shade50],
+            ),
+          ),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Row
               Row(
                 children: [
+                  // Category Icon
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: categoryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: categoryColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(_getCategoryIcon(), color: categoryColor, size: 20),
+                    child: Icon(
+                      categoryIcon,
+                      color: categoryColor,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
+
+                  // Description and Category
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,106 +388,170 @@ class _ExpenseCard extends StatelessWidget {
                         Text(
                           expense.description,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             fontSize: 16,
+                            letterSpacing: 0.2,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: categoryColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            Expense.getCategoryDisplayName(expense.category),
+                            style: TextStyle(
+                              color: categoryColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Amount
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '৳${currencyFormat.format(expense.amount)}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade600,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        expense.paymentMethod == 'cash'
+                            ? 'Cash'
+                            : expense.paymentMethod == 'card'
+                                ? 'Card'
+                                : 'Mobile',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Divider
+              Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.grey[300]!,
+                      Colors.grey[200]!,
+                      Colors.grey[300]!,
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Footer Row
+              Row(
+                children: [
+                  // Date
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 6),
                         Text(
-                          Expense.getCategoryDisplayName(expense.category),
+                          dateFormat.format(expense.expenseDate),
                           style: TextStyle(
-                            color: categoryColor,
                             fontSize: 12,
+                            color: Colors.grey.shade700,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Text(
-                    '৳${currencyFormat.format(expense.amount)}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red[700],
+
+                  // Receipt Number
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.receipt_rounded,
+                        size: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        expense.expenseNumber,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Photo indicator
+                  if (expense.receiptPhotos.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.image_rounded,
+                            size: 12,
+                            color: Colors.blue.shade600,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${expense.receiptPhotos.length}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.blue.shade600,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    dateFormat.format(expense.expenseDate),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.receipt, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    expense.expenseNumber,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  const Spacer(),
-                  _PaymentMethodChip(method: expense.paymentMethod),
+                  ],
                 ],
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PaymentMethodChip extends StatelessWidget {
-  final String method;
-
-  const _PaymentMethodChip({required this.method});
-
-  @override
-  Widget build(BuildContext context) {
-    IconData icon;
-    String label;
-    
-    switch (method) {
-      case 'cash':
-        icon = Icons.money;
-        label = 'Cash';
-        break;
-      case 'card':
-        icon = Icons.credit_card;
-        label = 'Card';
-        break;
-      case 'mobile_banking':
-        icon = Icons.phone_android;
-        label = 'Mobile';
-        break;
-      default:
-        icon = Icons.payment;
-        label = method;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: Colors.grey[700]),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: Colors.grey[700]),
-          ),
-        ],
       ),
     );
   }

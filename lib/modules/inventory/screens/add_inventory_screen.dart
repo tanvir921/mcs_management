@@ -34,6 +34,7 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
   File? _selectedImage;
   String? _imageUrl;
   bool _isSubmitting = false;
+  bool _isLoadingSku = false;
 
   @override
   void initState() {
@@ -42,6 +43,34 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
     if (_selectedType == ItemType.service) {
       _stockController.text = '1';
       _unitController.text = 'service';
+    } else {
+      _unitController.text = 'pcs'; // Default unit for products
+    }
+    // Auto-generate SKU on screen load
+    _generateSku();
+  }
+
+  Future<void> _generateSku() async {
+    setState(() => _isLoadingSku = true);
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final inventory = Provider.of<InventoryProvider>(context, listen: false);
+      if (auth.currentUser != null) {
+        final sku = await inventory.generateNextSku(auth.currentUser!.id);
+        if (mounted) {
+          setState(() {
+            _skuController.text = sku;
+            _isLoadingSku = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _skuController.text = DateTime.now().millisecondsSinceEpoch.toString().substring(5);
+          _isLoadingSku = false;
+        });
+      }
     }
   }
 
@@ -74,9 +103,9 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error selecting image: $e')));
       }
     }
   }
@@ -107,8 +136,10 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
             if (_selectedImage != null || _imageUrl != null)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Remove Photo',
-                    style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Remove Photo',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   setState(() {
@@ -156,8 +187,10 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
       // Upload image if selected
       String? uploadedImageUrl;
       if (_selectedImage != null) {
-        uploadedImageUrl =
-            await inventory.uploadImage(_selectedImage!, user.id);
+        uploadedImageUrl = await inventory.uploadImage(
+          _selectedImage!,
+          user.id,
+        );
       }
 
       // Create inventory item
@@ -244,7 +277,7 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
                             _stockController.text = '0';
                             _unitController.text = 'service';
                           } else {
-                            _unitController.clear();
+                            _unitController.text = 'pcs'; // Default unit
                             _stockController.clear();
                           }
                           _selectedCategory = null;
@@ -332,8 +365,10 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
               const SizedBox(height: 24),
 
               // Product Image
-              Text('Product Image',
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Product Image',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 12),
               GestureDetector(
                 onTap: _showImageSourceDialog,
@@ -348,45 +383,39 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
                   child: _selectedImage != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            _selectedImage!,
-                            fit: BoxFit.cover,
-                          ),
+                          child: Image.file(_selectedImage!, fit: BoxFit.cover),
                         )
                       : _imageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                _imageUrl!,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate,
-                                  size: 64,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Tap to add product photo',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Camera or Gallery',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(_imageUrl!, fit: BoxFit.cover),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate,
+                              size: 64,
+                              color: Colors.grey.shade400,
                             ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Tap to add product photo',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Camera or Gallery',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -430,16 +459,33 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
               ),
               const SizedBox(height: 16),
 
-              // SKU
+              // SKU - Auto-generated
               TextFormField(
                 controller: _skuController,
+                readOnly: true,
                 decoration: InputDecoration(
-                  labelText: 'SKU (Stock Keeping Unit)',
-                  prefixIcon: const Icon(Icons.qr_code),
+                  labelText: 'SKU (Auto-Generated)',
+                  prefixIcon: _isLoadingSku
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : const Icon(Icons.qr_code),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: _isLoadingSku ? null : _generateSku,
+                    tooltip: 'Generate new SKU',
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  helperText: 'Unique identifier for this item',
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  helperText: 'Auto-generated numeric SKU',
                 ),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {

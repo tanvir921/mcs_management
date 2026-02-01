@@ -1,15 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../models/expense.dart';
 
 class ExpenseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
   final String _collection = 'expenses';
+  final String _storagePath = 'expense_receipts';
 
   // Generate expense number: EXP-YYYYMM-XXXX
   Future<String> _generateExpenseNumber() async {
     final now = DateTime.now();
     final prefix = 'EXP-${now.year}${now.month.toString().padLeft(2, '0')}';
-    
+
     final query = await _db
         .collection(_collection)
         .where('expenseNumber', isGreaterThanOrEqualTo: prefix)
@@ -30,15 +34,46 @@ class ExpenseService {
     return '$prefix-${nextNumber.toString().padLeft(4, '0')}';
   }
 
-  // Create expense
-  Future<String> createExpense(Expense expense) async {
+  // Upload receipt photos and return URLs
+  Future<List<String>> _uploadReceiptPhotos(
+    String expenseId,
+    List<File> photos,
+  ) async {
+    try {
+      final photoUrls = <String>[];
+      for (int i = 0; i < photos.length; i++) {
+        final ref = _storage.ref().child(
+          '$_storagePath/$expenseId/receipt_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+        );
+        await ref.putFile(photos[i]);
+        final url = await ref.getDownloadURL();
+        photoUrls.add(url);
+      }
+      return photoUrls;
+    } catch (e) {
+      throw Exception('Failed to upload receipt photos: $e');
+    }
+  }
+
+  // Create expense with photos
+  Future<String> createExpense(
+    Expense expense, {
+    List<File>? receiptPhotos,
+  }) async {
     try {
       final docRef = _db.collection(_collection).doc();
       final expenseNumber = await _generateExpenseNumber();
-      
+
+      // Upload photos if provided
+      List<String> photoUrls = [];
+      if (receiptPhotos != null && receiptPhotos.isNotEmpty) {
+        photoUrls = await _uploadReceiptPhotos(docRef.id, receiptPhotos);
+      }
+
       final newExpense = expense.copyWith(
         id: docRef.id,
         expenseNumber: expenseNumber,
+        receiptPhotos: photoUrls,
       );
 
       await docRef.set(newExpense.toMap());
@@ -68,7 +103,9 @@ class ExpenseService {
     String? category,
   }) {
     try {
-      Query query = _db.collection(_collection).where('isActive', isEqualTo: true);
+      Query query = _db
+          .collection(_collection)
+          .where('isActive', isEqualTo: true);
 
       if (startDate != null) {
         query = query.where('expenseDate', isGreaterThanOrEqualTo: startDate);
@@ -83,9 +120,13 @@ class ExpenseService {
       return query
           .orderBy('expenseDate', descending: true)
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map((doc) => Expense.fromMap(doc.data() as Map<String, dynamic>))
-              .toList());
+          .map(
+            (snapshot) => snapshot.docs
+                .map(
+                  (doc) => Expense.fromMap(doc.data() as Map<String, dynamic>),
+                )
+                .toList(),
+          );
     } catch (e) {
       throw Exception('Failed to get expenses: $e');
     }
@@ -122,7 +163,9 @@ class ExpenseService {
     DateTime? endDate,
   }) async {
     try {
-      Query query = _db.collection(_collection).where('isActive', isEqualTo: true);
+      Query query = _db
+          .collection(_collection)
+          .where('isActive', isEqualTo: true);
 
       if (startDate != null) {
         query = query.where('expenseDate', isGreaterThanOrEqualTo: startDate);

@@ -108,14 +108,14 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
         final data = doc.data();
         final amount = (data['change'] ?? 0).toDouble();
         total += amount;
-        
+
         // Track positive (deductions) and negative (withdrawals) separately
         if (amount > 0) {
           totalAdded += amount;
         } else {
           totalExpenses += amount.abs();
         }
-        
+
         records.add({
           'id': doc.id,
           'date': (data['changedAt'] as Timestamp).toDate(),
@@ -232,9 +232,9 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
 
   Future<void> _withdrawForPersonalUse(double totalAvailable) async {
     if (_withdrawController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an amount')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter an amount')));
       return;
     }
 
@@ -282,9 +282,9 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
 
       setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -368,9 +368,9 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
               Text(
                 'Available: Tk. ${totalAvailable.toStringAsFixed(2)}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -515,13 +515,15 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
-                final data = snapshot.data ?? {
-                  'total': 0.0,
-                  'totalAdded': 0.0,
-                  'totalExpenses': 0.0,
-                  'records': [],
-                  'walletBalance': 0.0,
-                };
+                final data =
+                    snapshot.data ??
+                    {
+                      'total': 0.0,
+                      'totalAdded': 0.0,
+                      'totalExpenses': 0.0,
+                      'records': [],
+                      'walletBalance': 0.0,
+                    };
                 final records = (data['records'] as List<Map<String, dynamic>>);
                 final total = (data['total'] as num).toDouble();
                 final totalAdded = (data['totalAdded'] as num).toDouble();
@@ -582,9 +584,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                             children: [
                               Text(
                                 'Total Amount',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       color: Colors.amber.shade800,
                                       fontWeight: FontWeight.w600,
@@ -592,9 +592,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                               ),
                               Text(
                                 'Tk. ${totalAdded.toStringAsFixed(2)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: Colors.amber.shade900,
                                       fontWeight: FontWeight.bold,
@@ -609,9 +607,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                             children: [
                               Text(
                                 'Expenses Amount',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       color: Colors.red.shade800,
                                       fontWeight: FontWeight.w600,
@@ -619,9 +615,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                               ),
                               Text(
                                 'Tk. ${totalExpenses.toStringAsFixed(2)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
                                       color: Colors.red.shade900,
                                       fontWeight: FontWeight.bold,
@@ -636,9 +630,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                             children: [
                               Text(
                                 'Remaining Amount',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       color: Colors.green.shade800,
                                       fontWeight: FontWeight.bold,
@@ -646,9 +638,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                               ),
                               Text(
                                 'Tk. ${total.toStringAsFixed(2)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
+                                style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(
                                       color: Colors.green.shade900,
                                       fontWeight: FontWeight.bold,
@@ -757,8 +747,9 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                     : null,
                 label: const Text('Withdraw'),
                 icon: const Icon(Icons.remove_circle_outline),
-                backgroundColor:
-                    walletBalance > 0 ? Colors.orange.shade600 : Colors.grey,
+                backgroundColor: walletBalance > 0
+                    ? Colors.orange.shade600
+                    : Colors.grey,
                 heroTag: 'withdraw',
               ),
             ],

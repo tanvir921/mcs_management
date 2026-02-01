@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 import '../models/expense.dart';
 import '../services/expense_service.dart';
 
 class ExpenseProvider with ChangeNotifier {
   final ExpenseService _service = ExpenseService();
-  
+
   List<Expense> _expenses = [];
   Map<String, dynamic>? _stats;
   bool _isLoading = false;
@@ -26,11 +27,7 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
 
     _service
-        .getExpenses(
-          startDate: startDate,
-          endDate: endDate,
-          category: category,
-        )
+        .getExpenses(startDate: startDate, endDate: endDate, category: category)
         .listen(
           (expenses) {
             _expenses = expenses;
@@ -64,29 +61,28 @@ class ExpenseProvider with ChangeNotifier {
         'personalExpenses': 0.0,
         'otherExpenses': 0.0,
         'totalTransactions': 0,
-        'expensesByCategory': {
-          'shop': 0.0,
-          'personal': 0.0,
-          'other': 0.0,
-        },
+        'expensesByCategory': {'shop': 0.0, 'personal': 0.0, 'other': 0.0},
       };
     }
   }
 
   // Public method to load stats
-  Future<void> loadStats({
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  Future<void> loadStats({DateTime? startDate, DateTime? endDate}) async {
     await _loadStatsInternal(startDate: startDate, endDate: endDate);
     notifyListeners();
   }
 
   // Create expense
-  Future<String?> createExpense(Expense expense) async {
+  Future<String?> createExpense(
+    Expense expense, {
+    List<File>? receiptPhotos,
+  }) async {
     try {
       _error = null;
-      final id = await _service.createExpense(expense);
+      final id = await _service.createExpense(
+        expense,
+        receiptPhotos: receiptPhotos,
+      );
       return id;
     } catch (e) {
       _error = e.toString();

@@ -3,7 +3,7 @@ import '../models/sale.dart';
 import '../services/sales_service.dart';
 
 class SalesProvider extends ChangeNotifier {
-  final SalesService _salesService = SalesService();
+  final SalesService _service = SalesService();
 
   List<Sale> _sales = [];
   bool _isLoading = false;
@@ -15,61 +15,11 @@ class SalesProvider extends ChangeNotifier {
   String? get error => _error;
   Map<String, dynamic>? get stats => _stats;
 
-  Future<void> loadSales({
-    DateTime? startDate,
-    DateTime? endDate,
-    bool includeInactive = false,
-  }) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _sales = await _salesService.getAllSales(
-        startDate: startDate,
-        endDate: endDate,
-        includeInactive: includeInactive,
-      );
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadTodaySales() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _sales = await _salesService.getTodaySales();
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<Sale?> getSaleById(String id) async {
-    try {
-      return await _salesService.getSaleById(id);
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
-  }
-
+  // Create sale
   Future<String> createSale(Sale sale) async {
     try {
-      final saleId = await _salesService.createSale(sale);
-      await loadSales();
-      await _loadStatsInternal();
+      _error = null;
+      final saleId = await _service.createSale(sale);
       return saleId;
     } catch (e) {
       _error = e.toString();
@@ -78,11 +28,57 @@ class SalesProvider extends ChangeNotifier {
     }
   }
 
+  // Get sale by ID
+  Future<Sale?> getSaleById(String id) async {
+    try {
+      _error = null;
+      return await _service.getSaleById(id);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  // Load sales for user
+  Future<void> loadSales(String userId, {DateTime? startDate, DateTime? endDate}) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final allSales = await _service.getAllSales(
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      // Filter by user (createdBy)
+      _sales = allSales.where((sale) => sale.createdBy == userId).toList();
+
+      // Calculate stats
+      _calculateStats();
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Update sale
   Future<void> updateSale(Sale sale) async {
     try {
-      await _salesService.updateSale(sale);
-      await loadSales();
-      await _loadStatsInternal();
+      _error = null;
+      await _service.updateSale(sale);
+      // Update local list
+      final index = _sales.indexWhere((s) => s.id == sale.id);
+      if (index != -1) {
+        _sales[index] = sale;
+      }
+      _calculateStats();
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -90,54 +86,35 @@ class SalesProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteSale(String id) async {
-    try {
-      await _salesService.deleteSale(id);
-      await loadSales();
-      await _loadStatsInternal();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
+  void _calculateStats() {
+    if (_sales.isEmpty) {
+      _stats = {
+        'totalSales': 0.0,
+        'totalCost': 0.0,
+        'totalProfit': 0.0,
+        'profitMargin': 0.0,
+        'totalTransactions': 0,
+        'averageSale': 0.0,
+        'optionalProfit': 0.0,
+      };
+      return;
     }
-  }
 
-  Future<void> loadStats({DateTime? startDate, DateTime? endDate}) async {
-    try {
-      _stats = await _salesService.getSalesStats(
-        startDate: startDate,
-        endDate: endDate,
-      );
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
+    final totalSales = _sales.length;
+    final totalAmount = _sales.fold<double>(0, (sum, sale) => sum + sale.totalSelling);
+    final totalCost = _sales.fold<double>(0, (sum, sale) => sum + sale.totalCost);
+    final totalProfit = _sales.fold<double>(0, (sum, sale) => sum + sale.realizedProfit);
+    final totalPotentialProfit = _sales.fold<double>(0, (sum, sale) => sum + sale.potentialProfit);
 
-  // Internal method that doesn't notify listeners
-  Future<void> _loadStatsInternal({
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
-    try {
-      _stats = await _salesService.getSalesStats(
-        startDate: startDate,
-        endDate: endDate,
-      );
-    } catch (e) {
-      _error = e.toString();
-    }
-  }
-
-  Future<List<Sale>> getSalesByCustomer(String customerId) async {
-    try {
-      return await _salesService.getSalesByCustomer(customerId);
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
+    _stats = {
+      'totalSales': totalAmount,
+      'totalCost': totalCost,
+      'totalProfit': totalProfit,
+      'profitMargin': totalAmount > 0 ? (totalProfit / totalAmount) * 100 : 0.0,
+      'totalTransactions': totalSales,
+      'averageSale': totalAmount / totalSales,
+      'optionalProfit': totalPotentialProfit,
+    };
   }
 
   void clearError() {

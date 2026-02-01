@@ -51,6 +51,7 @@ class DailyClosing {
   todaysMSFRecharge; // Total MSF/recharge from due_transactions today
   final double todaysCashBorrowDue; // Total cash borrow due settled today
   final double todaysExpenses; // Total expenses today
+  final double totalDueCollections; // Total due collections (payments received)
   final double walletBalancesTotal; // Sum of all permanent wallet balances
   final double temporaryBalancesTotal; // Sum of all temporary wallet balances
 
@@ -70,7 +71,9 @@ class DailyClosing {
   subtotal; // Calculated: wallets + hand cash + sales + MSF + cash borrow - expenses - temp balances
   final double yesterdaySubtotal; // Subtotal from previous day (for comparison)
   final double
-  remainingCash; // Today's subtotal - Yesterday's subtotal (small sells)
+  cashoutCharge; // Temporary charge (subtracted from subtotal during closing)
+  final double
+  remainingCash; // (subtotal - cashoutCharge) - yesterdaySubtotal (small sells)
 
   // Profit Section
   final List<ProfitEntry>
@@ -100,6 +103,7 @@ class DailyClosing {
     required this.todaysMSFRecharge,
     required this.todaysCashBorrowDue,
     required this.todaysExpenses,
+    required this.totalDueCollections,
     required this.walletBalancesTotal,
     required this.temporaryBalancesTotal,
     required this.walletBreakdown,
@@ -114,6 +118,7 @@ class DailyClosing {
     required this.totalProfit,
     this.deductedProfit = 0,
     required this.finalClosingBalance,
+    this.cashoutCharge = 0,
     this.isApproved = false,
     this.isUploaded = false,
     this.approvedBy,
@@ -135,6 +140,8 @@ class DailyClosing {
       todaysCashBorrowDue:
           (json['todaysCashBorrowDue'] as num?)?.toDouble() ?? 0,
       todaysExpenses: (json['todaysExpenses'] as num?)?.toDouble() ?? 0,
+      totalDueCollections:
+          (json['totalDueCollections'] as num?)?.toDouble() ?? 0,
       walletBalancesTotal:
           (json['walletBalancesTotal'] as num?)?.toDouble() ?? 0,
       temporaryBalancesTotal:
@@ -176,6 +183,7 @@ class DailyClosing {
       deductedProfit: (json['deductedProfit'] as num?)?.toDouble() ?? 0,
       finalClosingBalance:
           (json['finalClosingBalance'] as num?)?.toDouble() ?? 0,
+      cashoutCharge: (json['cashoutCharge'] as num?)?.toDouble() ?? 0,
       isApproved: json['isApproved'] as bool? ?? false,
       isUploaded: json['isUploaded'] as bool? ?? false,
       approvedBy: json['approvedBy'] as String?,
@@ -199,6 +207,7 @@ class DailyClosing {
       'todaysMSFRecharge': todaysMSFRecharge,
       'todaysCashBorrowDue': todaysCashBorrowDue,
       'todaysExpenses': todaysExpenses,
+      'totalDueCollections': totalDueCollections,
       'walletBalancesTotal': walletBalancesTotal,
       'temporaryBalancesTotal': temporaryBalancesTotal,
       'walletBreakdown': walletBreakdown.map((item) => item.toJson()).toList(),
@@ -219,6 +228,7 @@ class DailyClosing {
       'totalProfit': totalProfit,
       'deductedProfit': deductedProfit,
       'finalClosingBalance': finalClosingBalance,
+      'cashoutCharge': cashoutCharge,
       'isApproved': isApproved,
       'isUploaded': isUploaded,
       'approvedBy': approvedBy,
@@ -239,6 +249,7 @@ class DailyClosing {
     double? todaysMSFRecharge,
     double? todaysCashBorrowDue,
     double? todaysExpenses,
+    double? totalDueCollections,
     double? walletBalancesTotal,
     double? temporaryBalancesTotal,
     List<BreakdownItem>? walletBreakdown,
@@ -253,6 +264,7 @@ class DailyClosing {
     double? totalProfit,
     double? deductedProfit,
     double? finalClosingBalance,
+    double? cashoutCharge,
     bool? isApproved,
     bool? isUploaded,
     String? approvedBy,
@@ -271,6 +283,7 @@ class DailyClosing {
       todaysMSFRecharge: todaysMSFRecharge ?? this.todaysMSFRecharge,
       todaysCashBorrowDue: todaysCashBorrowDue ?? this.todaysCashBorrowDue,
       todaysExpenses: todaysExpenses ?? this.todaysExpenses,
+      totalDueCollections: totalDueCollections ?? this.totalDueCollections,
       walletBalancesTotal: walletBalancesTotal ?? this.walletBalancesTotal,
       temporaryBalancesTotal:
           temporaryBalancesTotal ?? this.temporaryBalancesTotal,
@@ -287,6 +300,7 @@ class DailyClosing {
       totalProfit: totalProfit ?? this.totalProfit,
       deductedProfit: deductedProfit ?? this.deductedProfit,
       finalClosingBalance: finalClosingBalance ?? this.finalClosingBalance,
+      cashoutCharge: cashoutCharge ?? this.cashoutCharge,
       isApproved: isApproved ?? this.isApproved,
       isUploaded: isUploaded ?? this.isUploaded,
       approvedBy: approvedBy ?? this.approvedBy,

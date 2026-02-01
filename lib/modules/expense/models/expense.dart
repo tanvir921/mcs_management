@@ -1,12 +1,15 @@
+import 'package:flutter/material.dart';
+
 class Expense {
   final String id;
   final String expenseNumber;
   final DateTime expenseDate;
-  final String category; // shop, personal, other
+  final String category; // personal, shop, repair, other
   final double amount;
   final String description;
   final String paymentMethod; // cash, card, mobile_banking
   final String? notes;
+  final List<String> receiptPhotos; // URLs of receipt photos
   final String createdBy;
   final String createdByName;
   final DateTime createdAt;
@@ -22,6 +25,7 @@ class Expense {
     required this.description,
     required this.paymentMethod,
     this.notes,
+    this.receiptPhotos = const [],
     required this.createdBy,
     required this.createdByName,
     required this.createdAt,
@@ -34,11 +38,12 @@ class Expense {
       id: map['id'] ?? '',
       expenseNumber: map['expenseNumber'] ?? '',
       expenseDate: map['expenseDate']?.toDate() ?? DateTime.now(),
-      category: map['category'] ?? '',
+      category: map['category'] ?? 'other',
       amount: (map['amount'] ?? 0).toDouble(),
       description: map['description'] ?? '',
-      paymentMethod: map['paymentMethod'] ?? '',
+      paymentMethod: map['paymentMethod'] ?? 'cash',
       notes: map['notes'],
+      receiptPhotos: List<String>.from(map['receiptPhotos'] ?? []),
       createdBy: map['createdBy'] ?? '',
       createdByName: map['createdByName'] ?? '',
       createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
@@ -57,6 +62,7 @@ class Expense {
       'description': description,
       'paymentMethod': paymentMethod,
       'notes': notes,
+      'receiptPhotos': receiptPhotos,
       'createdBy': createdBy,
       'createdByName': createdByName,
       'createdAt': createdAt,
@@ -74,6 +80,7 @@ class Expense {
     String? description,
     String? paymentMethod,
     String? notes,
+    List<String>? receiptPhotos,
     String? createdBy,
     String? createdByName,
     DateTime? createdAt,
@@ -89,6 +96,7 @@ class Expense {
       description: description ?? this.description,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       notes: notes ?? this.notes,
+      receiptPhotos: receiptPhotos ?? this.receiptPhotos,
       createdBy: createdBy ?? this.createdBy,
       createdByName: createdByName ?? this.createdByName,
       createdAt: createdAt ?? this.createdAt,
@@ -103,10 +111,42 @@ class Expense {
         return 'Shop Expense';
       case 'personal':
         return 'Personal Expense';
+      case 'repair':
+        return 'Repair & Maintenance';
       case 'other':
         return 'Other Expense';
       default:
         return category;
+    }
+  }
+
+  static IconData getCategoryIcon(String category) {
+    switch (category) {
+      case 'shop':
+        return Icons.shopping_bag_rounded;
+      case 'personal':
+        return Icons.person_rounded;
+      case 'repair':
+        return Icons.build_rounded;
+      case 'other':
+        return Icons.more_horiz_rounded;
+      default:
+        return Icons.category_rounded;
+    }
+  }
+
+  static Color getCategoryColor(String category) {
+    switch (category) {
+      case 'shop':
+        return const Color(0xFFFF9500); // Orange
+      case 'personal':
+        return const Color(0xFF5856D6); // Purple
+      case 'repair':
+        return const Color(0xFFFF3B30); // Red
+      case 'other':
+        return const Color(0xFF007AFF); // Blue
+      default:
+        return const Color(0xFF8E8E93); // Gray
     }
   }
 }

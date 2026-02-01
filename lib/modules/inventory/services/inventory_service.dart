@@ -42,6 +42,7 @@ class InventoryService {
       final docRef = _firestore.collection(_categoriesCollection).doc();
       final category = InventoryCategory(
         id: docRef.id,
+        userId: userId,
         name: name,
         description: description,
         type: type,
@@ -50,6 +51,70 @@ class InventoryService {
       await docRef.set(category.toJson());
     } catch (e) {
       throw Exception('Failed to create category: $e');
+    }
+  }
+
+  /// Update an existing category
+  Future<void> updateCategory(
+    String categoryId,
+    String name,
+    String description,
+  ) async {
+    try {
+      await _firestore.collection(_categoriesCollection).doc(categoryId).update({
+        'name': name,
+        'description': description,
+      });
+    } catch (e) {
+      throw Exception('Failed to update category: $e');
+    }
+  }
+
+  /// Delete a category (soft delete)
+  Future<void> deleteCategory(String categoryId) async {
+    try {
+      await _firestore.collection(_categoriesCollection).doc(categoryId).update({
+        'isActive': false,
+      });
+    } catch (e) {
+      throw Exception('Failed to delete category: $e');
+    }
+  }
+
+  /// Generate next SKU number
+  Future<String> generateNextSku(String userId) async {
+    try {
+      // Get the highest existing SKU number
+      final snapshot = await _firestore
+          .collection(_itemsCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(1)
+          .get();
+
+      int nextNumber = 1001; // Start from 1001
+
+      if (snapshot.docs.isNotEmpty) {
+        final lastItem = InventoryItem.fromFirestore(snapshot.docs.first);
+        final lastSku = lastItem.sku;
+        // Try to parse the SKU as a number
+        final parsed = int.tryParse(lastSku);
+        if (parsed != null) {
+          nextNumber = parsed + 1;
+        } else {
+          // If SKU is not a number, count total items + 1000
+          final countSnapshot = await _firestore
+              .collection(_itemsCollection)
+              .where('userId', isEqualTo: userId)
+              .get();
+          nextNumber = countSnapshot.docs.length + 1001;
+        }
+      }
+
+      return nextNumber.toString();
+    } catch (e) {
+      // Fallback: timestamp-based SKU
+      return DateTime.now().millisecondsSinceEpoch.toString().substring(5);
     }
   }
 

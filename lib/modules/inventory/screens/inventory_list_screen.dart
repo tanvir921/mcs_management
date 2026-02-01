@@ -8,6 +8,7 @@ import '../../sales/providers/cart_provider.dart';
 import '../../../app/app_routes.dart';
 import 'add_inventory_screen.dart';
 import 'inventory_detail_screen.dart';
+import 'product_barcode_print_screen.dart';
 
 class InventoryListScreen extends StatefulWidget {
   const InventoryListScreen({super.key});
@@ -61,6 +62,252 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
     }
   }
 
+  Future<void> _filterByCategory(String? categoryId) async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final inventory = Provider.of<InventoryProvider>(context, listen: false);
+
+    if (auth.currentUser != null) {
+      await inventory.loadItems(
+        auth.currentUser!.id,
+        type: _selectedType,
+        category: categoryId,
+      );
+    }
+  }
+
+  Future<void> _scanBarcode() async {
+    // Navigate to barcode scanner screen
+    final result = await Navigator.pushNamed(context, '/barcode-scanner');
+    if (result != null && result is String) {
+      // Search for item with scanned barcode (SKU)
+      _searchController.text = result;
+      _handleSearch(result);
+    }
+  }
+
+  void _showPrintBarcodesDialog() {
+    final inventory = Provider.of<InventoryProvider>(context, listen: false);
+    final items = inventory.items.where((item) => item.type == _selectedType).toList();
+
+    if (items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No items available to print barcodes')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.print, color: Colors.teal.shade600),
+            const SizedBox(width: 8),
+            const Text('Print Barcodes'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select items to print barcodes:',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.select_all, color: Colors.teal.shade600),
+              title: const Text('Print All Items'),
+              subtitle: Text('${items.length} items'),
+              onTap: () {
+                Navigator.pop(context);
+                _navigateToPrintScreen(items);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.checklist, color: Colors.teal.shade600),
+              title: const Text('Select Items'),
+              subtitle: const Text('Choose specific items'),
+              onTap: () {
+                Navigator.pop(context);
+                _showSelectItemsForPrint(items);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSelectItemsForPrint(List<InventoryItem> items) {
+    final selectedItems = <InventoryItem>{};
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Select Items'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final isSelected = selectedItems.contains(item);
+                return CheckboxListTile(
+                  title: Text(item.name),
+                  subtitle: Text('SKU: ${item.sku}'),
+                  value: isSelected,
+                  onChanged: (value) {
+                    setState(() {
+                      if (value == true) {
+                        selectedItems.add(item);
+                      } else {
+                        selectedItems.remove(item);
+                      }
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: selectedItems.isEmpty
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      _navigateToPrintScreen(selectedItems.toList());
+                    },
+              child: Text('Print (${selectedItems.length})'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToPrintScreen(List<InventoryItem> items) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductBarcodePrintScreen(items: items),
+      ),
+    );
+  }
+
+  void _showAddCategoryDialog() {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.category, color: Colors.teal.shade600),
+            const SizedBox(width: 8),
+            Text('Add ${_selectedType.displayName} Category'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Category Name *',
+                hintText: 'e.g., Electronics, Mobile Phones',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.label),
+              ),
+              textCapitalization: TextCapitalization.words,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descriptionController,
+              decoration: InputDecoration(
+                labelText: 'Description (Optional)',
+                hintText: 'Brief description of this category',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.description),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter category name')),
+                );
+                return;
+              }
+
+              try {
+                final auth = Provider.of<AuthProvider>(context, listen: false);
+                final inventory = Provider.of<InventoryProvider>(context, listen: false);
+
+                if (auth.currentUser != null) {
+                  await inventory.createCategory(
+                    auth.currentUser!.id,
+                    nameController.text.trim(),
+                    descriptionController.text.trim(),
+                    _selectedType,
+                  );
+
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Category "${nameController.text}" created!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.teal.shade600,
+            ),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -70,15 +317,24 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
           title: const Text('Inventory Management'),
           centerTitle: true,
           elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.qr_code_scanner),
+              tooltip: 'Scan Barcode',
+              onPressed: _scanBarcode,
+            ),
+            IconButton(
+              icon: const Icon(Icons.print),
+              tooltip: 'Print Barcodes',
+              onPressed: _showPrintBarcodesDialog,
+            ),
+          ],
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.teal.shade600,
-                  Colors.teal.shade800,
-                ],
+                colors: [Colors.teal.shade600, Colors.teal.shade800],
               ),
             ),
           ),
@@ -89,10 +345,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.teal.shade600,
-                    Colors.teal.shade700,
-                  ],
+                  colors: [Colors.teal.shade600, Colors.teal.shade700],
                 ),
               ),
               child: TabBar(
@@ -125,10 +378,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.grey.shade50,
-                Colors.white,
-              ],
+              colors: [Colors.grey.shade50, Colors.white],
             ),
           ),
           child: Column(
@@ -141,10 +391,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                   onChanged: _handleSearch,
                   decoration: InputDecoration(
                     hintText: 'Search by name or SKU...',
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Colors.teal.shade600,
-                    ),
+                    prefixIcon: Icon(Icons.search, color: Colors.teal.shade600),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             icon: Icon(
@@ -164,6 +411,58 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                     fillColor: Colors.grey.shade50,
                   ),
                 ),
+              ),
+
+              // Category Filter Chips
+              Consumer<InventoryProvider>(
+                builder: (context, inventory, _) {
+                  final categories = _selectedType == ItemType.product
+                      ? inventory.productCategories
+                      : inventory.serviceCategories;
+                  
+                  return SizedBox(
+                    height: 50,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        // "All" chip
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: const Text('All'),
+                            selected: inventory.currentCategoryFilter == null,
+                            onSelected: (_) => _filterByCategory(null),
+                            selectedColor: Colors.teal.shade100,
+                            checkmarkColor: Colors.teal.shade700,
+                          ),
+                        ),
+                        // Category chips
+                        ...categories.map((category) => Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(category.name),
+                            selected: inventory.currentCategoryFilter == category.id,
+                            onSelected: (_) => _filterByCategory(category.id),
+                            selectedColor: Colors.teal.shade100,
+                            checkmarkColor: Colors.teal.shade700,
+                          ),
+                        )),
+                        // Add Category button
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ActionChip(
+                            avatar: Icon(Icons.add, size: 18, color: Colors.teal.shade700),
+                            label: const Text('Add Category'),
+                            onPressed: () => _showAddCategoryDialog(),
+                            backgroundColor: Colors.teal.shade50,
+                            side: BorderSide(color: Colors.teal.shade300),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
 
               // Statistics Card
@@ -189,10 +488,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              Colors.teal.shade50,
-                              Colors.teal.shade100,
-                            ],
+                            colors: [Colors.teal.shade50, Colors.teal.shade100],
                           ),
                         ),
                         padding: const EdgeInsets.all(16),
@@ -208,13 +504,15 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                             if (_selectedType == ItemType.product)
                               _StatisticColumn(
                                 label: 'Total Stock',
-                                value: '${(stats['totalStockValue'] as num).toStringAsFixed(0)}',
+                                value:
+                                    '${(stats['totalStockValue'] as num).toStringAsFixed(0)}',
                                 icon: Icons.storage,
                                 color: Colors.blue,
                               ),
                             _StatisticColumn(
                               label: 'Profit Margin',
-                              value: '${(stats['averageProfitMargin'] as num).toStringAsFixed(1)}%',
+                              value:
+                                  '${(stats['averageProfitMargin'] as num).toStringAsFixed(1)}%',
                               icon: Icons.trending_up,
                               color: Colors.green,
                             ),
@@ -314,13 +612,16 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => InventoryDetailScreen(item: item),
+                                builder: (_) =>
+                                    InventoryDetailScreen(item: item),
                               ),
                             );
                           },
                           onAddToCart: (quantity) {
-                            final cart =
-                                Provider.of<CartProvider>(context, listen: false);
+                            final cart = Provider.of<CartProvider>(
+                              context,
+                              listen: false,
+                            );
                             cart.addItem(item, quantity);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -336,6 +637,17 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                                       AppRoutes.sales,
                                     );
                                   },
+                                ),
+                              ),
+                            );
+                          },
+                          onPrintBarcode: () {
+                            // Navigate to single product barcode print screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProductBarcodePrintScreen(
+                                  items: [item],
                                 ),
                               ),
                             );
@@ -356,10 +668,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
               if (cart.isNotEmpty)
                 FloatingActionButton.extended(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.sales,
-                    );
+                    Navigator.pushReplacementNamed(context, AppRoutes.sales);
                   },
                   heroTag: 'cart',
                   backgroundColor: Colors.purple.shade600,
@@ -435,11 +744,13 @@ class _InventoryItemCard extends StatefulWidget {
   final InventoryItem item;
   final VoidCallback onTap;
   final Function(double) onAddToCart;
+  final VoidCallback onPrintBarcode;
 
   const _InventoryItemCard({
     required this.item,
     required this.onTap,
     required this.onAddToCart,
+    required this.onPrintBarcode,
   });
 
   @override
@@ -457,8 +768,9 @@ class _InventoryItemCardState extends State<_InventoryItemCard> {
       decimalDigits: 0,
     );
 
-    final profitColor =
-        widget.item.profit > 0 ? Colors.green.shade600 : Colors.red.shade600;
+    final profitColor = widget.item.profit > 0
+        ? Colors.green.shade600
+        : Colors.red.shade600;
 
     return InkWell(
       onTap: widget.onTap,
@@ -547,8 +859,10 @@ class _InventoryItemCardState extends State<_InventoryItemCard> {
                         decoration: BoxDecoration(
                           color: Colors.teal.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          border:
-                              Border.all(color: Colors.teal.shade200, width: 1),
+                          border: Border.all(
+                            color: Colors.teal.shade200,
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           'Stock: ${widget.item.stock}',
@@ -559,6 +873,19 @@ class _InventoryItemCardState extends State<_InventoryItemCard> {
                           ),
                         ),
                       ),
+                    // Print Barcode Button
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: widget.onPrintBarcode,
+                      icon: Icon(
+                        Icons.qr_code_2,
+                        color: Colors.indigo.shade600,
+                      ),
+                      tooltip: 'Print Barcode',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.indigo.shade50,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),

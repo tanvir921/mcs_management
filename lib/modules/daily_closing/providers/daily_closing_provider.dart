@@ -47,9 +47,28 @@ class DailyClosingProvider extends ChangeNotifier {
   void updateDeductedProfit(double deductedProfit) {
     if (_draftClosing == null) return;
 
+    final subtotalAfterCashout =
+        _draftClosing!.subtotal - _draftClosing!.cashoutCharge;
+
     _draftClosing = _draftClosing!.copyWith(
       deductedProfit: deductedProfit,
+      remainingCash: subtotalAfterCashout - _draftClosing!.yesterdaySubtotal,
       finalClosingBalance: _draftClosing!.subtotal - deductedProfit,
+    );
+    notifyListeners();
+  }
+
+  /// Update cashout charge in draft
+  void updateCashoutCharge(double cashoutCharge) {
+    if (_draftClosing == null) return;
+
+    final subtotalAfterCashout = _draftClosing!.subtotal - cashoutCharge;
+
+    _draftClosing = _draftClosing!.copyWith(
+      cashoutCharge: cashoutCharge,
+      remainingCash: subtotalAfterCashout - _draftClosing!.yesterdaySubtotal,
+      finalClosingBalance:
+          _draftClosing!.subtotal - _draftClosing!.deductedProfit,
     );
     notifyListeners();
   }
@@ -78,13 +97,15 @@ class DailyClosingProvider extends ChangeNotifier {
 
     final difference = amount - _draftClosing!.todaysHandCash;
     final newSubtotal = _draftClosing!.subtotal + difference;
-    final newRemainingCash = newSubtotal - _draftClosing!.yesterdaySubtotal;
+    final subtotalAfterCashout = newSubtotal - _draftClosing!.cashoutCharge;
+    final newRemainingCash =
+        subtotalAfterCashout - _draftClosing!.yesterdaySubtotal;
 
     _draftClosing = _draftClosing!.copyWith(
       todaysHandCash: amount,
       subtotal: newSubtotal,
       remainingCash: newRemainingCash,
-      finalClosingBalance: newSubtotal - _draftClosing!.deductedProfit,
+      finalClosingBalance: subtotalAfterCashout - _draftClosing!.deductedProfit,
     );
 
     notifyListeners();
@@ -131,7 +152,7 @@ class DailyClosingProvider extends ChangeNotifier {
   Future<void> loadClosingHistory(String userId) async {
     // Guard: prevent multiple simultaneous loads
     if (_isLoadingHistory) return;
-    
+
     _isLoadingHistory = true;
     _isLoading = true;
     _error = null;

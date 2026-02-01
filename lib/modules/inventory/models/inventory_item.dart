@@ -192,6 +192,7 @@ class InventoryItem {
 /// Category model for organizing inventory items
 class InventoryCategory {
   final String id;
+  final String userId;
   final String name;
   final String description;
   final String? icon;
@@ -201,6 +202,7 @@ class InventoryCategory {
 
   InventoryCategory({
     required this.id,
+    required this.userId,
     required this.name,
     required this.description,
     this.icon,
@@ -212,6 +214,7 @@ class InventoryCategory {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId,
       'name': name,
       'description': description,
       'icon': icon,
@@ -224,6 +227,7 @@ class InventoryCategory {
   factory InventoryCategory.fromJson(Map<String, dynamic> json) {
     return InventoryCategory(
       id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
       icon: json['icon'] as String?,

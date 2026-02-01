@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/sale.dart';
 import '../providers/sales_provider.dart';
-import 'sale_detail_screen.dart';
+import '../../auth/providers/auth_provider.dart';
+import 'qr_scanner_screen.dart';
+import 'sale_invoice_screen.dart';
 
 class SalesHistoryScreen extends StatefulWidget {
   const SalesHistoryScreen({super.key});
@@ -16,6 +18,9 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   String _filterPeriod = 'all';
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -25,18 +30,28 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
-    await context.read<SalesProvider>().loadSales(
-      startDate: _startDate,
-      endDate: _endDate,
-    );
+    final auth = context.read<AuthProvider>();
+    if (auth.currentUser != null) {
+      await context.read<SalesProvider>().loadSales(
+        auth.currentUser!.id,
+        startDate: _startDate,
+        endDate: _endDate,
+      );
+    }
   }
 
   void _applyFilter(String period) {
     setState(() {
       _filterPeriod = period;
       final now = DateTime.now();
-      
+
       switch (period) {
         case 'today':
           _startDate = DateTime(now.year, now.month, now.day);
@@ -82,25 +97,121 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     }
   }
 
+  Future<void> _scanQrCode() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const QrScannerScreen(
+          title: 'Scan Invoice QR',
+          subtitle: 'Point camera at invoice QR code',
+        ),
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      // Parse QR data: "INVOICE:id:saleNumber"
+      String searchTerm = result;
+      if (result.startsWith('INVOICE:')) {
+        final parts = result.split(':');
+        if (parts.length >= 3) {
+          searchTerm = parts[2]; // saleNumber
+        }
+      }
+
+      setState(() {
+        _isSearching = true;
+        _searchController.text = searchTerm;
+        _searchQuery = searchTerm;
+      });
+
+      // Try to find and show the specific sale
+      final salesProvider = Provider.of<SalesProvider>(context, listen: false);
+      final matchingSale = salesProvider.sales.firstWhere(
+        (s) => s.saleNumber.toLowerCase() == searchTerm.toLowerCase() ||
+               s.id == searchTerm,
+        orElse: () => salesProvider.sales.first,
+      );
+
+      if (matchingSale.saleNumber.toLowerCase() == searchTerm.toLowerCase() ||
+          matchingSale.id == searchTerm) {
+        _showSaleInvoice(matchingSale);
+      }
+    }
+  }
+
+  void _showSaleInvoice(Sale sale) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SaleInvoiceScreen(
+          sale: sale,
+          shopName: 'MCS Shop', // You can get this from settings
+          shopAddress: 'Your Shop Address',
+          shopPhone: '+880 1234-567890',
+        ),
+      ),
+    );
+  }
+
+  List<Sale> _filterSales(List<Sale> sales) {
+    if (_searchQuery.isEmpty) return sales;
+    return sales.where((sale) {
+      return sale.saleNumber.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+             sale.id.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+             (sale.customerName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sales History'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search by Invoice ID...',
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  border: InputBorder.none,
+                ),
+                onChanged: (value) {
+                  setState(() => _searchQuery = value);
+                },
+              )
+            : const Text('Sales History'),
         elevation: 0,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Colors.orange.shade600,
-                Colors.orange.shade800,
-              ],
+              colors: [Colors.orange.shade600, Colors.orange.shade800],
             ),
           ),
         ),
         actions: [
+          // Search Toggle
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+            tooltip: _isSearching ? 'Close Search' : 'Search Invoice',
+          ),
+          // QR Scanner
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: _scanQrCode,
+            tooltip: 'Scan Invoice QR',
+          ),
           IconButton(
             icon: const Icon(Icons.date_range),
             onPressed: _pickDateRange,
@@ -118,10 +229,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.grey.shade50,
-              Colors.white,
-            ],
+            colors: [Colors.grey.shade50, Colors.white],
           ),
         ),
         child: Column(
@@ -216,25 +324,45 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                     );
                   }
 
-                  if (provider.sales.isEmpty) {
+                  // Apply search filter
+                  final filteredSales = _filterSales(provider.sales);
+
+                  if (filteredSales.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.receipt_long,
+                            _searchQuery.isNotEmpty ? Icons.search_off : Icons.receipt_long,
                             size: 64,
                             color: Colors.grey[400],
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No sales found',
+                            _searchQuery.isNotEmpty 
+                                ? 'No sales matching "$_searchQuery"'
+                                : 'No sales found',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w500,
                               color: Colors.grey[600],
                             ),
+                            textAlign: TextAlign.center,
                           ),
+                          if (_searchQuery.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  _searchQuery = '';
+                                  _isSearching = false;
+                                });
+                              },
+                              icon: const Icon(Icons.clear),
+                              label: const Text('Clear Search'),
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -243,21 +371,13 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                   return RefreshIndicator(
                     onRefresh: _loadData,
                     child: ListView.builder(
-                      itemCount: provider.sales.length,
+                      itemCount: filteredSales.length,
                       padding: const EdgeInsets.all(12),
                       itemBuilder: (context, index) {
-                        final sale = provider.sales[index];
+                        final sale = filteredSales[index];
                         return _SaleCard(
                           sale: sale,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    SaleDetailScreen(saleId: sale.id),
-                              ),
-                            ).then((_) => _loadData());
-                          },
+                          onTap: () => _showSaleInvoice(sale),
                         );
                       },
                     ),
@@ -276,10 +396,7 @@ class _SaleCard extends StatefulWidget {
   final Sale sale;
   final VoidCallback onTap;
 
-  const _SaleCard({
-    required this.sale,
-    required this.onTap,
-  });
+  const _SaleCard({required this.sale, required this.onTap});
 
   @override
   State<_SaleCard> createState() => _SaleCardState();
@@ -336,12 +453,16 @@ class _SaleCardState extends State<_SaleCard> {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today,
-                                  size: 13, color: Colors.grey.shade600),
+                              Icon(
+                                Icons.calendar_today,
+                                size: 13,
+                                color: Colors.grey.shade600,
+                              ),
                               const SizedBox(width: 4),
                               Text(
-                                DateFormat('MMM d, y - hh:mm a')
-                                    .format(widget.sale.saleDate),
+                                DateFormat(
+                                  'MMM d, y - hh:mm a',
+                                ).format(widget.sale.saleDate),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
@@ -358,12 +479,14 @@ class _SaleCardState extends State<_SaleCard> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getPaymentColor(widget.sale.paymentMethod)
-                            .withOpacity(0.15),
+                        color: _getPaymentColor(
+                          widget.sale.paymentMethod,
+                        ).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: _getPaymentColor(widget.sale.paymentMethod)
-                              .withOpacity(0.5),
+                          color: _getPaymentColor(
+                            widget.sale.paymentMethod,
+                          ).withOpacity(0.5),
                         ),
                       ),
                       child: Text(

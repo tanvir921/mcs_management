@@ -230,6 +230,18 @@ class HomeScreen extends StatelessWidget {
                 ),
               );
             }
+            // Database Cleanup (Master Admin only)
+            if (user.isMasterAdmin) {
+              moduleCards.add(
+                _ModuleCardData(
+                  title: 'Database Cleanup',
+                  icon: Icons.delete_sweep,
+                  color: Colors.redAccent,
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.databaseCleanup),
+                ),
+              );
+            }
 
             return ListView(
               padding: EdgeInsets.zero,
