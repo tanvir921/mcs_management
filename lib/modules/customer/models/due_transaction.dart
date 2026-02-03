@@ -42,7 +42,8 @@ class DueTransaction {
       saleId: json['saleId'] as String?,
       potentialProfit: (json['potentialProfit'] as num?)?.toDouble() ?? 0,
       profitRealized: json['profitRealized'] as bool? ?? false,
-      realizedProfitAmount: (json['realizedProfitAmount'] as num?)?.toDouble() ?? 0,
+      realizedProfitAmount:
+          (json['realizedProfitAmount'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String?,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       createdBy: json['createdBy'] as String,

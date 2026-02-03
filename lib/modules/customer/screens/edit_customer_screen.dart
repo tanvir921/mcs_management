@@ -323,7 +323,11 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.trending_up, color: Colors.green.shade700, size: 18),
+                            Icon(
+                              Icons.trending_up,
+                              color: Colors.green.shade700,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Profit from Due Clear',
@@ -400,7 +404,9 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                 final customerName = widget.customer.name;
                 final finalAmount = amount;
                 final finalIsAddition = isAddition;
-                final finalProfit = isAddition ? 0.0 : profit; // Only track profit when clearing
+                final finalProfit = isAddition
+                    ? 0.0
+                    : profit; // Only track profit when clearing
 
                 Navigator.pop(context);
 

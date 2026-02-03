@@ -353,142 +353,153 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             return FutureBuilder<double>(
                               future: _getDueClearProfit(),
                               builder: (context, dueClearSnapshot) {
-                                final dueClearProfit = dueClearSnapshot.data ?? 0.0;
+                                final dueClearProfit =
+                                    dueClearSnapshot.data ?? 0.0;
                                 // Calculate combined total profit
-                                final salesProfit = (stats['totalProfit'] as num?)?.toDouble() ?? 0.0;
-                                final optionalProfit = (stats['optionalProfit'] as num?)?.toDouble() ?? 0.0;
-                                final combinedTotalProfit = salesProfit + optionalProfit + dueClearProfit;
+                                final salesProfit =
+                                    (stats['totalProfit'] as num?)
+                                        ?.toDouble() ??
+                                    0.0;
+                                final optionalProfit =
+                                    (stats['optionalProfit'] as num?)
+                                        ?.toDouble() ??
+                                    0.0;
+                                final combinedTotalProfit =
+                                    salesProfit +
+                                    optionalProfit +
+                                    dueClearProfit;
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _SectionHeader(
-                                  icon: Icons.point_of_sale_rounded,
-                                  title: 'Sales Performance',
-                                  color: Colors.blue,
-                                ),
-                                const SizedBox(height: 12),
-
-                                // Grid of stats cards
-                                GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 12,
-                                  crossAxisSpacing: 12,
-                                  childAspectRatio: 1.5,
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _StatCard(
-                                      title: 'Total Sales',
-                                      value:
-                                          '৳${currency.format(stats['totalSales'] ?? 0)}',
-                                      icon: Icons.shopping_cart_rounded,
+                                    _SectionHeader(
+                                      icon: Icons.point_of_sale_rounded,
+                                      title: 'Sales Performance',
                                       color: Colors.blue,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF2196F3),
-                                          Color(0xFF1976D2),
-                                        ],
-                                      ),
                                     ),
-                                    _StatCard(
-                                      title: 'Combined Profit',
-                                      value:
-                                          '৳${currency.format(combinedTotalProfit)}',
-                                      icon: Icons.trending_up_rounded,
-                                      color: Colors.green,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF4CAF50),
-                                          Color(0xFF388E3C),
-                                        ],
-                                      ),
+                                    const SizedBox(height: 12),
+
+                                    // Grid of stats cards
+                                    GridView.count(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      crossAxisCount: 2,
+                                      mainAxisSpacing: 12,
+                                      crossAxisSpacing: 12,
+                                      childAspectRatio: 1.5,
+                                      children: [
+                                        _StatCard(
+                                          title: 'Total Sales',
+                                          value:
+                                              '৳${currency.format(stats['totalSales'] ?? 0)}',
+                                          icon: Icons.shopping_cart_rounded,
+                                          color: Colors.blue,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF2196F3),
+                                              Color(0xFF1976D2),
+                                            ],
+                                          ),
+                                        ),
+                                        _StatCard(
+                                          title: 'Combined Profit',
+                                          value:
+                                              '৳${currency.format(combinedTotalProfit)}',
+                                          icon: Icons.trending_up_rounded,
+                                          color: Colors.green,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF4CAF50),
+                                              Color(0xFF388E3C),
+                                            ],
+                                          ),
+                                        ),
+                                        _StatCard(
+                                          title: 'Transactions',
+                                          value:
+                                              '${stats['totalTransactions'] ?? 0}',
+                                          icon: Icons.receipt_long_rounded,
+                                          color: Colors.purple,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF9C27B0),
+                                              Color(0xFF7B1FA2),
+                                            ],
+                                          ),
+                                        ),
+                                        _StatCard(
+                                          title: 'Profit Margin',
+                                          value:
+                                              '${(stats['profitMargin'] ?? 0).toStringAsFixed(1)}%',
+                                          icon: Icons.percent_rounded,
+                                          color: Colors.orange,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFFFF9800),
+                                              Color(0xFFF57C00),
+                                            ],
+                                          ),
+                                        ),
+                                        _StatCard(
+                                          title: 'Optional Profits',
+                                          value:
+                                              '৳${currency.format(stats['optionalProfit'] ?? 0)}',
+                                          icon: Icons.card_giftcard_rounded,
+                                          color: Colors.deepPurple,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF673AB7),
+                                              Color(0xFF512DA8),
+                                            ],
+                                          ),
+                                        ),
+                                        _StatCard(
+                                          title: 'Due Clear Profit',
+                                          value:
+                                              '৳${currency.format(dueClearProfit)}',
+                                          icon: Icons.price_check_rounded,
+                                          color: Colors.teal,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF009688),
+                                              Color(0xFF00695C),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    _StatCard(
-                                      title: 'Transactions',
-                                      value:
-                                          '${stats['totalTransactions'] ?? 0}',
-                                      icon: Icons.receipt_long_rounded,
-                                      color: Colors.purple,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF9C27B0),
-                                          Color(0xFF7B1FA2),
-                                        ],
-                                      ),
-                                    ),
-                                    _StatCard(
-                                      title: 'Profit Margin',
-                                      value:
-                                          '${(stats['profitMargin'] ?? 0).toStringAsFixed(1)}%',
-                                      icon: Icons.percent_rounded,
-                                      color: Colors.orange,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFFFF9800),
-                                          Color(0xFFF57C00),
-                                        ],
-                                      ),
-                                    ),
-                                    _StatCard(
-                                      title: 'Optional Profits',
-                                      value:
-                                          '৳${currency.format(stats['optionalProfit'] ?? 0)}',
-                                      icon: Icons.card_giftcard_rounded,
-                                      color: Colors.deepPurple,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF673AB7),
-                                          Color(0xFF512DA8),
-                                        ],
-                                      ),
-                                    ),
-                                    _StatCard(
-                                      title: 'Due Clear Profit',
-                                      value:
-                                          '৳${currency.format(dueClearProfit)}',
-                                      icon: Icons.price_check_rounded,
-                                      color: Colors.teal,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF009688),
-                                          Color(0xFF00695C),
-                                        ],
-                                      ),
+
+                                    const SizedBox(height: 12),
+
+                                    // Detailed breakdown card
+                                    _DetailCard(
+                                      children: [
+                                        _DetailRow(
+                                          label: 'Sales Profit',
+                                          value:
+                                              '৳${currency.format(stats['totalProfit'] ?? 0)}',
+                                          icon: Icons.sell_rounded,
+                                          color: Colors.green,
+                                        ),
+                                        _DetailRow(
+                                          label: 'Total Cost',
+                                          value:
+                                              '৳${currency.format(stats['totalCost'] ?? 0)}',
+                                          icon: Icons.payments_rounded,
+                                          color: Colors.orange,
+                                        ),
+                                        _DetailRow(
+                                          label: 'Average Sale',
+                                          value:
+                                              '৳${currency.format(stats['averageSale'] ?? 0)}',
+                                          icon: Icons.analytics_rounded,
+                                          color: Colors.indigo,
+                                        ),
+                                      ],
                                     ),
                                   ],
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // Detailed breakdown card
-                                _DetailCard(
-                                  children: [
-                                    _DetailRow(
-                                      label: 'Sales Profit',
-                                      value:
-                                          '৳${currency.format(stats['totalProfit'] ?? 0)}',
-                                      icon: Icons.sell_rounded,
-                                      color: Colors.green,
-                                    ),
-                                    _DetailRow(
-                                      label: 'Total Cost',
-                                      value:
-                                          '৳${currency.format(stats['totalCost'] ?? 0)}',
-                                      icon: Icons.payments_rounded,
-                                      color: Colors.orange,
-                                    ),
-                                    _DetailRow(
-                                      label: 'Average Sale',
-                                      value:
-                                          '৳${currency.format(stats['averageSale'] ?? 0)}',
-                                      icon: Icons.analytics_rounded,
-                                      color: Colors.indigo,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            );
+                                );
                               },
                             );
                           },

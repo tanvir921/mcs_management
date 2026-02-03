@@ -358,18 +358,27 @@ class CustomerService {
           .where('realizedProfitAmount', isGreaterThan: 0);
 
       if (startDate != null) {
-        query = query.where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+        query = query.where(
+          'createdAt',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+        );
       }
 
       if (endDate != null) {
-        query = query.where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+        query = query.where(
+          'createdAt',
+          isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+        );
       }
 
       query = query.orderBy('createdAt', descending: true);
 
       final snapshot = await query.get();
       return snapshot.docs
-          .map((doc) => DueTransaction.fromJson(doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                DueTransaction.fromJson(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw ValidationException('Failed to get due clear profits: $e');

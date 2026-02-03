@@ -32,7 +32,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     final authProvider = context.read<AuthProvider>();
     final currentUser = authProvider.currentUser;
     if (currentUser != null) {
-      final profit = await context.read<DailyClosingProvider>().getTodaysDueClearProfit(currentUser.id);
+      final profit = await context
+          .read<DailyClosingProvider>()
+          .getTodaysDueClearProfit(currentUser.id);
       if (mounted) {
         setState(() {
           _dueClearProfit = profit;
@@ -48,7 +50,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     if (currentUser != null) {
       // Load due clear profit
       _loadDueClearProfit();
-      
+
       // Check if closing already exists for today
       final closingProvider = context.read<DailyClosingProvider>();
       final todayClosing = await closingProvider.getTodaysClosing(
@@ -2284,7 +2286,9 @@ class ClosingDetailScreen extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      Text('Approved by: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}'),
+                      Text(
+                        'Approved by: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}',
+                      ),
                       Text(
                         'Approved at: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}',
                       ),
