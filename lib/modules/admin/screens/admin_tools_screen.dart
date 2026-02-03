@@ -78,10 +78,12 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       final snapshot = await _firestore.collection('users').get();
       setState(() {
         _users = snapshot.docs
-            .map((doc) => {
-                  'id': doc.id,
-                  'name': doc.data()['name']?.toString() ?? 'Unknown',
-                })
+            .map(
+              (doc) => {
+                'id': doc.id,
+                'name': doc.data()['name']?.toString() ?? 'Unknown',
+              },
+            )
             .toList();
       });
     } catch (e) {
@@ -106,20 +108,35 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       }
 
       final snapshot = await query.get();
-      
+
       List<ActionLog> logs = snapshot.docs
-          .map((doc) => ActionLog.fromJson({'id': doc.id, ...doc.data() as Map<String, dynamic>}))
+          .map(
+            (doc) => ActionLog.fromJson({
+              'id': doc.id,
+              ...doc.data() as Map<String, dynamic>,
+            }),
+          )
           .toList();
 
       // Filter by date client-side if needed
       if (_logStartDate != null) {
-        logs = logs.where((log) => 
-          log.timestamp.isAfter(_logStartDate!) || 
-          log.timestamp.isAtSameMomentAs(_logStartDate!)
-        ).toList();
+        logs = logs
+            .where(
+              (log) =>
+                  log.timestamp.isAfter(_logStartDate!) ||
+                  log.timestamp.isAtSameMomentAs(_logStartDate!),
+            )
+            .toList();
       }
       if (_logEndDate != null) {
-        final endOfDay = DateTime(_logEndDate!.year, _logEndDate!.month, _logEndDate!.day, 23, 59, 59);
+        final endOfDay = DateTime(
+          _logEndDate!.year,
+          _logEndDate!.month,
+          _logEndDate!.day,
+          23,
+          59,
+          59,
+        );
         logs = logs.where((log) => log.timestamp.isBefore(endOfDay)).toList();
       }
 
@@ -129,7 +146,10 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading logs: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error loading logs: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -174,7 +194,9 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
           .toList();
 
       // Load Inventory Items
-      final inventorySnap = await _firestore.collection('inventory_items').get();
+      final inventorySnap = await _firestore
+          .collection('inventory_items')
+          .get();
       _allRecords['inventory_items'] = inventorySnap.docs
           .map((d) => {'id': d.id, ...d.data()})
           .toList();
@@ -183,7 +205,10 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading records: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error loading records: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -245,7 +270,10 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
         title: const Text('Confirm Deletion'),
         content: Text(
           'Are you sure you want to delete ${selected.length} ${_activeModule} record(s)?\n\nThis action cannot be undone!',
-          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           TextButton(
@@ -296,7 +324,10 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       await _loadAllRecords();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting records: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Error deleting records: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() => _isDeleting = false);
@@ -313,7 +344,10 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
         title: const Text('Confirm Delete All'),
         content: Text(
           'Delete ALL $total $_activeModule record(s)?\n\nThis action CANNOT be undone!',
-          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           TextButton(
@@ -422,7 +456,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    
+
     // Only master admin can access
     if (auth.currentUser == null || !auth.currentUser!.isMasterAdmin) {
       return Scaffold(
@@ -470,10 +504,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildActivityLogsTab(),
-          _buildDatabaseCleanupTab(),
-        ],
+        children: [_buildActivityLogsTab(), _buildDatabaseCleanupTab()],
       ),
     );
   }
@@ -502,11 +533,19 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                         decoration: const InputDecoration(
                           labelText: 'Module',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('All Modules')),
-                          ..._modules.map((m) => DropdownMenuItem(value: m, child: Text(m))),
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All Modules'),
+                          ),
+                          ..._modules.map(
+                            (m) => DropdownMenuItem(value: m, child: Text(m)),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() => _selectedModule = value);
@@ -521,14 +560,22 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                         decoration: const InputDecoration(
                           labelText: 'User',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('All Users')),
-                          ..._users.map((u) => DropdownMenuItem(
-                            value: u['id'],
-                            child: Text(u['name'] ?? 'Unknown'),
-                          )),
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('All Users'),
+                          ),
+                          ..._users.map(
+                            (u) => DropdownMenuItem(
+                              value: u['id'],
+                              child: Text(u['name'] ?? 'Unknown'),
+                            ),
+                          ),
                         ],
                         onChanged: (value) {
                           setState(() => _selectedUser = value);
@@ -556,9 +603,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                           }
                         },
                         icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(_logStartDate == null
-                            ? 'Start Date'
-                            : DateFormat('MMM d, y').format(_logStartDate!)),
+                        label: Text(
+                          _logStartDate == null
+                              ? 'Start Date'
+                              : DateFormat('MMM d, y').format(_logStartDate!),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -577,9 +626,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                           }
                         },
                         icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(_logEndDate == null
-                            ? 'End Date'
-                            : DateFormat('MMM d, y').format(_logEndDate!)),
+                        label: Text(
+                          _logEndDate == null
+                              ? 'End Date'
+                              : DateFormat('MMM d, y').format(_logEndDate!),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -636,24 +687,24 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
           child: _isLoadingLogs
               ? const Center(child: CircularProgressIndicator())
               : _activityLogs.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.history, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('No activity logs found'),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _activityLogs.length,
-                      padding: const EdgeInsets.all(12),
-                      itemBuilder: (context, index) {
-                        final log = _activityLogs[index];
-                        return _buildLogCard(log);
-                      },
-                    ),
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No activity logs found'),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _activityLogs.length,
+                  padding: const EdgeInsets.all(12),
+                  itemBuilder: (context, index) {
+                    final log = _activityLogs[index];
+                    return _buildLogCard(log);
+                  },
+                ),
         ),
       ],
     );
@@ -701,7 +752,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                Icon(
+                  Icons.person_outline,
+                  size: 14,
+                  color: Colors.grey.shade600,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   log.userName,
@@ -790,7 +845,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
               const SizedBox(width: 8),
               _buildModuleChip('expenses', 'Expenses', Icons.money_off),
               const SizedBox(width: 8),
-              _buildModuleChip('closing', 'Daily Closing', Icons.assignment_turned_in),
+              _buildModuleChip(
+                'closing',
+                'Daily Closing',
+                Icons.assignment_turned_in,
+              ),
               const SizedBox(width: 8),
               _buildModuleChip('customers', 'Customers', Icons.people),
               const SizedBox(width: 8),
@@ -818,9 +877,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                     }
                   },
                   icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(_cleanupStartDate == null
-                      ? 'Start Date'
-                      : DateFormat('MMM d').format(_cleanupStartDate!)),
+                  label: Text(
+                    _cleanupStartDate == null
+                        ? 'Start Date'
+                        : DateFormat('MMM d').format(_cleanupStartDate!),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -838,9 +899,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                     }
                   },
                   icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(_cleanupEndDate == null
-                      ? 'End Date'
-                      : DateFormat('MMM d').format(_cleanupEndDate!)),
+                  label: Text(
+                    _cleanupEndDate == null
+                        ? 'End Date'
+                        : DateFormat('MMM d').format(_cleanupEndDate!),
+                  ),
                 ),
               ),
               IconButton(
@@ -875,12 +938,17 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                         if (selected.length == records.length) {
                           _selectedRecords[_activeModule]?.clear();
                         } else {
-                          _selectedRecords[_activeModule] = 
-                            records.map<String>((r) => r['id'] as String).toSet();
+                          _selectedRecords[_activeModule] = records
+                              .map<String>((r) => r['id'] as String)
+                              .toSet();
                         }
                       });
                     },
-                    child: Text(selected.length == records.length ? 'Deselect All' : 'Select All'),
+                    child: Text(
+                      selected.length == records.length
+                          ? 'Deselect All'
+                          : 'Select All',
+                    ),
                   ),
                   IconButton(
                     onPressed: _loadAllRecords,
@@ -897,57 +965,60 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
           child: _isLoadingRecords
               ? const Center(child: CircularProgressIndicator())
               : records.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.inbox, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No $_activeModule records found',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inbox, size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No $_activeModule records found',
+                        style: TextStyle(color: Colors.grey.shade600),
                       ),
-                    )
-                  : ListView.builder(
-                      itemCount: records.length,
-                      padding: const EdgeInsets.all(12),
-                      itemBuilder: (context, index) {
-                        final record = records[index];
-                        final id = record['id'] as String;
-                        final isSelected = selected.contains(id);
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: records.length,
+                  padding: const EdgeInsets.all(12),
+                  itemBuilder: (context, index) {
+                    final record = records[index];
+                    final id = record['id'] as String;
+                    final isSelected = selected.contains(id);
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          color: isSelected ? Colors.red.shade50 : null,
-                          child: CheckboxListTile(
-                            value: isSelected,
-                            onChanged: (value) {
-                              setState(() {
-                                if (value == true) {
-                                  _selectedRecords[_activeModule]?.add(id);
-                                } else {
-                                  _selectedRecords[_activeModule]?.remove(id);
-                                }
-                              });
-                            },
-                            title: Text(
-                              _getRecordTitle(record),
-                              style: const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            subtitle: Text(
-                              _getRecordSubtitle(record),
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                            ),
-                            secondary: Icon(
-                              _getModuleIconForCleanup(_activeModule),
-                              color: isSelected ? Colors.red : Colors.grey,
-                            ),
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      color: isSelected ? Colors.red.shade50 : null,
+                      child: CheckboxListTile(
+                        value: isSelected,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == true) {
+                              _selectedRecords[_activeModule]?.add(id);
+                            } else {
+                              _selectedRecords[_activeModule]?.remove(id);
+                            }
+                          });
+                        },
+                        title: Text(
+                          _getRecordTitle(record),
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          _getRecordSubtitle(record),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                        secondary: Icon(
+                          _getModuleIconForCleanup(_activeModule),
+                          color: isSelected ? Colors.red : Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
 
         // Delete Actions
@@ -959,7 +1030,9 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: selected.isEmpty || _isDeleting ? null : _deleteSelectedRecords,
+                      onPressed: selected.isEmpty || _isDeleting
+                          ? null
+                          : _deleteSelectedRecords,
                       icon: _isDeleting
                           ? const SizedBox(
                               width: 16,
@@ -1004,7 +1077,11 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       onSelected: (_) {
         setState(() => _activeModule = module);
       },
-      avatar: Icon(icon, size: 18, color: isActive ? Colors.white : Colors.grey),
+      avatar: Icon(
+        icon,
+        size: 18,
+        color: isActive ? Colors.white : Colors.grey,
+      ),
       label: Text('$label ($count)'),
       selectedColor: Colors.red.shade600,
       labelStyle: TextStyle(color: isActive ? Colors.white : null),

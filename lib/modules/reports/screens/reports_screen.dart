@@ -80,6 +80,48 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
+  (DateTime, DateTime) _getDateRange() {
+    final now = DateTime.now();
+    late DateTime startDate;
+    late DateTime endDate;
+
+    switch (_filter) {
+      case DateFilter.today:
+        startDate = DateTime(now.year, now.month, now.day);
+        endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        break;
+      case DateFilter.yesterday:
+        final yesterday = now.subtract(const Duration(days: 1));
+        startDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
+        endDate = DateTime(
+          yesterday.year,
+          yesterday.month,
+          yesterday.day,
+          23,
+          59,
+          59,
+        );
+        break;
+      case DateFilter.thisMonth:
+        startDate = DateTime(now.year, now.month, 1);
+        endDate = now;
+        break;
+      case DateFilter.thisYear:
+        startDate = DateTime(now.year, 1, 1);
+        endDate = now;
+        break;
+    }
+    return (startDate, endDate);
+  }
+
+  Future<double> _getDueClearProfit() async {
+    final (startDate, endDate) = _getDateRange();
+    return await context.read<CustomerProvider>().getTotalDueClearProfit(
+      startDate: startDate,
+      endDate: endDate,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -308,6 +350,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   optionalProfitSnapshot.data ?? 0.0;
                             }
 
+                            return FutureBuilder<double>(
+                              future: _getDueClearProfit(),
+                              builder: (context, dueClearSnapshot) {
+                                final dueClearProfit = dueClearSnapshot.data ?? 0.0;
+                                // Calculate combined total profit
+                                final salesProfit = (stats['totalProfit'] as num?)?.toDouble() ?? 0.0;
+                                final optionalProfit = (stats['optionalProfit'] as num?)?.toDouble() ?? 0.0;
+                                final combinedTotalProfit = salesProfit + optionalProfit + dueClearProfit;
+
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -341,9 +392,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                       ),
                                     ),
                                     _StatCard(
-                                      title: 'Total Profit',
+                                      title: 'Combined Profit',
                                       value:
-                                          '৳${currency.format(stats['totalProfit'] ?? 0)}',
+                                          '৳${currency.format(combinedTotalProfit)}',
                                       icon: Icons.trending_up_rounded,
                                       color: Colors.green,
                                       gradient: const LinearGradient(
@@ -384,6 +435,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                       value:
                                           '৳${currency.format(stats['optionalProfit'] ?? 0)}',
                                       icon: Icons.card_giftcard_rounded,
+                                      color: Colors.deepPurple,
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF673AB7),
+                                          Color(0xFF512DA8),
+                                        ],
+                                      ),
+                                    ),
+                                    _StatCard(
+                                      title: 'Due Clear Profit',
+                                      value:
+                                          '৳${currency.format(dueClearProfit)}',
+                                      icon: Icons.price_check_rounded,
                                       color: Colors.teal,
                                       gradient: const LinearGradient(
                                         colors: [
@@ -401,6 +465,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                 _DetailCard(
                                   children: [
                                     _DetailRow(
+                                      label: 'Sales Profit',
+                                      value:
+                                          '৳${currency.format(stats['totalProfit'] ?? 0)}',
+                                      icon: Icons.sell_rounded,
+                                      color: Colors.green,
+                                    ),
+                                    _DetailRow(
                                       label: 'Total Cost',
                                       value:
                                           '৳${currency.format(stats['totalCost'] ?? 0)}',
@@ -417,6 +488,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                                   ],
                                 ),
                               ],
+                            );
+                              },
                             );
                           },
                         );

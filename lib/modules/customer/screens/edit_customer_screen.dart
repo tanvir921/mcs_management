@@ -252,6 +252,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
   void _showDueDialog(String dueType, String title, double currentAmount) {
     final amountController = TextEditingController();
     final noteController = TextEditingController();
+    final profitController = TextEditingController();
     bool isAddition = true;
 
     final parentContext = context;
@@ -284,7 +285,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     ),
                     Expanded(
                       child: RadioListTile<bool>(
-                        title: const Text('Subtract'),
+                        title: const Text('Clear'),
                         value: false,
                         groupValue: isAddition,
                         onChanged: (value) {
@@ -307,6 +308,52 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                   ),
                   autofocus: true,
                 ),
+                // Show profit field only when clearing due (not adding)
+                if (!isAddition) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.trending_up, color: Colors.green.shade700, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Profit from Due Clear',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: profitController,
+                          decoration: InputDecoration(
+                            labelText: 'Profit Amount (Optional)',
+                            border: const OutlineInputBorder(),
+                            prefixText: '৳ ',
+                            hintText: 'Enter profit from this payment',
+                            filled: true,
+                            fillColor: Colors.white,
+                            labelStyle: TextStyle(color: Colors.green.shade700),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: noteController,
@@ -346,11 +393,14 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                 }
 
                 final note = noteController.text.trim();
+                final profit = double.tryParse(profitController.text) ?? 0;
                 final noteText = note.isNotEmpty ? ' - Note: $note' : '';
+                final profitText = profit > 0 ? ' (Profit: ৳$profit)' : '';
                 final customerId = widget.customer.id;
                 final customerName = widget.customer.name;
                 final finalAmount = amount;
                 final finalIsAddition = isAddition;
+                final finalProfit = isAddition ? 0.0 : profit; // Only track profit when clearing
 
                 Navigator.pop(context);
 
@@ -360,6 +410,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     amount: finalAmount,
                     dueType: dueType,
                     isAddition: finalIsAddition,
+                    realizedProfit: finalProfit,
                     note: note.isEmpty ? null : note,
                     userId: currentUser.id,
                     userName: currentUser.name,
@@ -369,7 +420,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     action: 'UPDATE_DUE',
                     module: 'Customer',
                     details:
-                        '${finalIsAddition ? "Added" : "Subtracted"} ৳$finalAmount ${finalIsAddition ? "to" : "from"} $title for $customerName$noteText',
+                        '${finalIsAddition ? "Added" : "Cleared"} ৳$finalAmount ${finalIsAddition ? "to" : "from"} $title for $customerName$profitText$noteText',
                   );
 
                   final updatedCustomer = await parentContext

@@ -85,7 +85,8 @@ class DailyClosing {
   // Status
   final bool isApproved; // Has been reviewed and approved
   final bool isUploaded; // Has been uploaded to server
-  final String? approvedBy; // User who approved
+  final String? approvedBy; // User ID who approved
+  final String? approvedByName; // User name who approved
   final DateTime? approvedAt; // When approved
   final String? pdfUrl; // URL of generated PDF report
 
@@ -122,6 +123,7 @@ class DailyClosing {
     this.isApproved = false,
     this.isUploaded = false,
     this.approvedBy,
+    this.approvedByName,
     this.approvedAt,
     this.pdfUrl,
     this.remarks,
@@ -187,6 +189,7 @@ class DailyClosing {
       isApproved: json['isApproved'] as bool? ?? false,
       isUploaded: json['isUploaded'] as bool? ?? false,
       approvedBy: json['approvedBy'] as String?,
+      approvedByName: json['approvedByName'] as String?,
       approvedAt: json['approvedAt'] != null
           ? (json['approvedAt'] as Timestamp).toDate()
           : null,
@@ -232,6 +235,7 @@ class DailyClosing {
       'isApproved': isApproved,
       'isUploaded': isUploaded,
       'approvedBy': approvedBy,
+      'approvedByName': approvedByName,
       'approvedAt': approvedAt != null ? Timestamp.fromDate(approvedAt!) : null,
       'pdfUrl': pdfUrl,
       'remarks': remarks,
@@ -268,6 +272,7 @@ class DailyClosing {
     bool? isApproved,
     bool? isUploaded,
     String? approvedBy,
+    String? approvedByName,
     DateTime? approvedAt,
     String? pdfUrl,
     String? remarks,
@@ -304,6 +309,7 @@ class DailyClosing {
       isApproved: isApproved ?? this.isApproved,
       isUploaded: isUploaded ?? this.isUploaded,
       approvedBy: approvedBy ?? this.approvedBy,
+      approvedByName: approvedByName ?? this.approvedByName,
       approvedAt: approvedAt ?? this.approvedAt,
       pdfUrl: pdfUrl ?? this.pdfUrl,
       remarks: remarks ?? this.remarks,

@@ -20,6 +20,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
   bool _showCalculations = false;
   bool _expandedIncomeSection = false;
   bool _expandedExpensesSection = false;
+  double _dueClearProfit = 0;
 
   @override
   void initState() {
@@ -27,18 +28,34 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     _loadClosingData();
   }
 
+  Future<void> _loadDueClearProfit() async {
+    final authProvider = context.read<AuthProvider>();
+    final currentUser = authProvider.currentUser;
+    if (currentUser != null) {
+      final profit = await context.read<DailyClosingProvider>().getTodaysDueClearProfit(currentUser.id);
+      if (mounted) {
+        setState(() {
+          _dueClearProfit = profit;
+        });
+      }
+    }
+  }
+
   Future<void> _loadClosingData() async {
     final authProvider = context.read<AuthProvider>();
     final currentUser = authProvider.currentUser;
 
     if (currentUser != null) {
+      // Load due clear profit
+      _loadDueClearProfit();
+      
       // Check if closing already exists for today
       final closingProvider = context.read<DailyClosingProvider>();
       final todayClosing = await closingProvider.getTodaysClosing(
         currentUser.id,
       );
 
-      if (todayClosing != null) {
+      if (todayClosing != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Today\'s closing already uploaded!'),
@@ -1406,7 +1423,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Sales profit + optional profits (does not affect closing balance)',
+              'Sales profit + due clear profit + optional profits',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
@@ -1419,6 +1436,20 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Colors.blueGrey,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Due Clear Profit'),
+                Text(
+                  '৳${_dueClearProfit.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.teal,
                   ),
                 ),
               ],
@@ -1757,12 +1788,14 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               );
 
               final closingProvider = context.read<DailyClosingProvider>();
+              final authProvider = context.read<AuthProvider>();
+              final userId = authProvider.currentUser?.id ?? '';
               if (closingProvider.draftClosing != null) {
                 final updatedEntries = [
                   ...closingProvider.draftClosing!.profitEntries,
                   newEntry,
                 ];
-                closingProvider.updateProfitEntries(updatedEntries);
+                closingProvider.updateProfitEntries(updatedEntries, userId);
               }
 
               Navigator.pop(context);
@@ -2251,7 +2284,7 @@ class ClosingDetailScreen extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      Text('Approved by: ${closing.approvedBy}'),
+                      Text('Approved by: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}'),
                       Text(
                         'Approved at: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}',
                       ),

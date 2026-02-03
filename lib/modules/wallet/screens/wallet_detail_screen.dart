@@ -43,11 +43,67 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
     );
   }
 
+  Future<void> _deleteWallet() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Wallet'),
+        content: Text(
+          'Are you sure you want to delete "${widget.wallet.displayName}"?\n\n'
+          'Current balance: ৳${widget.wallet.totalBalance.toStringAsFixed(2)}\n\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await context.read<WalletProvider>().deleteWallet(widget.wallet.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.wallet.displayName} deleted'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.wallet.displayName),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.green.shade600, Colors.green.shade800],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -59,6 +115,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               });
             },
             tooltip: 'Refresh',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: _deleteWallet,
+            tooltip: 'Delete Wallet',
           ),
         ],
       ),

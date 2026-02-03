@@ -78,12 +78,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       await _ensureGuestCustomer();
       final customers = context.read<CustomerProvider>().customers;
       final guestCustomer = customers.firstWhere(
-        (c) => c.name.toLowerCase() == 'guest',
+        (c) => c.id == 'guest_customer' || c.name.toLowerCase() == 'guest',
         orElse: () => Customer(
-          id: 'guest',
+          id: 'guest_customer',
           name: 'Guest',
           phone: null,
-          address: null,
+          address: 'Walk-in Customer',
           imageUrl: null,
           productDue: 0,
           serviceDue: 0,
@@ -162,16 +162,22 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   Future<void> _ensureGuestCustomer() async {
     final authProvider = context.read<AuthProvider>();
     final customerProvider = context.read<CustomerProvider>();
+
+    // Reload customers to get latest list
+    await customerProvider.loadCustomers();
     final customers = customerProvider.customers;
 
-    final guestExists = customers.any((c) => c.name.toLowerCase() == 'guest');
+    // Check for guest customer by ID or name
+    final guestExists = customers.any(
+      (c) => c.id == 'guest_customer' || c.name.toLowerCase() == 'guest',
+    );
 
     if (!guestExists && authProvider.currentUser != null) {
       final guestCustomer = Customer(
-        id: 'guest',
+        id: 'guest_customer', // Fixed ID for guest
         name: 'Guest',
         phone: null,
-        address: null,
+        address: 'Walk-in Customer',
         imageUrl: null,
         productDue: 0,
         serviceDue: 0,
@@ -185,6 +191,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
       try {
         await customerProvider.addCustomer(guestCustomer);
+        // Reload to get the new customer
+        await customerProvider.loadCustomers();
       } catch (e) {
         // Guest customer creation failed, but we'll use it anyway in memory
         debugPrint('Failed to create guest customer: $e');
@@ -370,7 +378,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
     if (products.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No products or services available in inventory')),
+        const SnackBar(
+          content: Text('No products or services available in inventory'),
+        ),
       );
       return;
     }
@@ -625,6 +635,21 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         );
       }
 
+      // Add purchase history for the customer (including Guest)
+      if (_selectedCustomer != null) {
+        final itemsList = _items.map((item) => item.itemName).join(', ');
+        await context.read<CustomerProvider>().addPurchaseHistory(
+          customerId: _selectedCustomer!.id,
+          description: 'Sale ${createdSale.saleNumber}: $itemsList',
+          amount: finalAmount,
+          userId: currentUser.id,
+          userName: currentUser.name,
+          note: dueAmount > 0
+              ? 'Paid: ৳${paidAmount.toStringAsFixed(2)}, Due: ৳${dueAmount.toStringAsFixed(2)}'
+              : 'Fully paid',
+        );
+      }
+
       // Log action
       await authProvider.logAction(
         action: 'CREATE_SALE',
@@ -637,7 +662,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sale created successfully')),
         );
-        
+
         // Navigate to invoice screen
         Navigator.pushReplacement(
           context,
@@ -2243,7 +2268,7 @@ class _ProductTileState extends State<_ProductTile> {
   @override
   Widget build(BuildContext context) {
     final isService = widget.product.isService;
-    
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       leading: Container(
@@ -2265,7 +2290,10 @@ class _ProductTileState extends State<_ProductTile> {
                         gradient: LinearGradient(
                           colors: isService
                               ? [Colors.blue.shade400, Colors.blue.shade600]
-                              : [Colors.orange.shade400, Colors.orange.shade600],
+                              : [
+                                  Colors.orange.shade400,
+                                  Colors.orange.shade600,
+                                ],
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -2380,7 +2408,8 @@ class _ProductTileState extends State<_ProductTile> {
                     _selectedQuantity = double.tryParse(value) ?? 1;
                     if (_selectedQuantity < 1) _selectedQuantity = 1;
                     // Only limit by stock for products, not services
-                    if (!isService && _selectedQuantity > widget.product.stock) {
+                    if (!isService &&
+                        _selectedQuantity > widget.product.stock) {
                       _selectedQuantity = widget.product.stock.toDouble();
                     }
                   });
@@ -2391,7 +2420,9 @@ class _ProductTileState extends State<_ProductTile> {
             FilledButton(
               onPressed: () => widget.onSelect(_selectedQuantity),
               style: FilledButton.styleFrom(
-                backgroundColor: isService ? Colors.blue.shade600 : Colors.purple.shade600,
+                backgroundColor: isService
+                    ? Colors.blue.shade600
+                    : Colors.purple.shade600,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               child: const Icon(Icons.add, size: 18),

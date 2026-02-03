@@ -237,6 +237,48 @@ class DailyClosingService {
     }
   }
 
+  /// Calculate today's profit from due clear
+  Future<double> calculateTodaysDueClearProfit(String userId) async {
+    try {
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day);
+      final endOfDay = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+        999,
+      );
+
+      final snapshot = await _firestore
+          .collection('due_transactions')
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
+          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .where('realizedProfitAmount', isGreaterThan: 0)
+          .get();
+
+      double totalProfit = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final profit = data['realizedProfitAmount'];
+        if (profit is num) {
+          totalProfit += profit.toDouble();
+        }
+      }
+
+      debugPrint('✅ TodaysDueClearProfit: $totalProfit');
+      return totalProfit;
+    } catch (e) {
+      debugPrint('❌ DueClearProfit ERROR: $e');
+      return 0;
+    }
+  }
+
   /// Get all wallet balances for user with breakdown
   Future<(double, double)> calculateWalletBalances(String userId) async {
     try {
@@ -511,6 +553,7 @@ class DailyClosingService {
         userId,
       );
       final yesterdayClosing = await getYesterdaysClosing(userId);
+      final dueClearProfit = await calculateTodaysDueClearProfit(userId);
 
       // Get breakdowns for detailed reporting
       final walletBreakdown = await getWalletBreakdown(userId);
@@ -537,12 +580,12 @@ class DailyClosingService {
       final yesterdaySubtotal = yesterdayClosing?.subtotal ?? 0;
       final remainingCash = subtotal - yesterdaySubtotal;
 
-      // Calculate total profit
+      // Calculate total profit (includes sales profit, optional profit entries, and due clear profit)
       final optionalProfit = profitEntries.fold<double>(
         0,
         (sum, entry) => sum + entry.amount,
       );
-      final totalProfit = todaysSalesProfit + optionalProfit;
+      final totalProfit = todaysSalesProfit + optionalProfit + dueClearProfit;
 
       // Final closing balance includes sales (sales deduction is only for subtotal balancing)
       final finalClosingBalanceBase =
@@ -613,6 +656,7 @@ class DailyClosingService {
         isApproved: true,
         isUploaded: true,
         approvedBy: approvedBy,
+        approvedByName: approvedByName,
         approvedAt: DateTime.now(),
         remarks: remarks,
       );

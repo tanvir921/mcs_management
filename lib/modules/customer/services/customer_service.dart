@@ -95,6 +95,7 @@ class CustomerService {
     required double amount,
     required String dueType,
     required bool isAddition,
+    double realizedProfit = 0,
     String? note,
     required String userId,
     required String userName,
@@ -155,6 +156,8 @@ class CustomerService {
         dueType: dueType,
         amount: amount,
         isAddition: isAddition,
+        realizedProfitAmount: realizedProfit,
+        profitRealized: realizedProfit > 0,
         note: note,
         createdAt: DateTime.now(),
         createdBy: userId,
@@ -340,6 +343,55 @@ class CustomerService {
           .toList();
     } catch (e) {
       throw ValidationException('Failed to get purchase history: $e');
+    }
+  }
+
+  /// Get profits from due clearance for a date range
+  Future<List<DueTransaction>> getDueClearProfits({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      Query query = _firestore
+          .collection(_transactionsCollection)
+          .where('isAddition', isEqualTo: false)
+          .where('realizedProfitAmount', isGreaterThan: 0);
+
+      if (startDate != null) {
+        query = query.where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+      }
+
+      if (endDate != null) {
+        query = query.where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+      }
+
+      query = query.orderBy('createdAt', descending: true);
+
+      final snapshot = await query.get();
+      return snapshot.docs
+          .map((doc) => DueTransaction.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw ValidationException('Failed to get due clear profits: $e');
+    }
+  }
+
+  /// Get total profit from due clearance for a date range
+  Future<double> getTotalDueClearProfit({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final transactions = await getDueClearProfits(
+        startDate: startDate,
+        endDate: endDate,
+      );
+      return transactions.fold<double>(
+        0,
+        (sum, t) => sum + t.realizedProfitAmount,
+      );
+    } catch (e) {
+      return 0;
     }
   }
 

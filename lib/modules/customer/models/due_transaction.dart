@@ -10,6 +10,7 @@ class DueTransaction {
   final String? saleId; // Reference to sale if from product sale
   final double potentialProfit; // Profit pending in this due
   final bool profitRealized; // Whether profit was added when due cleared
+  final double realizedProfitAmount; // Actual profit realized when clearing due
   final String? note;
   final DateTime createdAt;
   final String createdBy; // Admin user ID
@@ -24,6 +25,7 @@ class DueTransaction {
     this.saleId,
     this.potentialProfit = 0,
     this.profitRealized = false,
+    this.realizedProfitAmount = 0,
     this.note,
     required this.createdAt,
     required this.createdBy,
@@ -40,6 +42,7 @@ class DueTransaction {
       saleId: json['saleId'] as String?,
       potentialProfit: (json['potentialProfit'] as num?)?.toDouble() ?? 0,
       profitRealized: json['profitRealized'] as bool? ?? false,
+      realizedProfitAmount: (json['realizedProfitAmount'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String?,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       createdBy: json['createdBy'] as String,
@@ -57,6 +60,7 @@ class DueTransaction {
       'saleId': saleId,
       'potentialProfit': potentialProfit,
       'profitRealized': profitRealized,
+      'realizedProfitAmount': realizedProfitAmount,
       'note': note,
       'createdAt': Timestamp.fromDate(createdAt),
       'createdBy': createdBy,

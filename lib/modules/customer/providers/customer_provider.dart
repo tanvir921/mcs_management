@@ -71,6 +71,7 @@ class CustomerProvider extends ChangeNotifier {
     required double amount,
     required String dueType,
     required bool isAddition,
+    double realizedProfit = 0,
     String? note,
     required String userId,
     required String userName,
@@ -81,6 +82,7 @@ class CustomerProvider extends ChangeNotifier {
         amount: amount,
         dueType: dueType,
         isAddition: isAddition,
+        realizedProfit: realizedProfit,
         note: note,
         userId: userId,
         userName: userName,
@@ -175,6 +177,38 @@ class CustomerProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       rethrow;
+    }
+  }
+
+  Future<List<DueTransaction>> getDueClearProfits({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      return await _customerService.getDueClearProfits(
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<double> getTotalDueClearProfit({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      return await _customerService.getTotalDueClearProfit(
+        startDate: startDate,
+        endDate: endDate,
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return 0;
     }
   }
 

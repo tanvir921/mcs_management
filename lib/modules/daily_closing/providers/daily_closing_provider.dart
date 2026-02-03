@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import '../models/daily_closing_model.dart';
 import '../services/daily_closing_service.dart';
 
@@ -74,14 +75,19 @@ class DailyClosingProvider extends ChangeNotifier {
   }
 
   /// Update profit entries in draft
-  void updateProfitEntries(List<ProfitEntry> profitEntries) {
+  Future<void> updateProfitEntries(
+    List<ProfitEntry> profitEntries,
+    String userId,
+  ) async {
     if (_draftClosing == null) return;
 
     final optionalProfit = profitEntries.fold<double>(
       0,
       (sum, entry) => sum + entry.amount,
     );
-    final totalProfit = _draftClosing!.todaysSalesProfit + optionalProfit;
+    final dueClearProfit = await _service.calculateTodaysDueClearProfit(userId);
+    final totalProfit =
+        _draftClosing!.todaysSalesProfit + optionalProfit + dueClearProfit;
 
     _draftClosing = _draftClosing!.copyWith(
       profitEntries: profitEntries,
@@ -156,7 +162,7 @@ class DailyClosingProvider extends ChangeNotifier {
     _isLoadingHistory = true;
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    _safeNotifyListeners();
 
     try {
       _closingHistory = await _service.getUserClosingHistory(userId);
@@ -166,8 +172,15 @@ class DailyClosingProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       _isLoadingHistory = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
+  }
+
+  /// Safely notify listeners, deferring if called during build
+  void _safeNotifyListeners() {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   /// Get today's closing if it exists
@@ -178,6 +191,15 @@ class DailyClosingProvider extends ChangeNotifier {
       _error = e.toString();
       // Don't notify listeners for non-critical checks
       return null;
+    }
+  }
+
+  /// Get today's due clear profit
+  Future<double> getTodaysDueClearProfit(String userId) async {
+    try {
+      return await _service.calculateTodaysDueClearProfit(userId);
+    } catch (e) {
+      return 0;
     }
   }
 

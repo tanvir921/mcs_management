@@ -27,7 +27,9 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   Future<void> _loadExpense() async {
     setState(() => _isLoading = true);
     try {
-      final expense = await context.read<ExpenseProvider>().getExpenseById(widget.expenseId);
+      final expense = await context.read<ExpenseProvider>().getExpenseById(
+        widget.expenseId,
+      );
       setState(() {
         _expense = expense;
         _isLoading = false;
@@ -201,7 +203,10 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: categoryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
@@ -230,10 +235,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 children: [
                   const Text(
                     'Details',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const Divider(height: 24),
                   _DetailRow(
@@ -253,7 +255,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     label: 'Payment Method',
                     value: _getPaymentMethodName(_expense!.paymentMethod),
                   ),
-                  if (_expense!.notes != null && _expense!.notes!.isNotEmpty) ...[
+                  if (_expense!.notes != null &&
+                      _expense!.notes!.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     _DetailRow(
                       icon: Icons.notes,
@@ -277,10 +280,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 children: [
                   const Text(
                     'Record Information',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const Divider(height: 24),
                   _DetailRow(
@@ -292,14 +292,18 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   _DetailRow(
                     icon: Icons.access_time,
                     label: 'Created At',
-                    value: DateFormat('MMM dd, yyyy hh:mm a').format(_expense!.createdAt),
+                    value: DateFormat(
+                      'MMM dd, yyyy hh:mm a',
+                    ).format(_expense!.createdAt),
                   ),
                   if (_expense!.updatedAt != null) ...[
                     const SizedBox(height: 12),
                     _DetailRow(
                       icon: Icons.update,
                       label: 'Updated At',
-                      value: DateFormat('MMM dd, yyyy hh:mm a').format(_expense!.updatedAt!),
+                      value: DateFormat(
+                        'MMM dd, yyyy hh:mm a',
+                      ).format(_expense!.updatedAt!),
                     ),
                   ],
                 ],
@@ -349,10 +353,7 @@ class _DetailRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 4),
               Text(
