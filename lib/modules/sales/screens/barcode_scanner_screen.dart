@@ -180,7 +180,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.purple.shade500, Colors.purple.shade700],
+                          colors: [
+                            Colors.purple.shade500,
+                            Colors.purple.shade700,
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -197,10 +200,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Tap camera icon to scan barcode with camera',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),

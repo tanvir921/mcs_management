@@ -408,12 +408,15 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 quantity: newQuantity,
                 totalCost: newQuantity * existingItem.costPrice,
                 totalSelling: newQuantity * existingItem.sellingPrice,
-                profit: (newQuantity * existingItem.sellingPrice) -
+                profit:
+                    (newQuantity * existingItem.sellingPrice) -
                     (newQuantity * existingItem.costPrice),
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${product.name} quantity updated to $newQuantity'),
+                  content: Text(
+                    '${product.name} quantity updated to $newQuantity',
+                  ),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -459,7 +462,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     if (result != null && result.isNotEmpty) {
       int addedCount = 0;
       int updatedCount = 0;
-      
+
       setState(() {
         for (final product in result) {
           // Check if product already exists in items
@@ -475,7 +478,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               quantity: newQuantity,
               totalCost: newQuantity * existingItem.costPrice,
               totalSelling: newQuantity * existingItem.sellingPrice,
-              profit: (newQuantity * existingItem.sellingPrice) -
+              profit:
+                  (newQuantity * existingItem.sellingPrice) -
                   (newQuantity * existingItem.costPrice),
             );
             updatedCount++;
@@ -501,7 +505,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         }
         _paidAmountController.text = finalAmount.toStringAsFixed(2);
       });
-      
+
       String message = '';
       if (addedCount > 0) message += '$addedCount product(s) added';
       if (updatedCount > 0) {
@@ -509,10 +513,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         message += '$updatedCount product(s) quantity updated';
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 2),
-        ),
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
       );
     }
   }
@@ -550,7 +551,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         quantity: newQuantity,
         totalCost: newQuantity * item.costPrice,
         totalSelling: newQuantity * item.sellingPrice,
-        profit: (newQuantity * item.sellingPrice) - (newQuantity * item.costPrice),
+        profit:
+            (newQuantity * item.sellingPrice) - (newQuantity * item.costPrice),
       );
       _paidAmountController.text = finalAmount.toStringAsFixed(2);
     });
@@ -1473,7 +1475,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   // Product Info
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           item.itemName,
@@ -1515,27 +1518,39 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                         InkWell(
                                           onTap: () {
                                             if (item.quantity > 1) {
-                                              _updateItemQuantity(index, item.quantity - 1);
+                                              _updateItemQuantity(
+                                                index,
+                                                item.quantity - 1,
+                                              );
                                             } else {
                                               _removeItem(index);
                                             }
                                           },
-                                          borderRadius: const BorderRadius.horizontal(
-                                            left: Radius.circular(8),
-                                          ),
+                                          borderRadius:
+                                              const BorderRadius.horizontal(
+                                                left: Radius.circular(8),
+                                              ),
                                           child: Container(
                                             padding: const EdgeInsets.all(8),
                                             child: Icon(
-                                              item.quantity > 1 ? Icons.remove : Icons.delete_outline,
+                                              item.quantity > 1
+                                                  ? Icons.remove
+                                                  : Icons.delete_outline,
                                               size: 20,
-                                              color: item.quantity > 1 ? Colors.purple.shade700 : Colors.red,
+                                              color: item.quantity > 1
+                                                  ? Colors.purple.shade700
+                                                  : Colors.red,
                                             ),
                                           ),
                                         ),
                                         // Quantity display
                                         Container(
-                                          constraints: const BoxConstraints(minWidth: 40),
-                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 40,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                          ),
                                           child: Text(
                                             '${item.quantity.toStringAsFixed(0)}',
                                             textAlign: TextAlign.center,
@@ -1547,10 +1562,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                         ),
                                         // Increase button
                                         InkWell(
-                                          onTap: () => _updateItemQuantity(index, item.quantity + 1),
-                                          borderRadius: const BorderRadius.horizontal(
-                                            right: Radius.circular(8),
+                                          onTap: () => _updateItemQuantity(
+                                            index,
+                                            item.quantity + 1,
                                           ),
+                                          borderRadius:
+                                              const BorderRadius.horizontal(
+                                                right: Radius.circular(8),
+                                              ),
                                           child: Container(
                                             padding: const EdgeInsets.all(8),
                                             child: Icon(
