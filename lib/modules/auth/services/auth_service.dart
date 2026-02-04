@@ -195,7 +195,9 @@ class AuthService {
       }
 
       await _firestore.collection(_usersCollection).doc(userId).update({
-        'permissions': permissions.map((p) => p.toString().split('.').last).toList(),
+        'permissions': permissions
+            .map((p) => p.toString().split('.').last)
+            .toList(),
       });
 
       await _logAction(

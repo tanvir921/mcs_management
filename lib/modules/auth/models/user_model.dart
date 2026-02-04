@@ -52,15 +52,13 @@ class UserModel {
     List<Permission> permissions = [];
     if (role == UserRole.subAdmin && json['permissions'] != null) {
       final permissionsList = json['permissions'] as List<dynamic>;
-      permissions = permissionsList
-          .map((p) {
-            final pString = p.toString();
-            return Permission.values.firstWhere(
-              (e) => e.toString().split('.').last == pString || e.name == pString,
-              orElse: () => Permission.customers,
-            );
-          })
-          .toList();
+      permissions = permissionsList.map((p) {
+        final pString = p.toString();
+        return Permission.values.firstWhere(
+          (e) => e.toString().split('.').last == pString || e.name == pString,
+          orElse: () => Permission.customers,
+        );
+      }).toList();
     }
 
     return UserModel(
@@ -82,7 +80,9 @@ class UserModel {
       'role': role.toString().split('.').last,
       'createdAt': Timestamp.fromDate(createdAt),
       'isActive': isActive,
-      'permissions': permissions.map((p) => p.toString().split('.').last).toList(),
+      'permissions': permissions
+          .map((p) => p.toString().split('.').last)
+          .toList(),
     };
   }
 

@@ -371,9 +371,7 @@ class DailyClosingService {
       final startOfDay = DateTime(today.year, today.month, today.day);
       final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-      final customersSnapshot = await _firestore
-          .collection('customers')
-          .get();
+      final customersSnapshot = await _firestore.collection('customers').get();
 
       List<BreakdownItem> breakdown = [];
 
@@ -417,9 +415,7 @@ class DailyClosingService {
       final startOfDay = DateTime(today.year, today.month, today.day);
       final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-      final customersSnapshot = await _firestore
-          .collection('customers')
-          .get();
+      final customersSnapshot = await _firestore.collection('customers').get();
 
       List<BreakdownItem> breakdown = [];
 
