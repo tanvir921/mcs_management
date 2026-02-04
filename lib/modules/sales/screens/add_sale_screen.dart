@@ -394,33 +394,57 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       builder: (context) => _ProductPickerModal(
         products: products,
         onProductSelected: (product, quantity) {
-          final saleItem = SaleItem(
-            id: 'item_${++_itemCounter}',
-            inventoryItemId: product.id,
-            itemType: product.type.value,
-            itemName: product.name,
-            quantity: quantity,
-            unit: product.unit,
-            costPrice: product.costPrice,
-            sellingPrice: product.sellingPrice,
-            totalCost: quantity * product.costPrice,
-            totalSelling: quantity * product.sellingPrice,
-            profit:
-                (quantity * product.sellingPrice) -
-                (quantity * product.costPrice),
-            notes: null,
+          // Check if product already exists in items
+          final existingIndex = _items.indexWhere(
+            (item) => item.inventoryItemId == product.id,
           );
 
           setState(() {
-            _items.add(saleItem);
+            if (existingIndex != -1) {
+              // Update existing item quantity
+              final existingItem = _items[existingIndex];
+              final newQuantity = existingItem.quantity + quantity;
+              _items[existingIndex] = existingItem.copyWith(
+                quantity: newQuantity,
+                totalCost: newQuantity * existingItem.costPrice,
+                totalSelling: newQuantity * existingItem.sellingPrice,
+                profit: (newQuantity * existingItem.sellingPrice) -
+                    (newQuantity * existingItem.costPrice),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${product.name} quantity updated to $newQuantity'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            } else {
+              // Add new item
+              final saleItem = SaleItem(
+                id: 'item_${++_itemCounter}',
+                inventoryItemId: product.id,
+                itemType: product.type.value,
+                itemName: product.name,
+                quantity: quantity,
+                unit: product.unit,
+                costPrice: product.costPrice,
+                sellingPrice: product.sellingPrice,
+                totalCost: quantity * product.costPrice,
+                totalSelling: quantity * product.sellingPrice,
+                profit:
+                    (quantity * product.sellingPrice) -
+                    (quantity * product.costPrice),
+                notes: null,
+              );
+              _items.add(saleItem);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${product.name} added to sale'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
             _paidAmountController.text = finalAmount.toStringAsFixed(2);
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${product.name} added to sale'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
         },
       ),
     );
@@ -433,29 +457,60 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     );
 
     if (result != null && result.isNotEmpty) {
+      int addedCount = 0;
+      int updatedCount = 0;
+      
       setState(() {
         for (final product in result) {
-          final saleItem = SaleItem(
-            id: 'item_${++_itemCounter}',
-            inventoryItemId: product.id,
-            itemType: product.type.value,
-            itemName: product.name,
-            quantity: 1,
-            unit: product.unit,
-            costPrice: product.costPrice,
-            sellingPrice: product.sellingPrice,
-            totalCost: product.costPrice,
-            totalSelling: product.sellingPrice,
-            profit: product.sellingPrice - product.costPrice,
-            notes: null,
+          // Check if product already exists in items
+          final existingIndex = _items.indexWhere(
+            (item) => item.inventoryItemId == product.id,
           );
-          _items.add(saleItem);
+
+          if (existingIndex != -1) {
+            // Update existing item quantity
+            final existingItem = _items[existingIndex];
+            final newQuantity = existingItem.quantity + 1;
+            _items[existingIndex] = existingItem.copyWith(
+              quantity: newQuantity,
+              totalCost: newQuantity * existingItem.costPrice,
+              totalSelling: newQuantity * existingItem.sellingPrice,
+              profit: (newQuantity * existingItem.sellingPrice) -
+                  (newQuantity * existingItem.costPrice),
+            );
+            updatedCount++;
+          } else {
+            // Add new item
+            final saleItem = SaleItem(
+              id: 'item_${++_itemCounter}',
+              inventoryItemId: product.id,
+              itemType: product.type.value,
+              itemName: product.name,
+              quantity: 1,
+              unit: product.unit,
+              costPrice: product.costPrice,
+              sellingPrice: product.sellingPrice,
+              totalCost: product.costPrice,
+              totalSelling: product.sellingPrice,
+              profit: product.sellingPrice - product.costPrice,
+              notes: null,
+            );
+            _items.add(saleItem);
+            addedCount++;
+          }
         }
         _paidAmountController.text = finalAmount.toStringAsFixed(2);
       });
+      
+      String message = '';
+      if (addedCount > 0) message += '$addedCount product(s) added';
+      if (updatedCount > 0) {
+        if (message.isNotEmpty) message += ', ';
+        message += '$updatedCount product(s) quantity updated';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${result.length} product(s) added from scan'),
+          content: Text(message),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -480,6 +535,23 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   void _removeItem(int index) {
     setState(() {
       _items.removeAt(index);
+      _paidAmountController.text = finalAmount.toStringAsFixed(2);
+    });
+  }
+
+  void _updateItemQuantity(int index, double newQuantity) {
+    if (newQuantity <= 0) {
+      _removeItem(index);
+      return;
+    }
+    final item = _items[index];
+    setState(() {
+      _items[index] = item.copyWith(
+        quantity: newQuantity,
+        totalCost: newQuantity * item.costPrice,
+        totalSelling: newQuantity * item.sellingPrice,
+        profit: (newQuantity * item.sellingPrice) - (newQuantity * item.costPrice),
+      );
       _paidAmountController.text = finalAmount.toStringAsFixed(2);
     });
   }
@@ -1390,67 +1462,109 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                               const Divider(height: 1),
                           itemBuilder: (context, index) {
                             final item = _items[index];
-                            return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
                                 vertical: 12,
                               ),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.purple.shade50,
-                                child: Icon(
-                                  Icons.shopping_bag,
-                                  color: Colors.purple.shade600,
-                                ),
-                              ),
-                              title: Text(
-                                item.itemName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Column(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${item.quantity} ${item.unit} × ৳${item.sellingPrice.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontWeight: FontWeight.w500,
+                                  // Product Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.itemName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '৳${item.sellingPrice.toStringAsFixed(0)} × ${item.quantity.toStringAsFixed(0)} ${item.unit}',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '৳${item.totalSelling.toStringAsFixed(0)}',
+                                          style: TextStyle(
+                                            color: Colors.purple.shade700,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Text(
-                                    'Total: ৳${item.totalSelling.toStringAsFixed(2)} | Profit: ৳${item.profit.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      color: Colors.purple.shade600,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                  // Quantity Controls
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Decrease button
+                                        InkWell(
+                                          onTap: () {
+                                            if (item.quantity > 1) {
+                                              _updateItemQuantity(index, item.quantity - 1);
+                                            } else {
+                                              _removeItem(index);
+                                            }
+                                          },
+                                          borderRadius: const BorderRadius.horizontal(
+                                            left: Radius.circular(8),
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Icon(
+                                              item.quantity > 1 ? Icons.remove : Icons.delete_outline,
+                                              size: 20,
+                                              color: item.quantity > 1 ? Colors.purple.shade700 : Colors.red,
+                                            ),
+                                          ),
+                                        ),
+                                        // Quantity display
+                                        Container(
+                                          constraints: const BoxConstraints(minWidth: 40),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          child: Text(
+                                            '${item.quantity.toStringAsFixed(0)}',
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                        // Increase button
+                                        InkWell(
+                                          onTap: () => _updateItemQuantity(index, item.quantity + 1),
+                                          borderRadius: const BorderRadius.horizontal(
+                                            right: Radius.circular(8),
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Icon(
+                                              Icons.add,
+                                              size: 20,
+                                              color: Colors.purple.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.edit,
-                                      size: 20,
-                                      color: Colors.blue.shade600,
-                                    ),
-                                    onPressed: () => _editItem(index),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      size: 20,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: () => _removeItem(index),
-                                  ),
-                                ],
-                              ),
-                              isThreeLine: true,
                             );
                           },
                         ),

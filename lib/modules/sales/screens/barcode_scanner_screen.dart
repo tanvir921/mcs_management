@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../inventory/models/inventory_item.dart';
 import '../../inventory/providers/inventory_provider.dart';
+import 'qr_scanner_screen.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -29,6 +30,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       return;
     }
 
+    _processBarcode(barcode);
+  }
+
+  void _processBarcode(String barcode) {
     final inventory = context.read<InventoryProvider>();
     // Search both products and services by SKU or ID
     final product = inventory.items.firstWhere(
@@ -76,6 +81,22 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     }
 
     _barcodeController.clear();
+  }
+
+  Future<void> _scanWithCamera() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const QrScannerScreen(
+          title: 'Scan Barcode',
+          subtitle: 'Point camera at product barcode',
+        ),
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      _processBarcode(result);
+    }
   }
 
   void _removeProduct(int index) {
@@ -133,23 +154,53 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _barcodeController,
-                  decoration: InputDecoration(
-                    hintText: 'Place cursor here and scan...',
-                    prefixIcon: const Icon(Icons.qr_code_2),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.add_circle),
-                      onPressed: _scanBarcode,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _barcodeController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter barcode or SKU...',
+                          prefixIcon: const Icon(Icons.qr_code_2),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.add_circle),
+                            onPressed: _scanBarcode,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        onSubmitted: (_) => _scanBarcode(),
+                        autofocus: true,
+                      ),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.purple.shade500, Colors.purple.shade700],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: _scanWithCamera,
+                        icon: const Icon(Icons.camera_alt, color: Colors.white),
+                        tooltip: 'Scan with Camera',
+                        iconSize: 28,
+                        padding: const EdgeInsets.all(12),
+                      ),
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tap camera icon to scan barcode with camera',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
                   ),
-                  onSubmitted: (_) => _scanBarcode(),
-                  autofocus: true,
                 ),
               ],
             ),
