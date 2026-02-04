@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/customer_provider.dart';
 import '../models/customer_model.dart';
 import '../../../app/app_routes.dart';
+import '../../../core/utils/responsive.dart';
 
 enum SortOption {
   nameAsc,
@@ -386,180 +387,38 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 )
               else
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: customers.length,
-                    itemBuilder: (context, index) {
-                      final customer = customers[index];
-                      final hasDue = customer.totalDue > 0;
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                          border: Border.all(
-                            color: hasDue
-                                ? Colors.red.shade100
-                                : Colors.grey.shade200,
-                            width: hasDue ? 1.5 : 1,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isLargeScreen = Responsive.isLargeScreen(context);
+                      final crossAxisCount = Responsive.value(context, mobile: 1, tablet: 2, desktop: 3);
+                      
+                      if (isLargeScreen) {
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 2.2,
                           ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.customerEdit,
-                                arguments: customer,
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  // Avatar
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: LinearGradient(
-                                        colors: hasDue
-                                            ? [
-                                                Colors.red.shade50,
-                                                Colors.red.shade100,
-                                              ]
-                                            : [
-                                                Colors.green.shade50,
-                                                Colors.green.shade100,
-                                              ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      border: Border.all(
-                                        color: hasDue
-                                            ? Colors.red.shade300
-                                            : Colors.green.shade300,
-                                        width: 2.5,
-                                      ),
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.transparent,
-                                      backgroundImage: customer.imageUrl != null
-                                          ? NetworkImage(customer.imageUrl!)
-                                          : null,
-                                      child: customer.imageUrl == null
-                                          ? Text(
-                                              customer.name
-                                                  .substring(0, 1)
-                                                  .toUpperCase(),
-                                              style: TextStyle(
-                                                color: hasDue
-                                                    ? Colors.red.shade700
-                                                    : Colors.green.shade700,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 24,
-                                              ),
-                                            )
-                                          : null,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-
-                                  // Customer info
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          customer.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 17,
-                                            letterSpacing: 0.2,
-                                          ),
-                                        ),
-                                        if (customer.phone != null) ...[
-                                          const SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.phone_rounded,
-                                                size: 15,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                customer.phone!,
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade700,
-                                                  fontSize: 14,
-                                                  letterSpacing: 0.3,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                        const SizedBox(height: 10),
-
-                                        // Due information
-                                        Wrap(
-                                          spacing: 6,
-                                          runSpacing: 6,
-                                          children: [
-                                            _buildDueBadge(
-                                              'Total',
-                                              customer.totalDue,
-                                              hasDue
-                                                  ? Colors.red
-                                                  : Colors.green,
-                                            ),
-                                            if (customer.cashBorrowDue > 0)
-                                              _buildDueBadge(
-                                                'Cash',
-                                                customer.cashBorrowDue,
-                                                Colors.orange,
-                                              ),
-                                            if (customer.previousDue > 0)
-                                              _buildDueBadge(
-                                                'Prev',
-                                                customer.previousDue,
-                                                Colors.teal,
-                                              ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Arrow icon
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      size: 16,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                          itemCount: customers.length,
+                          itemBuilder: (context, index) {
+                            final customer = customers[index];
+                            return _buildCustomerCard(context, customer);
+                          },
+                        );
+                      }
+                      
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: customers.length,
+                        itemBuilder: (context, index) {
+                          final customer = customers[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildCustomerCard(context, customer),
+                          );
+                        },
                       );
                     },
                   ),
@@ -578,6 +437,141 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.3),
         ),
         elevation: 4,
+      ),
+    );
+  }
+
+  Widget _buildCustomerCard(BuildContext context, Customer customer) {
+    final hasDue = customer.totalDue > 0;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: hasDue ? Colors.red.shade100 : Colors.grey.shade200,
+          width: hasDue ? 1.5 : 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.customerEdit,
+              arguments: customer,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: hasDue
+                          ? [Colors.red.shade50, Colors.red.shade100]
+                          : [Colors.green.shade50, Colors.green.shade100],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: hasDue ? Colors.red.shade300 : Colors.green.shade300,
+                      width: 2.5,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: customer.imageUrl != null
+                        ? NetworkImage(customer.imageUrl!)
+                        : null,
+                    child: customer.imageUrl == null
+                        ? Text(
+                            customer.name.substring(0, 1).toUpperCase(),
+                            style: TextStyle(
+                              color: hasDue ? Colors.red.shade700 : Colors.green.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        customer.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          letterSpacing: 0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (customer.phone != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(Icons.phone_rounded, size: 15, color: Colors.grey.shade600),
+                            const SizedBox(width: 6),
+                            Text(
+                              customer.phone!,
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontSize: 14,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          _buildDueBadge('Total', customer.totalDue, hasDue ? Colors.red : Colors.green),
+                          if (customer.cashBorrowDue > 0)
+                            _buildDueBadge('Cash', customer.cashBorrowDue, Colors.orange),
+                          if (customer.previousDue > 0)
+                            _buildDueBadge('Prev', customer.previousDue, Colors.teal),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../../../app/app_routes.dart';
+import '../../../core/utils/responsive.dart';
 import 'add_sale_screen.dart';
 import 'sales_history_screen.dart';
 
@@ -154,47 +155,62 @@ class SalesScreen extends StatelessWidget {
                 ),
 
                 // New Sale Card
-                _SaleActionCard(
-                  icon: Icons.add_shopping_cart,
-                  title: 'New Sale',
-                  subtitle: 'Create a new sale transaction',
-                  gradient: [Colors.purple.shade400, Colors.purple.shade600],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddSaleScreen(),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isLargeScreen = Responsive.isLargeScreen(context);
+                    
+                    final actionCards = [
+                      _SaleActionCard(
+                        icon: Icons.add_shopping_cart,
+                        title: 'New Sale',
+                        subtitle: 'Create a new sale transaction',
+                        gradient: [Colors.purple.shade400, Colors.purple.shade600],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AddSaleScreen()),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Sales History Card
-                _SaleActionCard(
-                  icon: Icons.history,
-                  title: 'Sales History',
-                  subtitle: 'View all sales transactions',
-                  gradient: [Colors.orange.shade400, Colors.orange.shade600],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SalesHistoryScreen(),
+                      _SaleActionCard(
+                        icon: Icons.history,
+                        title: 'Sales History',
+                        subtitle: 'View all sales transactions',
+                        gradient: [Colors.orange.shade400, Colors.orange.shade600],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SalesHistoryScreen()),
+                          );
+                        },
                       ),
+                      _SaleActionCard(
+                        icon: Icons.inventory_2,
+                        title: 'Inventory',
+                        subtitle: 'Manage products and services',
+                        gradient: [Colors.teal.shade400, Colors.teal.shade600],
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.inventory),
+                      ),
+                    ];
+                    
+                    if (isLargeScreen) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: actionCards.map((card) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: card,
+                          ),
+                        )).toList(),
+                      );
+                    }
+                    
+                    return Column(
+                      children: actionCards.map((card) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: card,
+                      )).toList(),
                     );
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Inventory Management Card
-                _SaleActionCard(
-                  icon: Icons.inventory_2,
-                  title: 'Inventory',
-                  subtitle: 'Manage products and services',
-                  gradient: [Colors.teal.shade400, Colors.teal.shade600],
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.inventory);
                   },
                 ),
               ],

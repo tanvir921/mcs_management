@@ -6,6 +6,7 @@ import '../services/reports_service.dart';
 import '../../sales/providers/sales_provider.dart';
 import '../../customer/providers/customer_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/responsive.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});

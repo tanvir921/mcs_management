@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/expense.dart';
 import '../providers/expense_provider.dart';
+import '../../../core/utils/responsive.dart';
 import 'add_expense_screen.dart';
 import 'expense_history_screen.dart';
 

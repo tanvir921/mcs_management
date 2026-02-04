@@ -6,6 +6,7 @@ import '../providers/inventory_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../sales/providers/cart_provider.dart';
 import '../../../app/app_routes.dart';
+import '../../../core/utils/responsive.dart';
 import 'add_inventory_screen.dart';
 import 'inventory_detail_screen.dart';
 import 'product_barcode_print_screen.dart';
@@ -629,55 +630,34 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                       );
                     }
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return _InventoryItemCard(
-                          item: item,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    InventoryDetailScreen(item: item),
-                              ),
-                            );
-                          },
-                          onAddToCart: (quantity) {
-                            final cart = Provider.of<CartProvider>(
-                              context,
-                              listen: false,
-                            );
-                            cart.addItem(item, quantity);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Added ${item.name} to cart (${quantity} ${item.unit})',
-                                ),
-                                duration: const Duration(seconds: 2),
-                                action: SnackBarAction(
-                                  label: 'View Cart',
-                                  onPressed: () {
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      AppRoutes.sales,
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                          onPrintBarcode: () {
-                            // Navigate to single product barcode print screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ProductBarcodePrintScreen(items: [item]),
-                              ),
-                            );
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isLargeScreen = Responsive.isLargeScreen(context);
+                        final crossAxisCount = Responsive.value(context, mobile: 1, tablet: 2, desktop: 3);
+                        
+                        if (isLargeScreen) {
+                          return GridView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 1.8,
+                            ),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return _buildInventoryItem(context, item);
+                            },
+                          );
+                        }
+                        
+                        return ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            return _buildInventoryItem(context, item);
                           },
                         );
                       },
@@ -722,6 +702,44 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInventoryItem(BuildContext context, InventoryItem item) {
+    return _InventoryItemCard(
+      item: item,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => InventoryDetailScreen(item: item),
+          ),
+        );
+      },
+      onAddToCart: (quantity) {
+        final cart = Provider.of<CartProvider>(context, listen: false);
+        cart.addItem(item, quantity);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added ${item.name} to cart (${quantity} ${item.unit})'),
+            duration: const Duration(seconds: 2),
+            action: SnackBarAction(
+              label: 'View Cart',
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, AppRoutes.sales);
+              },
+            ),
+          ),
+        );
+      },
+      onPrintBarcode: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductBarcodePrintScreen(items: [item]),
+          ),
+        );
+      },
     );
   }
 }

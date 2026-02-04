@@ -4,6 +4,7 @@ import '../models/wallet_type.dart';
 import '../models/wallet.dart';
 import '../providers/wallet_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/responsive.dart';
 import 'add_wallet_screen.dart';
 import 'wallet_detail_screen.dart';
 
@@ -227,6 +228,8 @@ class _WalletsScreenState extends State<WalletsScreen> {
               ...walletsByType.entries.map((entry) {
                 final walletType = entry.key;
                 final walletsOfType = entry.value;
+                final isLargeScreen = Responsive.isLargeScreen(context);
+                final crossAxisCount = Responsive.value(context, mobile: 1, tablet: 2, desktop: 3);
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,12 +273,29 @@ class _WalletsScreenState extends State<WalletsScreen> {
                         ],
                       ),
                     ),
-                    ...walletsOfType.map(
-                      (wallet) => _WalletCard(
-                        wallet: wallet,
-                        onDelete: () => _deleteWallet(wallet),
+                    if (isLargeScreen)
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 2.0,
+                        ),
+                        itemCount: walletsOfType.length,
+                        itemBuilder: (context, index) => _WalletCard(
+                          wallet: walletsOfType[index],
+                          onDelete: () => _deleteWallet(walletsOfType[index]),
+                        ),
+                      )
+                    else
+                      ...walletsOfType.map(
+                        (wallet) => _WalletCard(
+                          wallet: wallet,
+                          onDelete: () => _deleteWallet(wallet),
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 16),
                   ],
                 );

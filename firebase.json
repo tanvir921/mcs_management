@@ -1,1 +1,37 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"mcs-management","appId":"1:474484831866:android:58d93344181273a0c3edc3","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"mcs-management","configurations":{"android":"1:474484831866:android:58d93344181273a0c3edc3","web":"1:474484831866:web:7f4b96c1358d5c59c3edc3","windows":"1:474484831866:web:eea46bf5ba281813c3edc3"}}}}}}
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "mcs-management",
+          "appId": "1:474484831866:android:58d93344181273a0c3edc3",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "mcs-management",
+          "configurations": {
+            "android": "1:474484831866:android:58d93344181273a0c3edc3",
+            "web": "1:474484831866:web:7f4b96c1358d5c59c3edc3",
+            "windows": "1:474484831866:web:eea46bf5ba281813c3edc3"
+          }
+        }
+      }
+    }
+  }
+}
