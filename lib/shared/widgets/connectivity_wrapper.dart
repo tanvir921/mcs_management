@@ -30,10 +30,10 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
         .map((snapshot) => !snapshot.metadata.isFromCache)
         .distinct()
         .listen((isOnline) {
-      if (mounted) {
-        setState(() => _isOnline = isOnline);
-      }
-    });
+          if (mounted) {
+            setState(() => _isOnline = isOnline);
+          }
+        });
 
     // Also try a simple network check
     _checkInitialConnectivity();
@@ -81,7 +81,11 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
                           SizedBox(width: 8),
                           Text(
                             'You are offline - Changes will sync when online',
-                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),

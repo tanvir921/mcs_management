@@ -53,12 +53,7 @@ class Responsive {
 
   /// Get grid cross axis count based on screen size
   static int gridCrossAxisCount(BuildContext context, {int maxColumns = 4}) {
-    return value(
-      context,
-      mobile: 2,
-      tablet: 3,
-      desktop: maxColumns,
-    );
+    return value(context, mobile: 2, tablet: 3, desktop: maxColumns);
   }
 
   /// Get maximum content width for centered layouts
@@ -129,10 +124,7 @@ class CenteredContent extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: maxWidth ?? Responsive.maxContentWidth(context),
         ),
-        child: Padding(
-          padding: padding ?? EdgeInsets.zero,
-          child: child,
-        ),
+        child: Padding(padding: padding ?? EdgeInsets.zero, child: child),
       ),
     );
   }

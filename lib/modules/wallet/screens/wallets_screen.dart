@@ -229,7 +229,12 @@ class _WalletsScreenState extends State<WalletsScreen> {
                 final walletType = entry.key;
                 final walletsOfType = entry.value;
                 final isLargeScreen = Responsive.isLargeScreen(context);
-                final crossAxisCount = Responsive.value(context, mobile: 1, tablet: 2, desktop: 3);
+                final crossAxisCount = Responsive.value(
+                  context,
+                  mobile: 1,
+                  tablet: 2,
+                  desktop: 3,
+                );
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

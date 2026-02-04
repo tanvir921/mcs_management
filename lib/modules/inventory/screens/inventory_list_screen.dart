@@ -633,17 +633,23 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                     return LayoutBuilder(
                       builder: (context, constraints) {
                         final isLargeScreen = Responsive.isLargeScreen(context);
-                        final crossAxisCount = Responsive.value(context, mobile: 1, tablet: 2, desktop: 3);
-                        
+                        final crossAxisCount = Responsive.value(
+                          context,
+                          mobile: 1,
+                          tablet: 2,
+                          desktop: 3,
+                        );
+
                         if (isLargeScreen) {
                           return GridView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 1.8,
-                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 1.8,
+                                ),
                             itemCount: items.length,
                             itemBuilder: (context, index) {
                               final item = items[index];
@@ -651,7 +657,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                             },
                           );
                         }
-                        
+
                         return ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: items.length,
@@ -711,9 +717,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => InventoryDetailScreen(item: item),
-          ),
+          MaterialPageRoute(builder: (_) => InventoryDetailScreen(item: item)),
         );
       },
       onAddToCart: (quantity) {
@@ -721,7 +725,9 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
         cart.addItem(item, quantity);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added ${item.name} to cart (${quantity} ${item.unit})'),
+            content: Text(
+              'Added ${item.name} to cart (${quantity} ${item.unit})',
+            ),
             duration: const Duration(seconds: 2),
             action: SnackBarAction(
               label: 'View Cart',

@@ -158,17 +158,22 @@ class SalesScreen extends StatelessWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isLargeScreen = Responsive.isLargeScreen(context);
-                    
+
                     final actionCards = [
                       _SaleActionCard(
                         icon: Icons.add_shopping_cart,
                         title: 'New Sale',
                         subtitle: 'Create a new sale transaction',
-                        gradient: [Colors.purple.shade400, Colors.purple.shade600],
+                        gradient: [
+                          Colors.purple.shade400,
+                          Colors.purple.shade600,
+                        ],
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const AddSaleScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const AddSaleScreen(),
+                            ),
                           );
                         },
                       ),
@@ -176,11 +181,16 @@ class SalesScreen extends StatelessWidget {
                         icon: Icons.history,
                         title: 'Sales History',
                         subtitle: 'View all sales transactions',
-                        gradient: [Colors.orange.shade400, Colors.orange.shade600],
+                        gradient: [
+                          Colors.orange.shade400,
+                          Colors.orange.shade600,
+                        ],
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const SalesHistoryScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const SalesHistoryScreen(),
+                            ),
                           );
                         },
                       ),
@@ -189,27 +199,38 @@ class SalesScreen extends StatelessWidget {
                         title: 'Inventory',
                         subtitle: 'Manage products and services',
                         gradient: [Colors.teal.shade400, Colors.teal.shade600],
-                        onTap: () => Navigator.pushNamed(context, AppRoutes.inventory),
+                        onTap: () =>
+                            Navigator.pushNamed(context, AppRoutes.inventory),
                       ),
                     ];
-                    
+
                     if (isLargeScreen) {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: actionCards.map((card) => Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: card,
-                          ),
-                        )).toList(),
+                        children: actionCards
+                            .map(
+                              (card) => Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: card,
+                                ),
+                              ),
+                            )
+                            .toList(),
                       );
                     }
-                    
+
                     return Column(
-                      children: actionCards.map((card) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: card,
-                      )).toList(),
+                      children: actionCards
+                          .map(
+                            (card) => Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: card,
+                            ),
+                          )
+                          .toList(),
                     );
                   },
                 ),

@@ -52,11 +52,7 @@ class ResponsiveScaffold extends StatefulWidget {
 class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
   // All navigation items
   static const List<NavItem> _allNavItems = [
-    NavItem(
-      title: 'Home',
-      icon: Icons.home,
-      route: '/',
-    ),
+    NavItem(title: 'Home', icon: Icons.home, route: '/'),
     NavItem(
       title: 'Customers',
       icon: Icons.people,
@@ -193,9 +189,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                 // Top bar
                 _buildTopBar(context),
                 // Body
-                Expanded(
-                  child: widget.body,
-                ),
+                Expanded(child: widget.body),
               ],
             ),
           ),
@@ -280,7 +274,9 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                         radius: 20,
                         backgroundColor: Colors.blue.shade100,
                         child: Text(
-                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                          user.name.isNotEmpty
+                              ? user.name[0].toUpperCase()
+                              : 'U',
                           style: TextStyle(
                             color: Colors.blue.shade700,
                             fontWeight: FontWeight.bold,
@@ -320,8 +316,10 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                   itemCount: navItems.length,
                   itemBuilder: (context, index) {
                     final item = navItems[index];
-                    final isSelected = _currentRoute == item.route ||
-                        (item.route != '/' && _currentRoute.startsWith(item.route));
+                    final isSelected =
+                        _currentRoute == item.route ||
+                        (item.route != '/' &&
+                            _currentRoute.startsWith(item.route));
 
                     return _buildNavItem(
                       context,
@@ -335,9 +333,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.grey.shade200),
-                  ),
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: InkWell(
                   onTap: () async {
@@ -356,7 +352,11 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.logout, color: Colors.red.shade700, size: 20),
+                        Icon(
+                          Icons.logout,
+                          color: Colors.red.shade700,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Logout',
@@ -399,9 +399,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
           decoration: BoxDecoration(
             color: isSelected ? Colors.blue.shade50 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            border: isSelected
-                ? Border.all(color: Colors.blue.shade200)
-                : null,
+            border: isSelected ? Border.all(color: Colors.blue.shade200) : null,
           ),
           child: Row(
             children: [
@@ -415,8 +413,12 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                 child: Text(
                   item.title,
                   style: TextStyle(
-                    color: isSelected ? Colors.blue.shade700 : Colors.grey.shade700,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected
+                        ? Colors.blue.shade700
+                        : Colors.grey.shade700,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -459,10 +461,7 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
             ),
           Text(
             widget.title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (widget.actions != null) ...widget.actions!,

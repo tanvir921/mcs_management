@@ -390,17 +390,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final isLargeScreen = Responsive.isLargeScreen(context);
-                      final crossAxisCount = Responsive.value(context, mobile: 1, tablet: 2, desktop: 3);
-                      
+                      final crossAxisCount = Responsive.value(
+                        context,
+                        mobile: 1,
+                        tablet: 2,
+                        desktop: 3,
+                      );
+
                       if (isLargeScreen) {
                         return GridView.builder(
                           padding: const EdgeInsets.all(16),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 2.2,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 2.2,
+                              ),
                           itemCount: customers.length,
                           itemBuilder: (context, index) {
                             final customer = customers[index];
@@ -408,7 +414,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           },
                         );
                       }
-                      
+
                       return ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: customers.length,
@@ -443,7 +449,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
   Widget _buildCustomerCard(BuildContext context, Customer customer) {
     final hasDue = customer.totalDue > 0;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -486,7 +492,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: hasDue ? Colors.red.shade300 : Colors.green.shade300,
+                      color: hasDue
+                          ? Colors.red.shade300
+                          : Colors.green.shade300,
                       width: 2.5,
                     ),
                   ),
@@ -500,7 +508,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         ? Text(
                             customer.name.substring(0, 1).toUpperCase(),
                             style: TextStyle(
-                              color: hasDue ? Colors.red.shade700 : Colors.green.shade700,
+                              color: hasDue
+                                  ? Colors.red.shade700
+                                  : Colors.green.shade700,
                               fontWeight: FontWeight.bold,
                               fontSize: 24,
                             ),
@@ -528,7 +538,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(Icons.phone_rounded, size: 15, color: Colors.grey.shade600),
+                            Icon(
+                              Icons.phone_rounded,
+                              size: 15,
+                              color: Colors.grey.shade600,
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               customer.phone!,
@@ -546,11 +560,23 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          _buildDueBadge('Total', customer.totalDue, hasDue ? Colors.red : Colors.green),
+                          _buildDueBadge(
+                            'Total',
+                            customer.totalDue,
+                            hasDue ? Colors.red : Colors.green,
+                          ),
                           if (customer.cashBorrowDue > 0)
-                            _buildDueBadge('Cash', customer.cashBorrowDue, Colors.orange),
+                            _buildDueBadge(
+                              'Cash',
+                              customer.cashBorrowDue,
+                              Colors.orange,
+                            ),
                           if (customer.previousDue > 0)
-                            _buildDueBadge('Prev', customer.previousDue, Colors.teal),
+                            _buildDueBadge(
+                              'Prev',
+                              customer.previousDue,
+                              Colors.teal,
+                            ),
                         ],
                       ),
                     ],

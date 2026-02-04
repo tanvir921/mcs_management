@@ -102,10 +102,7 @@ class ResponsiveListWrapper extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (actions != null) ...actions!,
@@ -219,10 +216,7 @@ class ResponsiveFormWrapper extends StatelessWidget {
           if (showBackButton) const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           if (actions != null) ...actions!,
@@ -261,10 +255,12 @@ class ResponsiveCardGrid extends StatelessWidget {
     if (columns == 1) {
       return Column(
         children: children
-            .map((child) => Padding(
-                  padding: EdgeInsets.only(bottom: spacing),
-                  child: child,
-                ))
+            .map(
+              (child) => Padding(
+                padding: EdgeInsets.only(bottom: spacing),
+                child: child,
+              ),
+            )
             .toList(),
       );
     }
@@ -273,14 +269,12 @@ class ResponsiveCardGrid extends StatelessWidget {
       spacing: spacing,
       runSpacing: spacing,
       children: children.map((child) {
-        final width = (MediaQuery.of(context).size.width -
+        final width =
+            (MediaQuery.of(context).size.width -
                 (Responsive.isLargeScreen(context) ? 260 : 0) -
                 (spacing * (columns + 1))) /
             columns;
-        return SizedBox(
-          width: width.clamp(200.0, 500.0),
-          child: child,
-        );
+        return SizedBox(width: width.clamp(200.0, 500.0), child: child);
       }).toList(),
     );
   }

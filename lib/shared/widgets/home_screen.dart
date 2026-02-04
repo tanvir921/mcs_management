@@ -45,9 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
       // Get today's sales
       final todaySalesSnapshot = await firestore
           .collection('sales')
-          .where('saleDate', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+          .where(
+            'saleDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart),
+          )
           .get();
-      
+
       double todayTotal = 0;
       for (var doc in todaySalesSnapshot.docs) {
         todayTotal += (doc.data()['total'] ?? 0).toDouble();
@@ -56,9 +59,12 @@ class _HomeScreenState extends State<HomeScreen> {
       // Get this month's sales
       final monthSalesSnapshot = await firestore
           .collection('sales')
-          .where('saleDate', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+          .where(
+            'saleDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart),
+          )
           .get();
-      
+
       double monthTotal = 0;
       for (var doc in monthSalesSnapshot.docs) {
         monthTotal += (doc.data()['total'] ?? 0).toDouble();
@@ -66,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Get pending dues (customers with positive dues)
       final customersSnapshot = await firestore.collection('customers').get();
-      
+
       double totalDues = 0;
       int customerCount = customersSnapshot.docs.length;
       for (var doc in customersSnapshot.docs) {
@@ -104,7 +110,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: isLargeScreen ? null : _buildAppBar(context),
-      body: isLargeScreen ? _buildWebLayout(context) : _buildMobileLayout(context),
+      body: isLargeScreen
+          ? _buildWebLayout(context)
+          : _buildMobileLayout(context),
     );
   }
 
@@ -148,7 +156,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       const Icon(Icons.security, size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        authProvider.currentUser != null ? _getRoleDisplayName(authProvider.currentUser!.role) : '',
+                        authProvider.currentUser != null
+                            ? _getRoleDisplayName(
+                                authProvider.currentUser!.role,
+                              )
+                            : '',
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
@@ -201,20 +213,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 32),
                             Text(
                               'Quick Access',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: Responsive.value(context, mobile: 2, tablet: 3, desktop: 4),
-                                crossAxisSpacing: 20,
-                                mainAxisSpacing: 20,
-                                childAspectRatio: 1.3,
-                              ),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: Responsive.value(
+                                      context,
+                                      mobile: 2,
+                                      tablet: 3,
+                                      desktop: 4,
+                                    ),
+                                    crossAxisSpacing: 20,
+                                    mainAxisSpacing: 20,
+                                    childAspectRatio: 1.3,
+                                  ),
                               itemCount: moduleCards.length,
                               itemBuilder: (context, index) {
                                 final card = moduleCards[index];
@@ -248,7 +265,11 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.grey.shade200, blurRadius: 10, offset: const Offset(2, 0)),
+          BoxShadow(
+            color: Colors.grey.shade200,
+            blurRadius: 10,
+            offset: const Offset(2, 0),
+          ),
         ],
       ),
       child: Column(
@@ -276,7 +297,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Expanded(
                   child: Text(
                     'MCS Management',
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -291,26 +316,82 @@ class _HomeScreenState extends State<HomeScreen> {
                 ]),
                 if (user?.hasPermission(Permission.customers) ?? false)
                   _buildNavSection('MANAGEMENT', [
-                    _NavItem(Icons.people, 'Customers', false, () => Navigator.pushNamed(context, AppRoutes.customers)),
-                    if (user?.hasPermission(Permission.msfTransactions) ?? false)
-                      _NavItem(Icons.account_balance_wallet, 'Wallets', false, () => Navigator.pushNamed(context, AppRoutes.wallets)),
+                    _NavItem(
+                      Icons.people,
+                      'Customers',
+                      false,
+                      () => Navigator.pushNamed(context, AppRoutes.customers),
+                    ),
+                    if (user?.hasPermission(Permission.msfTransactions) ??
+                        false)
+                      _NavItem(
+                        Icons.account_balance_wallet,
+                        'Wallets',
+                        false,
+                        () => Navigator.pushNamed(context, AppRoutes.wallets),
+                      ),
                     if (user?.hasPermission(Permission.products) ?? false)
-                      _NavItem(Icons.inventory_2, 'Inventory', false, () => Navigator.pushNamed(context, AppRoutes.inventory)),
+                      _NavItem(
+                        Icons.inventory_2,
+                        'Inventory',
+                        false,
+                        () => Navigator.pushNamed(context, AppRoutes.inventory),
+                      ),
                     if (user?.hasPermission(Permission.products) ?? false)
-                      _NavItem(Icons.point_of_sale, 'Sales', false, () => Navigator.pushNamed(context, AppRoutes.sales)),
+                      _NavItem(
+                        Icons.point_of_sale,
+                        'Sales',
+                        false,
+                        () => Navigator.pushNamed(context, AppRoutes.sales),
+                      ),
                   ]),
                 if (user?.hasPermission(Permission.reports) ?? false)
                   _buildNavSection('REPORTS', [
-                    _NavItem(Icons.summarize, 'Daily Closing', false, () => Navigator.pushNamed(context, AppRoutes.dailyClosing)),
-                    _NavItem(Icons.receipt_long, 'Expenses', false, () => Navigator.pushNamed(context, AppRoutes.expenses)),
-                    _NavItem(Icons.analytics, 'Reports', false, () => Navigator.pushNamed(context, AppRoutes.reports)),
-                    _NavItem(Icons.trending_down, 'Profit Deduction', false, () => Navigator.pushNamed(context, AppRoutes.profitDeduction)),
+                    _NavItem(
+                      Icons.summarize,
+                      'Daily Closing',
+                      false,
+                      () =>
+                          Navigator.pushNamed(context, AppRoutes.dailyClosing),
+                    ),
+                    _NavItem(
+                      Icons.receipt_long,
+                      'Expenses',
+                      false,
+                      () => Navigator.pushNamed(context, AppRoutes.expenses),
+                    ),
+                    _NavItem(
+                      Icons.analytics,
+                      'Reports',
+                      false,
+                      () => Navigator.pushNamed(context, AppRoutes.reports),
+                    ),
+                    _NavItem(
+                      Icons.trending_down,
+                      'Profit Deduction',
+                      false,
+                      () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.profitDeduction,
+                      ),
+                    ),
                   ]),
                 if (user?.hasPermission(Permission.userManagement) ?? false)
                   _buildNavSection('ADMIN', [
-                    _NavItem(Icons.admin_panel_settings, 'User Management', false, () => Navigator.pushNamed(context, AppRoutes.users)),
+                    _NavItem(
+                      Icons.admin_panel_settings,
+                      'User Management',
+                      false,
+                      () => Navigator.pushNamed(context, AppRoutes.users),
+                    ),
                     if (user?.isMasterAdmin ?? false)
-                      _NavItem(Icons.build, 'Admin Tools', false, () => Navigator.pushNamed(context, AppRoutes.adminTools)),
+                      _NavItem(
+                        Icons.build,
+                        'Admin Tools',
+                        false,
+                        () =>
+                            Navigator.pushNamed(context, AppRoutes.adminTools),
+                      ),
                   ]),
               ],
             ),
@@ -332,7 +413,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.logout, color: Colors.red.shade600, size: 20),
                     const SizedBox(width: 8),
-                    Text('Logout', style: TextStyle(color: Colors.red.shade600, fontWeight: FontWeight.w600)),
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Colors.red.shade600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -351,7 +438,12 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             title,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey.shade500, letterSpacing: 1.2),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 8),
           ...items.map((item) => _buildNavTile(item)),
@@ -374,13 +466,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Row(
             children: [
-              Icon(item.icon, size: 20, color: item.isSelected ? Colors.blue.shade700 : Colors.grey.shade600),
+              Icon(
+                item.icon,
+                size: 20,
+                color: item.isSelected
+                    ? Colors.blue.shade700
+                    : Colors.grey.shade600,
+              ),
               const SizedBox(width: 12),
               Text(
                 item.title,
                 style: TextStyle(
-                  color: item.isSelected ? Colors.blue.shade700 : Colors.grey.shade700,
-                  fontWeight: item.isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: item.isSelected
+                      ? Colors.blue.shade700
+                      : Colors.grey.shade700,
+                  fontWeight: item.isSelected
+                      ? FontWeight.w600
+                      : FontWeight.normal,
                 ),
               ),
             ],
@@ -395,26 +497,54 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.grey.shade100, blurRadius: 4, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Welcome back,', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-              Text(user.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(
+                'Welcome back,',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
+              Text(
+                user.name,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Row(
               children: [
-                Icon(Icons.verified_user, size: 18, color: Colors.blue.shade700),
+                Icon(
+                  Icons.verified_user,
+                  size: 18,
+                  color: Colors.blue.shade700,
+                ),
                 const SizedBox(width: 8),
-                Text(_getRoleDisplayName(user.role), style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.w600)),
+                Text(
+                  _getRoleDisplayName(user.role),
+                  style: TextStyle(
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -426,33 +556,41 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildStatsRow(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _StatCard(
-          title: 'Today\'s Sales',
-          value: _isLoading ? '...' : _formatCurrency(_todaySales),
-          icon: Icons.point_of_sale,
-          color: Colors.green,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: 'Today\'s Sales',
+            value: _isLoading ? '...' : _formatCurrency(_todaySales),
+            icon: Icons.point_of_sale,
+            color: Colors.green,
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(
-          title: 'Pending Dues',
-          value: _isLoading ? '...' : _formatCurrency(_pendingDues),
-          icon: Icons.pending_actions,
-          color: Colors.orange,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: 'Pending Dues',
+            value: _isLoading ? '...' : _formatCurrency(_pendingDues),
+            icon: Icons.pending_actions,
+            color: Colors.orange,
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(
-          title: 'This Month',
-          value: _isLoading ? '...' : _formatCurrency(_thisMonthSales),
-          icon: Icons.calendar_today,
-          color: Colors.purple,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: 'This Month',
+            value: _isLoading ? '...' : _formatCurrency(_thisMonthSales),
+            icon: Icons.calendar_today,
+            color: Colors.purple,
+          ),
+        ),
         const SizedBox(width: 20),
-        Expanded(child: _StatCard(
-          title: 'Total Customers',
-          value: _isLoading ? '...' : '$_totalCustomers',
-          icon: Icons.people,
-          color: Colors.blue,
-        )),
+        Expanded(
+          child: _StatCard(
+            title: 'Total Customers',
+            value: _isLoading ? '...' : '$_totalCustomers',
+            icon: Icons.people,
+            color: Colors.blue,
+          ),
+        ),
       ],
     );
   }
@@ -489,14 +627,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 8),
-                    Text('Welcome Back', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white70, fontWeight: FontWeight.w500)),
+                    Text(
+                      'Welcome Back',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(user.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(
+                      user.name,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
-                      child: Text(_getRoleDisplayName(user.role), style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _getRoleDisplayName(user.role),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -509,23 +673,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.9,
-                      ),
-                      itemCount: moduleCards.length.isOdd ? moduleCards.length - 1 : moduleCards.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.9,
+                          ),
+                      itemCount: moduleCards.length.isOdd
+                          ? moduleCards.length - 1
+                          : moduleCards.length,
                       itemBuilder: (context, index) {
                         final card = moduleCards[index];
-                        return _ModuleCard(title: card.title, icon: card.icon, color: card.color, onTap: card.onTap);
+                        return _ModuleCard(
+                          title: card.title,
+                          icon: card.icon,
+                          color: card.color,
+                          onTap: card.onTap,
+                        );
                       },
                     ),
                     if (moduleCards.length.isOdd) ...[
                       const SizedBox(height: 12),
                       SizedBox(
                         height: MediaQuery.of(context).size.width / 2 * 0.9,
-                        child: _ModuleCard(title: moduleCards.last.title, icon: moduleCards.last.icon, color: moduleCards.last.color, onTap: moduleCards.last.onTap),
+                        child: _ModuleCard(
+                          title: moduleCards.last.title,
+                          icon: moduleCards.last.icon,
+                          color: moduleCards.last.color,
+                          onTap: moduleCards.last.onTap,
+                        ),
                       ),
                     ],
                   ],
@@ -542,34 +719,105 @@ class _HomeScreenState extends State<HomeScreen> {
     final moduleCards = <_ModuleCardData>[];
 
     if (user.hasPermission(Permission.customers)) {
-      moduleCards.add(_ModuleCardData(title: 'Customers', icon: Icons.people, color: Colors.blue, onTap: () => Navigator.pushNamed(context, AppRoutes.customers)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Customers',
+          icon: Icons.people,
+          color: Colors.blue,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.customers),
+        ),
+      );
     }
     if (user.hasPermission(Permission.msfTransactions)) {
-      moduleCards.add(_ModuleCardData(title: 'Wallets', icon: Icons.account_balance_wallet, color: Colors.green, onTap: () => Navigator.pushNamed(context, AppRoutes.wallets)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Wallets',
+          icon: Icons.account_balance_wallet,
+          color: Colors.green,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.wallets),
+        ),
+      );
     }
     if (user.hasPermission(Permission.reports)) {
-      moduleCards.add(_ModuleCardData(title: 'Daily Closing', icon: Icons.summarize, color: Colors.deepOrange, onTap: () => Navigator.pushNamed(context, AppRoutes.dailyClosing)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Daily Closing',
+          icon: Icons.summarize,
+          color: Colors.deepOrange,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.dailyClosing),
+        ),
+      );
     }
-    if (user.hasPermission(Permission.products) || user.hasPermission(Permission.services)) {
-      moduleCards.add(_ModuleCardData(title: 'Inventory', icon: Icons.inventory_2, color: Colors.teal, onTap: () => Navigator.pushNamed(context, AppRoutes.inventory)));
+    if (user.hasPermission(Permission.products) ||
+        user.hasPermission(Permission.services)) {
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Inventory',
+          icon: Icons.inventory_2,
+          color: Colors.teal,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.inventory),
+        ),
+      );
     }
     if (user.hasPermission(Permission.products)) {
-      moduleCards.add(_ModuleCardData(title: 'Sales', icon: Icons.point_of_sale, color: Colors.purple, onTap: () => Navigator.pushNamed(context, AppRoutes.sales)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Sales',
+          icon: Icons.point_of_sale,
+          color: Colors.purple,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.sales),
+        ),
+      );
     }
     if (user.hasPermission(Permission.reports)) {
-      moduleCards.add(_ModuleCardData(title: 'Expenses', icon: Icons.receipt_long, color: Colors.red, onTap: () => Navigator.pushNamed(context, AppRoutes.expenses)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Expenses',
+          icon: Icons.receipt_long,
+          color: Colors.red,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.expenses),
+        ),
+      );
     }
     if (user.hasPermission(Permission.reports)) {
-      moduleCards.add(_ModuleCardData(title: 'Reports', icon: Icons.analytics, color: Colors.orange, onTap: () => Navigator.pushNamed(context, AppRoutes.reports)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Reports',
+          icon: Icons.analytics,
+          color: Colors.orange,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
+        ),
+      );
     }
     if (user.hasPermission(Permission.userManagement)) {
-      moduleCards.add(_ModuleCardData(title: 'User Management', icon: Icons.admin_panel_settings, color: Colors.indigo, onTap: () => Navigator.pushNamed(context, AppRoutes.users)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'User Management',
+          icon: Icons.admin_panel_settings,
+          color: Colors.indigo,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.users),
+        ),
+      );
     }
     if (user.hasPermission(Permission.reports)) {
-      moduleCards.add(_ModuleCardData(title: 'Profit Deduction', icon: Icons.trending_down, color: Colors.amber, onTap: () => Navigator.pushNamed(context, AppRoutes.profitDeduction)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Profit Deduction',
+          icon: Icons.trending_down,
+          color: Colors.amber,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.profitDeduction),
+        ),
+      );
     }
     if (user.isMasterAdmin) {
-      moduleCards.add(_ModuleCardData(title: 'Admin Tools', icon: Icons.build, color: Colors.red.shade700, onTap: () => Navigator.pushNamed(context, AppRoutes.adminTools)));
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Admin Tools',
+          icon: Icons.build,
+          color: Colors.red.shade700,
+          onTap: () => Navigator.pushNamed(context, AppRoutes.adminTools),
+        ),
+      );
     }
 
     return moduleCards;
@@ -589,7 +837,12 @@ class _ModuleCardData {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  _ModuleCardData({required this.title, required this.icon, required this.color, required this.onTap});
+  _ModuleCardData({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 }
 
 class _ModuleCard extends StatefulWidget {
@@ -598,7 +851,12 @@ class _ModuleCard extends StatefulWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _ModuleCard({required this.title, required this.icon, required this.color, required this.onTap});
+  const _ModuleCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   State<_ModuleCard> createState() => _ModuleCardState();
@@ -618,11 +876,17 @@ class _ModuleCardState extends State<_ModuleCard> {
         duration: const Duration(milliseconds: 200),
         child: Card(
           elevation: _isHovered ? 6 : 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Colors.white, Colors.grey.shade50]),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.white, Colors.grey.shade50],
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -630,13 +894,27 @@ class _ModuleCardState extends State<_ModuleCard> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [widget.color.withOpacity(0.3), widget.color.withOpacity(0.1)]),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        widget.color.withOpacity(0.3),
+                        widget.color.withOpacity(0.1),
+                      ],
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(widget.icon, size: 40, color: widget.color),
                 ),
                 const SizedBox(height: 12),
-                Text(widget.title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+                Text(
+                  widget.title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
               ],
             ),
           ),
@@ -652,7 +930,12 @@ class _WebModuleCard extends StatefulWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _WebModuleCard({required this.title, required this.icon, required this.color, required this.onTap});
+  const _WebModuleCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   State<_WebModuleCard> createState() => _WebModuleCardState();
@@ -673,9 +956,20 @@ class _WebModuleCardState extends State<_WebModuleCard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: _isHovered ? widget.color.withOpacity(0.3) : Colors.grey.shade200, blurRadius: _isHovered ? 16 : 8, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: _isHovered
+                  ? widget.color.withOpacity(0.3)
+                  : Colors.grey.shade200,
+              blurRadius: _isHovered ? 16 : 8,
+              offset: const Offset(0, 4),
+            ),
           ],
-          border: Border.all(color: _isHovered ? widget.color.withOpacity(0.5) : Colors.transparent, width: 2),
+          border: Border.all(
+            color: _isHovered
+                ? widget.color.withOpacity(0.5)
+                : Colors.transparent,
+            width: 2,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -684,11 +978,22 @@ class _WebModuleCardState extends State<_WebModuleCard> {
             children: [
               Container(
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: widget.color.withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Icon(widget.icon, size: 32, color: widget.color),
               ),
               const SizedBox(height: 14),
-              Text(widget.title, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+              Text(
+                widget.title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
             ],
           ),
         ),
@@ -703,7 +1008,12 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _StatCard({required this.title, required this.value, required this.icon, required this.color});
+  const _StatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -712,13 +1022,22 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade200,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(width: 16),
@@ -726,9 +1045,19 @@ class _StatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                Text(
+                  title,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
                 const SizedBox(height: 4),
-                Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
               ],
             ),
           ),
