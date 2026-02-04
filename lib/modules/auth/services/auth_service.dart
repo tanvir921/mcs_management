@@ -5,6 +5,34 @@ import '../models/action_log.dart';
 import '../../../core/constants/enums.dart';
 import '../../../core/errors/app_exceptions.dart';
 
+String _getPermissionDisplayName(Permission p) {
+  switch (p) {
+    case Permission.customers:
+      return 'Customer Management';
+    case Permission.msfTransactions:
+      return 'MSF Transactions';
+    case Permission.products:
+      return 'Product Management';
+    case Permission.services:
+      return 'Service Management';
+    case Permission.reports:
+      return 'Reports';
+    case Permission.dailyClosing:
+      return 'Daily Closing';
+    case Permission.userManagement:
+      return 'User Management';
+  }
+}
+
+String _getRoleDisplayName(UserRole role) {
+  switch (role) {
+    case UserRole.masterAdmin:
+      return 'Master Admin';
+    case UserRole.subAdmin:
+      return 'Sub Admin';
+  }
+}
+
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -136,7 +164,7 @@ class AuthService {
         action: 'CREATE_USER',
         module: 'Auth',
         details:
-            'Created ${role.displayName}: $name ($email)${role == UserRole.subAdmin ? " with ${permissions?.length ?? 0} permissions" : ""}',
+            'Created ${_getRoleDisplayName(role)}: $name ($email)${role == UserRole.subAdmin ? " with ${permissions?.length ?? 0} permissions" : ""}',
       );
     } on FirebaseAuthException catch (e) {
       throw ValidationException(_getAuthErrorMessage(e.code));
@@ -167,7 +195,7 @@ class AuthService {
       }
 
       await _firestore.collection(_usersCollection).doc(userId).update({
-        'permissions': permissions.map((p) => p.name).toList(),
+        'permissions': permissions.map((p) => p.toString().split('.').last).toList(),
       });
 
       await _logAction(
@@ -176,7 +204,7 @@ class AuthService {
         action: 'UPDATE_PERMISSIONS',
         module: 'Auth',
         details:
-            'Updated permissions for ${userData.name}: ${permissions.map((p) => p.displayName).join(", ")}',
+            'Updated permissions for ${userData.name}: ${permissions.map((p) => _getPermissionDisplayName(p)).join(", ")}',
       );
     } catch (e) {
       if (e is ValidationException) rethrow;

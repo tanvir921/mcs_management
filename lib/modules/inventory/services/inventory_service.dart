@@ -15,7 +15,6 @@ class InventoryService {
     try {
       Query query = _firestore
           .collection(_categoriesCollection)
-          .where('userId', isEqualTo: userId)
           .where('type', isEqualTo: type.value);
 
       if (!includeInactive) {
@@ -86,7 +85,6 @@ class InventoryService {
       // Get the highest existing SKU number
       final snapshot = await _firestore
           .collection(_itemsCollection)
-          .where('userId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
           .limit(1)
           .get();
@@ -104,7 +102,6 @@ class InventoryService {
           // If SKU is not a number, count total items + 1000
           final countSnapshot = await _firestore
               .collection(_itemsCollection)
-              .where('userId', isEqualTo: userId)
               .get();
           nextNumber = countSnapshot.docs.length + 1001;
         }
@@ -117,7 +114,7 @@ class InventoryService {
     }
   }
 
-  /// Get all inventory items for user
+  /// Get all inventory items (shared across all users)
   Future<List<InventoryItem>> getItems(
     String userId, {
     ItemType? type,
@@ -125,9 +122,7 @@ class InventoryService {
     bool includeInactive = false,
   }) async {
     try {
-      Query query = _firestore
-          .collection(_itemsCollection)
-          .where('userId', isEqualTo: userId);
+      Query query = _firestore.collection(_itemsCollection);
 
       if (type != null) {
         query = query.where('type', isEqualTo: type.value);

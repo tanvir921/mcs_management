@@ -50,10 +50,9 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
     }
 
     try {
-      // Get profitDeduction wallet
+      // Get profitDeduction wallet (shared across all users)
       final walletsSnapshot = await FirebaseFirestore.instance
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('type', isEqualTo: 'profitDeduction')
           .get();
 
@@ -168,10 +167,9 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
 
       if (userId == null) return;
 
-      // Get or create profitDeduction wallet
+      // Get or create profitDeduction wallet (shared across all users)
       final walletsSnapshot = await FirebaseFirestore.instance
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('type', isEqualTo: 'profitDeduction')
           .get();
 

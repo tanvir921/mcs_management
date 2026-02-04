@@ -279,12 +279,11 @@ class DailyClosingService {
     }
   }
 
-  /// Get all wallet balances for user with breakdown
+  /// Get all wallet balances with breakdown (shared across all users)
   Future<(double, double)> calculateWalletBalances(String userId) async {
     try {
       final snapshot = await _firestore
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('isActive', isEqualTo: true)
           .get();
 
@@ -303,12 +302,11 @@ class DailyClosingService {
     }
   }
 
-  /// Get wallet breakdown - individual wallet permanent balances
+  /// Get wallet breakdown - individual wallet permanent balances (shared)
   Future<List<BreakdownItem>> getWalletBreakdown(String userId) async {
     try {
       final snapshot = await _firestore
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('isActive', isEqualTo: true)
           .get();
 
@@ -333,14 +331,13 @@ class DailyClosingService {
     }
   }
 
-  /// Get temporary balance breakdown - individual wallet temporary balances
+  /// Get temporary balance breakdown - individual wallet temporary balances (shared)
   Future<List<BreakdownItem>> getTemporaryBalanceBreakdown(
     String userId,
   ) async {
     try {
       final snapshot = await _firestore
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('isActive', isEqualTo: true)
           .get();
 
@@ -367,7 +364,7 @@ class DailyClosingService {
     }
   }
 
-  /// Get MSF breakdown - individual customer MSF transactions for today
+  /// Get MSF breakdown - individual customer MSF transactions for today (shared)
   Future<List<BreakdownItem>> getMSFBreakdown(String userId) async {
     try {
       final today = DateTime.now();
@@ -376,7 +373,6 @@ class DailyClosingService {
 
       final customersSnapshot = await _firestore
           .collection('customers')
-          .where('userId', isEqualTo: userId)
           .get();
 
       List<BreakdownItem> breakdown = [];
@@ -414,7 +410,7 @@ class DailyClosingService {
     }
   }
 
-  /// Get cash borrow breakdown - individual customer cash borrow transactions for today
+  /// Get cash borrow breakdown - individual customer cash borrow transactions for today (shared)
   Future<List<BreakdownItem>> getCashBorrowBreakdown(String userId) async {
     try {
       final today = DateTime.now();
@@ -423,7 +419,6 @@ class DailyClosingService {
 
       final customersSnapshot = await _firestore
           .collection('customers')
-          .where('userId', isEqualTo: userId)
           .get();
 
       List<BreakdownItem> breakdown = [];
@@ -462,6 +457,7 @@ class DailyClosingService {
   }
 
   /// Get expense breakdown - individual expense items for today
+  /// Get expense breakdown - individual expense items for today (shared)
   Future<List<BreakdownItem>> getExpenseBreakdown(String userId) async {
     try {
       final today = DateTime.now();
@@ -470,7 +466,6 @@ class DailyClosingService {
 
       final snapshot = await _firestore
           .collection('expenses')
-          .where('userId', isEqualTo: userId)
           .where('date', isGreaterThanOrEqualTo: startOfDay)
           .where('date', isLessThanOrEqualTo: endOfDay)
           .get();
@@ -501,7 +496,7 @@ class DailyClosingService {
     }
   }
 
-  /// Get yesterday's daily closing to compare
+  /// Get yesterday's daily closing to compare (shared across all users)
   Future<DailyClosing?> getYesterdaysClosing(String userId) async {
     try {
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
@@ -521,7 +516,6 @@ class DailyClosingService {
 
       final snapshot = await _firestore
           .collection(_closingCollection)
-          .where('userId', isEqualTo: userId)
           .where('closingDate', isGreaterThanOrEqualTo: startOfDay)
           .where('closingDate', isLessThanOrEqualTo: endOfDay)
           .limit(1)
@@ -687,7 +681,7 @@ class DailyClosingService {
     }
   }
 
-  /// Track profit deduction in Profit Deduction Tracking wallet
+  /// Track profit deduction in Profit Deduction Tracking wallet (shared)
   Future<void> _trackProfitDeductionInWallet({
     required String userId,
     required double amount,
@@ -696,10 +690,9 @@ class DailyClosingService {
     required String approvedByName,
   }) async {
     try {
-      // Get or create profit deduction wallet
+      // Get or create profit deduction wallet (shared across all users)
       final profitWalletQuery = await _firestore
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('type', isEqualTo: 'profitDeduction')
           .limit(1)
           .get();
@@ -829,7 +822,7 @@ class DailyClosingService {
     }
   }
 
-  /// Get all daily closings for a user (for history)
+  /// Get all daily closings (for history - shared across all users)
   Future<List<DailyClosing>> getUserClosingHistory(
     String userId, {
     int limit = 30,
@@ -837,7 +830,6 @@ class DailyClosingService {
     try {
       final snapshot = await _firestore
           .collection(_closingCollection)
-          .where('userId', isEqualTo: userId)
           .where('isUploaded', isEqualTo: true)
           .orderBy('closingDate', descending: true)
           .limit(limit)
@@ -851,7 +843,7 @@ class DailyClosingService {
     }
   }
 
-  /// Check if closing already exists for today
+  /// Check if closing already exists for today (shared across all users)
   Future<DailyClosing?> getTodaysClosing(String userId) async {
     try {
       final today = DateTime.now();
@@ -860,7 +852,6 @@ class DailyClosingService {
 
       final snapshot = await _firestore
           .collection(_closingCollection)
-          .where('userId', isEqualTo: userId)
           .where('closingDate', isGreaterThanOrEqualTo: startOfDay)
           .where('closingDate', isLessThanOrEqualTo: endOfDay)
           .limit(1)
@@ -885,7 +876,7 @@ class DailyClosingService {
     }
   }
 
-  /// Withdraw amount from profit deduction for personal use
+  /// Withdraw amount from profit deduction for personal use (shared wallet)
   Future<void> withdrawFromProfitDeduction({
     required String userId,
     required double amount,
@@ -893,10 +884,9 @@ class DailyClosingService {
     required String withdrawnByName,
   }) async {
     try {
-      // Get profit deduction wallet
+      // Get profit deduction wallet (shared across all users)
       final profitWalletQuery = await _firestore
           .collection('wallets')
-          .where('userId', isEqualTo: userId)
           .where('type', isEqualTo: 'profitDeduction')
           .limit(1)
           .get();

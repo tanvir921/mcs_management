@@ -20,15 +20,13 @@ class WalletService {
     }
   }
 
-  /// Get all wallets for a user
+  /// Get all wallets (shared across all users)
   Future<List<Wallet>> getUserWallets(
     String userId, {
     bool includeInactive = false,
   }) async {
     try {
-      Query query = _firestore
-          .collection(_walletsCollection)
-          .where('userId', isEqualTo: userId);
+      Query query = _firestore.collection(_walletsCollection);
 
       if (!includeInactive) {
         query = query.where('isActive', isEqualTo: true);

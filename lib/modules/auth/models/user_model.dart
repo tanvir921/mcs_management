@@ -36,19 +36,30 @@ class UserModel {
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    final role = UserRole.values.firstWhere((e) => e.name == json['role']);
+    // Parse role - handle both string and direct values
+    UserRole role;
+    final roleValue = json['role'];
+    if (roleValue is String) {
+      role = UserRole.values.firstWhere(
+        (e) => e.toString().split('.').last == roleValue || e.name == roleValue,
+        orElse: () => UserRole.subAdmin,
+      );
+    } else {
+      role = UserRole.subAdmin;
+    }
 
     // Parse permissions
     List<Permission> permissions = [];
     if (role == UserRole.subAdmin && json['permissions'] != null) {
       final permissionsList = json['permissions'] as List<dynamic>;
       permissions = permissionsList
-          .map(
-            (p) => Permission.values.firstWhere(
-              (e) => e.name == p,
+          .map((p) {
+            final pString = p.toString();
+            return Permission.values.firstWhere(
+              (e) => e.toString().split('.').last == pString || e.name == pString,
               orElse: () => Permission.customers,
-            ),
-          )
+            );
+          })
           .toList();
     }
 
@@ -68,10 +79,10 @@ class UserModel {
       'id': id,
       'email': email,
       'name': name,
-      'role': role.name,
+      'role': role.toString().split('.').last,
       'createdAt': Timestamp.fromDate(createdAt),
       'isActive': isActive,
-      'permissions': permissions.map((p) => p.name).toList(),
+      'permissions': permissions.map((p) => p.toString().split('.').last).toList(),
     };
   }
 
