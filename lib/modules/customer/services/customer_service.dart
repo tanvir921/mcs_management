@@ -159,7 +159,7 @@ class CustomerService {
         realizedProfitAmount: realizedProfit,
         profitRealized: realizedProfit > 0,
         note: note,
-        createdAt: DateTime.now(),
+        // createdAt will be set by server timestamp
         createdBy: userId,
         createdByName: userName,
       );
@@ -174,7 +174,7 @@ class CustomerService {
 
       batch.set(
         _firestore.collection(_transactionsCollection).doc(transactionId),
-        transaction.toJson(),
+        transaction.toJsonForCreate(), // Use server timestamp
       );
 
       await batch.commit();
@@ -256,7 +256,7 @@ class CustomerService {
         potentialProfit: potentialProfit,
         profitRealized: false,
         note: note,
-        createdAt: DateTime.now(),
+        // createdAt will be set by server timestamp
         createdBy: createdBy,
         createdByName: createdByName,
       );
@@ -271,7 +271,7 @@ class CustomerService {
 
       batch.set(
         _firestore.collection(_transactionsCollection).doc(transactionId),
-        transaction.toJson(),
+        transaction.toJsonForCreate(), // Use server timestamp
       );
 
       await batch.commit();

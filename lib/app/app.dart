@@ -8,7 +8,6 @@ import '../modules/wallet/providers/wallet_provider.dart';
 import '../modules/expense/providers/expense_provider.dart';
 import '../modules/daily_closing/providers/daily_closing_provider.dart';
 import '../modules/inventory/providers/inventory_provider.dart';
-import '../shared/widgets/connectivity_wrapper.dart';
 import 'auth_wrapper.dart';
 import 'app_routes.dart';
 import 'app_theme.dart';
@@ -34,7 +33,7 @@ class App extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         themeMode: ThemeMode.light,
-        home: const ConnectivityWrapper(child: AuthWrapper()),
+        home: const AuthWrapper(),
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );

@@ -45,9 +45,9 @@ class InventoryService {
         name: name,
         description: description,
         type: type,
-        createdAt: DateTime.now(),
+        // createdAt will be set by server timestamp
       );
-      await docRef.set(category.toJson());
+      await docRef.set(category.toJsonForCreate()); // Use server timestamp
     } catch (e) {
       throw Exception('Failed to create category: $e');
     }
@@ -166,10 +166,10 @@ class InventoryService {
       final docRef = _firestore.collection(_itemsCollection).doc();
       final newItem = item.copyWith(
         id: docRef.id,
-        createdAt: DateTime.now(),
+        createdAt: DateTime.now(), // Local time for return value
         updatedAt: DateTime.now(),
       );
-      await docRef.set(newItem.toJson());
+      await docRef.set(newItem.toJsonForCreate()); // Use server timestamp for Firestore
       return newItem;
     } catch (e) {
       throw Exception('Failed to create item: $e');

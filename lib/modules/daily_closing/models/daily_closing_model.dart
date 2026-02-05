@@ -131,10 +131,14 @@ class DailyClosing {
 
   factory DailyClosing.fromJson(Map<String, dynamic> json) {
     return DailyClosing(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      closingDate: (json['closingDate'] as Timestamp).toDate(),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      id: json['id'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
+      closingDate: json['closingDate'] != null 
+          ? (json['closingDate'] as Timestamp).toDate() 
+          : DateTime.now(),
+      createdAt: json['createdAt'] != null 
+          ? (json['createdAt'] as Timestamp).toDate() 
+          : DateTime.now(),
       todaysHandCash: (json['todaysHandCash'] as num?)?.toDouble() ?? 0,
       todaysSalesTotal: (json['todaysSalesTotal'] as num?)?.toDouble() ?? 0,
       todaysSalesProfit: (json['todaysSalesProfit'] as num?)?.toDouble() ?? 0,
@@ -332,8 +336,8 @@ class ProfitEntry {
 
   factory ProfitEntry.fromJson(Map<String, dynamic> json) {
     return ProfitEntry(
-      id: json['id'] as String,
-      source: json['source'] as String,
+      id: json['id'] as String? ?? '',
+      source: json['source'] as String? ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String?,
     );

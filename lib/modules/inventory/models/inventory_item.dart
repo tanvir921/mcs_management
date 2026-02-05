@@ -151,8 +151,32 @@ class InventoryItem {
       'image': image,
       'metadata': metadata,
       'isActive': isActive,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+      'createdBy': createdBy,
+      'updatedBy': updatedBy,
+    };
+  }
+
+  /// Use this for creating new documents - uses server timestamp
+  Map<String, dynamic> toJsonForCreate() {
+    return {
+      'id': id,
+      'userId': userId,
+      'category': category,
+      'name': name,
+      'description': description,
+      'type': type.value,
+      'costPrice': costPrice,
+      'sellingPrice': sellingPrice,
+      'stock': stock,
+      'unit': unit,
+      'sku': sku,
+      'image': image,
+      'metadata': metadata,
+      'isActive': isActive,
+      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'updatedAt': FieldValue.serverTimestamp(),
       'createdBy': createdBy,
       'updatedBy': updatedBy,
     };
@@ -198,7 +222,7 @@ class InventoryCategory {
   final String? icon;
   final ItemType type; // Which type this category is for
   final bool isActive;
-  final DateTime createdAt;
+  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
 
   InventoryCategory({
     required this.id,
@@ -208,7 +232,7 @@ class InventoryCategory {
     this.icon,
     required this.type,
     this.isActive = true,
-    required this.createdAt,
+    this.createdAt, // Optional - server timestamp used on create
   });
 
   Map<String, dynamic> toJson() {
@@ -220,7 +244,21 @@ class InventoryCategory {
       'icon': icon,
       'type': type.value,
       'isActive': isActive,
-      'createdAt': createdAt,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+    };
+  }
+
+  /// Use this for creating new documents - uses server timestamp
+  Map<String, dynamic> toJsonForCreate() {
+    return {
+      'id': id,
+      'userId': userId,
+      'name': name,
+      'description': description,
+      'icon': icon,
+      'type': type.value,
+      'isActive': isActive,
+      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
     };
   }
 

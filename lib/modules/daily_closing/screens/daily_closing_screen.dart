@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -171,6 +172,365 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isWideScreen = MediaQuery.of(context).size.width > 1100;
+
+    if (kIsWeb && isWideScreen) {
+      return _buildWebLayout(context);
+    }
+    return _buildMobileLayout(context);
+  }
+
+  Widget _buildWebLayout(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Consumer<DailyClosingProvider>(
+        builder: (context, closingProvider, child) {
+          return Column(
+            children: [
+              // Web Header
+              Container(
+                height: 70,
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade900]),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Daily Closing', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text(DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now()), style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                      ],
+                    ),
+                    const Spacer(),
+                    // Stats in header
+                    if (closingProvider.draftClosing != null) ...[
+                      _WebHeaderStat(label: 'Subtotal', value: '৳${closingProvider.draftClosing!.subtotal.toStringAsFixed(0)}', icon: Icons.calculate),
+                      const SizedBox(width: 24),
+                      _WebHeaderStat(label: 'Profit', value: '৳${closingProvider.draftClosing!.totalProfit.toStringAsFixed(0)}', icon: Icons.trending_up),
+                      const SizedBox(width: 24),
+                    ],
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ClosingHistoryScreen()));
+                      },
+                      icon: const Icon(Icons.history, size: 18),
+                      label: const Text('History'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Content
+              Expanded(
+                child: closingProvider.isLoading
+                    ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.blue.shade600)))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(32),
+                        child: !_showCalculations
+                            ? _buildWebInputSection()
+                            : closingProvider.draftClosing != null
+                                ? _buildWebClosingReport(context, closingProvider.draftClosing!)
+                                : const SizedBox(),
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildWebInputSection() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Column(
+          children: [
+            // Welcome Card
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade700]),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
+              ),
+              padding: const EdgeInsets.all(32),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.all(16),
+                    child: const Icon(Icons.wallet, color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Daily Closing', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Input Card
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Hand Cash Entry', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text('Enter the cash amount you have on hand', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                    const SizedBox(height: 32),
+                    TextField(
+                      controller: _handCashController,
+                      decoration: InputDecoration(
+                        labelText: 'Hand Cash',
+                        hintText: 'Enter amount',
+                        prefixIcon: const Icon(Icons.currency_exchange),
+                        suffixText: '৳',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _createDraftClosing,
+                        icon: const Icon(Icons.calculate, size: 20),
+                        label: const Text('Calculate Daily Closing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          backgroundColor: Colors.blue.shade600,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWebClosingReport(BuildContext context, DailyClosing closing) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left Panel - Main Report
+        Expanded(
+          flex: 2,
+          child: Column(
+            children: [
+              // Summary Cards Row
+              Row(
+                children: [
+                  Expanded(child: _buildWebSummaryCard('Wallet Balance', closing.walletBalancesTotal, Icons.account_balance_wallet, Colors.blue)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildWebSummaryCard('Total Expenses', closing.todaysExpenses, Icons.trending_down, Colors.red)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildWebSummaryCard('Today\'s Subtotal', closing.subtotal, Icons.calculate, Colors.green)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Income & Deductions in two columns
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildWebBreakdownCard('Income', Icons.arrow_upward, Colors.green, _buildIncomeBreakdown(closing))),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildWebBreakdownCard('Deductions', Icons.arrow_downward, Colors.red, _buildExpensesBreakdown(closing))),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Cashout & Comparison
+              _buildCashoutChargeSection(context, closing),
+              const SizedBox(height: 16),
+              if (closing.yesterdaySubtotal > 0)
+                _buildComparisonCard(context, closing)
+              else
+                _buildInfoCard('No previous closing found (first closing)', Colors.amber),
+              const SizedBox(height: 24),
+              // Profits & Deduction
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildProfitsSection(context, closing)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildProfitDeductionSection(context, closing)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 32),
+        // Right Panel - Final Balance & Actions
+        SizedBox(
+          width: 380,
+          child: Column(
+            children: [
+              // Final Balance Card
+              _buildFinalBalanceCard(closing),
+              const SizedBox(height: 24),
+              // Remarks
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.note_outlined, color: Colors.blue.shade400, size: 20),
+                          const SizedBox(width: 8),
+                          const Text('Remarks', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _remarksController,
+                        decoration: InputDecoration(
+                          hintText: 'Add any notes about today\'s closing...',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        context.read<DailyClosingProvider>().clearDraft();
+                        setState(() => _showCalculations = false);
+                        _handCashController.clear();
+                        _deductedProfitController.clear();
+                        _cashoutChargeController.clear();
+                        _remarksController.clear();
+                      },
+                      icon: const Icon(Icons.close_rounded),
+                      label: const Text('Cancel'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _saveDailyClosing,
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: const Text('Approve & Save'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green.shade600,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWebSummaryCard(String label, double amount, IconData icon, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [color.withOpacity(0.85), color.withOpacity(0.65)]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: color.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 16),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Text('৳${amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebBreakdownCard(String title, IconData icon, Color color, Widget content) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            content,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daily Closing'),
@@ -1838,6 +2198,212 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isWideScreen = MediaQuery.of(context).size.width > 1100;
+
+    if (kIsWeb && isWideScreen) {
+      return _buildWebLayout(context);
+    }
+    return _buildMobileLayout(context);
+  }
+
+  Widget _buildWebLayout(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          // Web Header
+          Container(
+            height: 70,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade900]),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.history_rounded, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Closing History', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text('View past daily closings', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: Consumer<DailyClosingProvider>(
+              builder: (context, closingProvider, child) {
+                if (closingProvider.isLoading) {
+                  return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.blue.shade600)));
+                }
+
+                if (closingProvider.closingHistory.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history, size: 80, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text('No closing history found', style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Summary Stats
+                      Row(
+                        children: [
+                          _buildWebStatCard('Total Closings', closingProvider.closingHistory.length.toString(), Icons.calendar_month, Colors.blue),
+                          const SizedBox(width: 16),
+                          _buildWebStatCard('Total Profit', '৳${closingProvider.closingHistory.fold<double>(0, (sum, c) => sum + c.totalProfit).toStringAsFixed(0)}', Icons.trending_up, Colors.green),
+                          const SizedBox(width: 16),
+                          _buildWebStatCard('Avg. Balance', '৳${(closingProvider.closingHistory.fold<double>(0, (sum, c) => sum + c.finalClosingBalance) / closingProvider.closingHistory.length).toStringAsFixed(0)}', Icons.account_balance, Colors.purple),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // History Table
+                      Expanded(
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: Column(
+                            children: [
+                              // Table Header
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Expanded(flex: 2, child: Text('Date', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
+                                    const Expanded(flex: 2, child: Text('Balance', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
+                                    const Expanded(flex: 2, child: Text('Profit', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
+                                    const Expanded(flex: 2, child: Text('Subtotal', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
+                                    const Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
+                                    const SizedBox(width: 50),
+                                  ],
+                                ),
+                              ),
+                              const Divider(height: 1),
+                              // Table Body
+                              Expanded(
+                                child: ListView.separated(
+                                  itemCount: closingProvider.closingHistory.length,
+                                  separatorBuilder: (_, __) => const Divider(height: 1),
+                                  itemBuilder: (context, index) {
+                                    final closing = closingProvider.closingHistory[index];
+                                    final isPositive = closing.finalClosingBalance >= 0;
+                                    return InkWell(
+                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClosingDetailScreen(closing: closing))),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(DateFormat('EEEE, MMM d, yyyy').format(closing.closingDate), style: const TextStyle(fontWeight: FontWeight.w500)),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text('৳${closing.finalClosingBalance.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w600, color: isPositive ? Colors.green : Colors.red)),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text('৳${closing.totalProfit.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w500)),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text('৳${closing.subtotal.toStringAsFixed(2)}', style: TextStyle(color: Colors.grey.shade700)),
+                                            ),
+                                            Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: isPositive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(20),
+                                                ),
+                                                child: Text(isPositive ? 'Positive' : 'Negative', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isPositive ? Colors.green : Colors.red)),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20),
+                                            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebStatCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.2)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text(value, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Closing History'),
@@ -2018,6 +2584,253 @@ class ClosingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWideScreen = MediaQuery.of(context).size.width > 1100;
+
+    if (kIsWeb && isWideScreen) {
+      return _buildWebLayout(context);
+    }
+    return _buildMobileLayout(context);
+  }
+
+  Widget _buildWebLayout(BuildContext context) {
+    final isPositive = closing.finalClosingBalance >= 0;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          // Web Header
+          Container(
+            height: 70,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade900]),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(DateFormat('EEEE, MMMM d, yyyy').format(closing.closingDate), style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text('Closing Details', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  ],
+                ),
+                const Spacer(),
+                _WebHeaderStatDetail(label: 'Balance', value: '৳${closing.finalClosingBalance.toStringAsFixed(0)}', color: isPositive ? Colors.greenAccent : Colors.redAccent),
+                const SizedBox(width: 24),
+                _WebHeaderStatDetail(label: 'Profit', value: '৳${closing.totalProfit.toStringAsFixed(0)}', color: Colors.greenAccent),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Panel - Summary & Breakdowns
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: [
+                        // Summary Card
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                isPositive ? Colors.green.shade600 : Colors.red.shade600,
+                                isPositive ? Colors.green.shade700 : Colors.red.shade700,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [BoxShadow(color: (isPositive ? Colors.green : Colors.red).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                          ),
+                          padding: const EdgeInsets.all(28),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Final Closing Balance', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
+                                    const SizedBox(height: 8),
+                                    Text('৳${closing.finalClosingBalance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 36)),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        _buildDetailMetric(label: 'Profit', amount: closing.totalProfit, icon: Icons.trending_up, color: Colors.white),
+                                        const SizedBox(width: 16),
+                                        _buildDetailMetric(label: 'Remaining', amount: closing.remainingCash, icon: Icons.compare_arrows, color: Colors.white),
+                                        const SizedBox(width: 16),
+                                        _buildDetailMetric(label: 'Subtotal', amount: closing.subtotal, icon: Icons.calculate, color: Colors.white),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                                padding: const EdgeInsets.all(20),
+                                child: Icon(isPositive ? Icons.trending_up : Icons.trending_down, color: Colors.white, size: 50),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Breakdowns in Grid
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildDetailedBreakdownSection(title: 'Wallet Balances', breakdown: closing.walletBreakdown, total: closing.walletBalancesTotal)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildDetailedBreakdownSection(title: 'Expenses', breakdown: closing.expenseBreakdown, total: closing.todaysExpenses, isNegative: true)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildDetailedBreakdownSection(title: 'MSF/Recharge', breakdown: closing.msfBreakdown, total: closing.todaysMSFRecharge)),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildDetailedBreakdownSection(title: 'Cash Borrow Due', breakdown: closing.cashBorrowBreakdown, total: closing.todaysCashBorrowDue)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDetailedBreakdownSection(title: 'Temporary Wallet Balance', breakdown: closing.temporaryBalanceBreakdown, total: closing.temporaryBalancesTotal, isNegative: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  // Right Panel - Quick Info
+                  SizedBox(
+                    width: 350,
+                    child: Column(
+                      children: [
+                        // Quick Stats
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Quick Stats', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const SizedBox(height: 16),
+                                _buildQuickStatRow('Hand Cash', closing.todaysHandCash, Icons.account_balance_wallet),
+                                _buildQuickStatRow('Total Sales', closing.todaysSalesTotal, Icons.shopping_cart),
+                                _buildQuickStatRow('Sales Profit', closing.todaysSalesProfit, Icons.trending_up),
+                                _buildQuickStatRow('Cashout Charge', closing.cashoutCharge, Icons.attach_money),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Profit Entries
+                        if (closing.profitEntries.isNotEmpty)
+                          Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Profit Entries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  const SizedBox(height: 16),
+                                  ...closing.profitEntries.map((entry) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 6),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(entry.source, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                              if (entry.note != null) Text(entry.note!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                            ],
+                                          ),
+                                        ),
+                                        Text('৳${entry.amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                  )),
+                                ],
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        // Approval Info
+                        if (closing.isApproved)
+                          Card(
+                            elevation: 2,
+                            color: Colors.green.shade50,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.verified, color: Colors.green.shade600, size: 20),
+                                      const SizedBox(width: 8),
+                                      const Text('Approved', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text('By: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}', style: const TextStyle(fontSize: 14)),
+                                  Text('At: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+                                  if (closing.remarks != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text('Remarks: ${closing.remarks}', style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStatRow(String label, double amount, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.blue.shade400),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
+          Text('৳${amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
     final isPositive = closing.finalClosingBalance >= 0;
 
     return Scaffold(
@@ -2431,6 +3244,68 @@ class ClosingDetailScreen extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Web Header Stat Widget for DailyClosingScreen
+class _WebHeaderStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _WebHeaderStat({required this.label, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white70, size: 18),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: const TextStyle(color: Colors.white60, fontSize: 11)),
+              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Web Header Stat Widget for ClosingDetailScreen
+class _WebHeaderStatDetail extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _WebHeaderStatDetail({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 11)),
+          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+        ],
       ),
     );
   }

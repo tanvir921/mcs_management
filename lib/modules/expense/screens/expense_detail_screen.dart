@@ -294,7 +294,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     label: 'Created At',
                     value: DateFormat(
                       'MMM dd, yyyy hh:mm a',
-                    ).format(_expense!.createdAt),
+                    ).format(_expense!.createdAt ?? DateTime.now()),
                   ),
                   if (_expense!.updatedAt != null) ...[
                     const SizedBox(height: 12),

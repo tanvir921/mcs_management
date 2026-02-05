@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
 import '../../app/app_routes.dart';
 import '../../modules/auth/providers/auth_provider.dart';
+import '../../modules/reports/services/reports_service.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/responsive.dart';
 
@@ -23,87 +26,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double _todaySales = 0;
-  double _pendingDues = 0;
-  double _thisMonthSales = 0;
-  int _totalCustomers = 0;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadStats();
-  }
-
-  Future<void> _loadStats() async {
-    try {
-      final firestore = FirebaseFirestore.instance;
-      final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final monthStart = DateTime(now.year, now.month, 1);
-
-      // Get today's sales
-      final todaySalesSnapshot = await firestore
-          .collection('sales')
-          .where(
-            'saleDate',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart),
-          )
-          .get();
-
-      double todayTotal = 0;
-      for (var doc in todaySalesSnapshot.docs) {
-        todayTotal += (doc.data()['total'] ?? 0).toDouble();
-      }
-
-      // Get this month's sales
-      final monthSalesSnapshot = await firestore
-          .collection('sales')
-          .where(
-            'saleDate',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart),
-          )
-          .get();
-
-      double monthTotal = 0;
-      for (var doc in monthSalesSnapshot.docs) {
-        monthTotal += (doc.data()['total'] ?? 0).toDouble();
-      }
-
-      // Get pending dues (customers with positive dues)
-      final customersSnapshot = await firestore.collection('customers').get();
-
-      double totalDues = 0;
-      int customerCount = customersSnapshot.docs.length;
-      for (var doc in customersSnapshot.docs) {
-        totalDues += (doc.data()['totalDue'] ?? 0).toDouble();
-      }
-
-      if (mounted) {
-        setState(() {
-          _todaySales = todayTotal;
-          _thisMonthSales = monthTotal;
-          _pendingDues = totalDues;
-          _totalCustomers = customerCount;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  String _formatCurrency(double amount) {
-    if (amount >= 1000000) {
-      return '৳${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '৳${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '৳${amount.toStringAsFixed(0)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = Responsive.isLargeScreen(context);
@@ -114,6 +36,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _buildWebLayout(context)
           : _buildMobileLayout(context),
     );
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount >= 1000000) {
+      return '৳${(amount / 1000000).toStringAsFixed(1)}M';
+    } else if (amount >= 1000) {
+      return '৳${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return '৳${amount.toStringAsFixed(0)}';
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -275,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 33),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -521,78 +452,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.verified_user,
+                      size: 14,
+                      color: Colors.blue.shade700,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _getRoleDisplayName(user.role),
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.verified_user,
-                  size: 18,
-                  color: Colors.blue.shade700,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _getRoleDisplayName(user.role),
-                  style: TextStyle(
-                    color: Colors.blue.shade700,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Real-time Clock
+          const _RealtimeClock(),
         ],
       ),
     );
   }
 
   Widget _buildStatsRow(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            title: 'Today\'s Sales',
-            value: _isLoading ? '...' : _formatCurrency(_todaySales),
-            icon: Icons.point_of_sale,
-            color: Colors.green,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Pending Dues',
-            value: _isLoading ? '...' : _formatCurrency(_pendingDues),
-            icon: Icons.pending_actions,
-            color: Colors.orange,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'This Month',
-            value: _isLoading ? '...' : _formatCurrency(_thisMonthSales),
-            icon: Icons.calendar_today,
-            color: Colors.purple,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Total Customers',
-            value: _isLoading ? '...' : '$_totalCustomers',
-            icon: Icons.people,
-            color: Colors.blue,
-          ),
-        ),
-      ],
-    );
+    return _TodayStatsRow(formatCurrency: _formatCurrency);
   }
 
   Widget _buildMobileLayout(BuildContext context) {
@@ -998,6 +899,209 @@ class _WebModuleCardState extends State<_WebModuleCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Real-time Clock Widget
+class _RealtimeClock extends StatefulWidget {
+  const _RealtimeClock();
+
+  @override
+  State<_RealtimeClock> createState() => _RealtimeClockState();
+}
+
+class _RealtimeClockState extends State<_RealtimeClock> {
+  late Timer _timer;
+  late DateTime _currentTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTime = DateTime.now();
+    // Update every second
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _currentTime = DateTime.now();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('EEEE, MMMM d, yyyy');
+    final timeFormat = DateFormat('hh:mm:ss a');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.indigo.shade50, Colors.purple.shade50],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.indigo.shade100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.access_time_rounded,
+            color: Colors.indigo.shade600,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                dateFormat.format(_currentTime),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                timeFormat.format(_currentTime),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo.shade700,
+                  fontFamily: 'monospace',
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Today's Stats Row - Uses ReportsService (same as Reports screen)
+class _TodayStatsRow extends StatefulWidget {
+  final String Function(double) formatCurrency;
+
+  const _TodayStatsRow({required this.formatCurrency});
+
+  @override
+  State<_TodayStatsRow> createState() => _TodayStatsRowState();
+}
+
+class _TodayStatsRowState extends State<_TodayStatsRow> {
+  final ReportsService _reportsService = ReportsService();
+
+  double _todaySales = 0;
+  double _todayDuesAdded = 0;
+  double _todayCollections = 0;
+  double _todayExpenses = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodayStats();
+  }
+
+  Future<void> _loadTodayStats() async {
+    try {
+      // Use the EXACT same service and method as Reports screen
+      final summary = await _reportsService.getSummary(DateFilter.today);
+
+      // Get today's sales separately
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+
+      final salesSnapshot = await FirebaseFirestore.instance
+          .collection('sales')
+          .where(
+            'saleDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart),
+          )
+          .where('saleDate', isLessThanOrEqualTo: Timestamp.fromDate(todayEnd))
+          .get();
+
+      double totalSales = 0;
+      for (var doc in salesSnapshot.docs) {
+        final data = doc.data();
+        final totalSelling = (data['totalSelling'] as num?)?.toDouble() ?? 0;
+        final discountAmount =
+            (data['discountAmount'] as num?)?.toDouble() ?? 0;
+        totalSales += (totalSelling - discountAmount);
+      }
+
+      if (mounted) {
+        setState(() {
+          _todaySales = totalSales;
+          _todayDuesAdded = summary.totalDuesAdded;
+          _todayCollections = summary.totalCollections;
+          _todayExpenses =
+              (summary.expenseStats?['totalExpenses'] as num?)?.toDouble() ?? 0;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading today stats: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            title: 'Today\'s Sales',
+            value: _isLoading ? '...' : widget.formatCurrency(_todaySales),
+            icon: Icons.point_of_sale,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: _StatCard(
+            title: 'Due Added',
+            value: _isLoading ? '...' : widget.formatCurrency(_todayDuesAdded),
+            icon: Icons.add_circle_outline,
+            color: Colors.red,
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: _StatCard(
+            title: 'Due Collection',
+            value: _isLoading
+                ? '...'
+                : widget.formatCurrency(_todayCollections),
+            icon: Icons.payments_outlined,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 20),
+        Expanded(
+          child: _StatCard(
+            title: 'Expenses',
+            value: _isLoading ? '...' : widget.formatCurrency(_todayExpenses),
+            icon: Icons.receipt_long,
+            color: Colors.orange,
+          ),
+        ),
+      ],
     );
   }
 }

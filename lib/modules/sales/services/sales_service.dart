@@ -38,7 +38,7 @@ class SalesService {
         saleNumber: saleNumber,
       );
 
-      await docRef.set(saleWithNumber.toMap());
+      await docRef.set(saleWithNumber.toMapForCreate()); // Use server timestamp
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create sale: $e');

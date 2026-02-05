@@ -14,7 +14,7 @@ class WalletService {
       await _firestore
           .collection(_walletsCollection)
           .doc(wallet.id)
-          .set(wallet.toJson());
+          .set(wallet.toJsonForCreate()); // Use server timestamp
     } catch (e) {
       throw ValidationException('Failed to create wallet: $e');
     }

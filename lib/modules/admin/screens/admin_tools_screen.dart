@@ -123,8 +123,9 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
         logs = logs
             .where(
               (log) =>
-                  log.timestamp.isAfter(_logStartDate!) ||
-                  log.timestamp.isAtSameMomentAs(_logStartDate!),
+                  log.timestamp != null &&
+                  (log.timestamp!.isAfter(_logStartDate!) ||
+                      log.timestamp!.isAtSameMomentAs(_logStartDate!)),
             )
             .toList();
       }
@@ -137,7 +138,12 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
           59,
           59,
         );
-        logs = logs.where((log) => log.timestamp.isBefore(endOfDay)).toList();
+        logs = logs
+            .where(
+              (log) =>
+                  log.timestamp != null && log.timestamp!.isBefore(endOfDay),
+            )
+            .toList();
       }
 
       setState(() {
@@ -766,7 +772,9 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                 Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
                 Text(
-                  DateFormat('MMM d, y - hh:mm a').format(log.timestamp),
+                  DateFormat(
+                    'MMM d, y - hh:mm a',
+                  ).format(log.timestamp ?? DateTime.now()),
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],

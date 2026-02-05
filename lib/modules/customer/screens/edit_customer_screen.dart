@@ -1116,7 +1116,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                                     ),
                                   ),
                                   Text(
-                                    DateFormat('MMM d, y').format(tx.createdAt),
+                                    DateFormat('MMM d, y').format(tx.createdAt ?? DateTime.now()),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey,

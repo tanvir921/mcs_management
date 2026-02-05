@@ -76,7 +76,7 @@ class ExpenseService {
         receiptPhotos: photoUrls,
       );
 
-      await docRef.set(newExpense.toMap());
+      await docRef.set(newExpense.toMapForCreate()); // Use server timestamp
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create expense: $e');

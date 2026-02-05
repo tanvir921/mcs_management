@@ -302,6 +302,115 @@ class DailyClosingService {
     }
   }
 
+  /// OPTIMIZED: Get wallet balances AND breakdown in one query
+  Future<({double permanent, double temporary, List<BreakdownItem> walletBreakdown, List<BreakdownItem> tempBreakdown})> calculateWalletBalancesWithBreakdown(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('wallets')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      double permanentTotal = 0;
+      double temporaryTotal = 0;
+      List<BreakdownItem> walletBreakdown = [];
+      List<BreakdownItem> tempBreakdown = [];
+
+      for (var doc in snapshot.docs) {
+        final wallet = Wallet.fromJson(doc.data());
+        permanentTotal += wallet.permanentBalance;
+        temporaryTotal += wallet.temporaryBalance;
+        
+        if (wallet.permanentBalance > 0) {
+          walletBreakdown.add(
+            BreakdownItem(
+              id: doc.id,
+              label: wallet.displayName,
+              amount: wallet.permanentBalance,
+              category: 'wallet',
+              description: 'Permanent balance',
+            ),
+          );
+        }
+        
+        if (wallet.temporaryBalance > 0) {
+          tempBreakdown.add(
+            BreakdownItem(
+              id: doc.id,
+              label: wallet.displayName,
+              amount: wallet.temporaryBalance,
+              category: 'temporary',
+              description: 'Temporary balance',
+            ),
+          );
+        }
+      }
+
+      return (
+        permanent: permanentTotal,
+        temporary: temporaryTotal,
+        walletBreakdown: walletBreakdown,
+        tempBreakdown: tempBreakdown,
+      );
+    } catch (e) {
+      throw ValidationException('Failed to calculate wallet balances with breakdown: $e');
+    }
+  }
+
+  /// OPTIMIZED: Get MSF and CashBorrow breakdown in single query (no N+1 problem)
+  Future<({List<BreakdownItem> msf, List<BreakdownItem> cashBorrow})> getDueTransactionBreakdowns(String userId) async {
+    try {
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day);
+      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+
+      // Single query to get all due transactions for today
+      final snapshot = await _firestore
+          .collection('due_transactions')
+          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .get();
+
+      List<BreakdownItem> msfBreakdown = [];
+      List<BreakdownItem> cashBorrowBreakdown = [];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final dueType = data['dueType'] as String?;
+        final amount = (data['amount'] as num?)?.toDouble() ?? 0;
+        final customerName = data['customerName'] as String? ?? 'Unknown';
+
+        if (amount > 0) {
+          if (dueType == 'msfRecharge') {
+            msfBreakdown.add(
+              BreakdownItem(
+                id: doc.id,
+                label: customerName,
+                amount: amount,
+                category: 'msf',
+                description: 'MSF Recharge',
+              ),
+            );
+          } else if (dueType == 'cashBorrow') {
+            cashBorrowBreakdown.add(
+              BreakdownItem(
+                id: doc.id,
+                label: customerName,
+                amount: amount,
+                category: 'cashBorrow',
+                description: 'Cash Borrow',
+              ),
+            );
+          }
+        }
+      }
+
+      return (msf: msfBreakdown, cashBorrow: cashBorrowBreakdown);
+    } catch (e) {
+      debugPrint('❌ getDueTransactionBreakdowns ERROR: $e');
+      return (msf: <BreakdownItem>[], cashBorrow: <BreakdownItem>[]);
+    }
+  }
+
   /// Get wallet breakdown - individual wallet permanent balances (shared)
   Future<List<BreakdownItem>> getWalletBreakdown(String userId) async {
     try {
@@ -495,6 +604,7 @@ class DailyClosingService {
   /// Get yesterday's daily closing to compare (shared across all users)
   Future<DailyClosing?> getYesterdaysClosing(String userId) async {
     try {
+      debugPrint('📅 Getting yesterday\'s closing...');
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
       final startOfDay = DateTime(
         yesterday.year,
@@ -510,6 +620,8 @@ class DailyClosingService {
         59,
       );
 
+      debugPrint('📅 Date range: $startOfDay to $endOfDay');
+      
       final snapshot = await _firestore
           .collection(_closingCollection)
           .where('closingDate', isGreaterThanOrEqualTo: startOfDay)
@@ -517,42 +629,84 @@ class DailyClosingService {
           .limit(1)
           .get();
 
-      if (snapshot.docs.isEmpty) return null;
+      if (snapshot.docs.isEmpty) {
+        debugPrint('📅 No yesterday closing found');
+        return null;
+      }
 
-      return DailyClosing.fromJson(snapshot.docs.first.data());
+      debugPrint('📅 Found yesterday closing, parsing...');
+      final data = snapshot.docs.first.data();
+      debugPrint('📅 Raw data keys: ${data.keys.toList()}');
+      debugPrint('📅 closingDate type: ${data['closingDate'].runtimeType}');
+      debugPrint('📅 createdAt type: ${data['createdAt'].runtimeType}');
+      
+      return DailyClosing.fromJson(data);
     } catch (e) {
+      debugPrint('❌ Error getting yesterday closing: $e');
       throw ValidationException('Failed to get yesterday closing: $e');
     }
   }
 
-  /// Create draft daily closing with calculations
+  /// Create draft daily closing with calculations (OPTIMIZED - parallel queries)
   Future<DailyClosing> createDraftClosing({
     required String userId,
     required double todaysHandCash,
     required List<ProfitEntry> profitEntries,
   }) async {
     try {
-      // Get all required data
-      final todaysMSF = await calculateTodaysMSFRecharge(userId);
-      final todaysCashBorrow = await calculateTodaysCashBorrowDue(userId);
-      final todaysExpenses = await calculateTodaysExpenses(userId);
-      final totalDueCollections = await calculateTotalDueCollections(userId);
-      final (todaysSalesTotal, todaysSalesProfit) =
-          await calculateTodaysSalesSummary(userId);
-      final (walletPermanent, walletTemporary) = await calculateWalletBalances(
-        userId,
-      );
-      final yesterdayClosing = await getYesterdaysClosing(userId);
-      final dueClearProfit = await calculateTodaysDueClearProfit(userId);
-
-      // Get breakdowns for detailed reporting
-      final walletBreakdown = await getWalletBreakdown(userId);
-      final temporaryBalanceBreakdown = await getTemporaryBalanceBreakdown(
-        userId,
-      );
-      final msfBreakdown = await getMSFBreakdown(userId);
-      final cashBorrowBreakdown = await getCashBorrowBreakdown(userId);
-      final expenseBreakdown = await getExpenseBreakdown(userId);
+      debugPrint('🚀 CREATE DRAFT CLOSING STARTED');
+      debugPrint('📝 userId: $userId, handCash: $todaysHandCash');
+      
+      final stopwatch = Stopwatch()..start();
+      
+      // ===== PHASE 1: Run ALL independent queries in parallel =====
+      debugPrint('📊 Phase 1: Running all queries in parallel...');
+      
+      final results = await Future.wait([
+        calculateTodaysMSFRecharge(userId),           // 0: todaysMSF
+        calculateTodaysCashBorrowDue(userId),         // 1: todaysCashBorrow
+        calculateTodaysExpenses(userId),              // 2: todaysExpenses
+        calculateTotalDueCollections(userId),         // 3: totalDueCollections
+        calculateTodaysSalesSummary(userId),          // 4: (salesTotal, salesProfit)
+        calculateWalletBalancesWithBreakdown(userId), // 5: wallet data with breakdown
+        getYesterdaysClosing(userId),                 // 6: yesterdayClosing
+        calculateTodaysDueClearProfit(userId),        // 7: dueClearProfit
+        getExpenseBreakdown(userId),                  // 8: expenseBreakdown
+        getDueTransactionBreakdowns(userId),          // 9: (msfBreakdown, cashBorrowBreakdown)
+      ]);
+      
+      debugPrint('✅ Phase 1 completed in ${stopwatch.elapsedMilliseconds}ms');
+      
+      // Extract results
+      final todaysMSF = results[0] as double;
+      final todaysCashBorrow = results[1] as double;
+      final todaysExpenses = results[2] as double;
+      final totalDueCollections = results[3] as double;
+      final salesSummary = results[4] as (double, double);
+      final walletData = results[5] as ({double permanent, double temporary, List<BreakdownItem> walletBreakdown, List<BreakdownItem> tempBreakdown});
+      final yesterdayClosing = results[6] as DailyClosing?;
+      final dueClearProfit = results[7] as double;
+      final expenseBreakdown = results[8] as List<BreakdownItem>;
+      final dueBreakdowns = results[9] as ({List<BreakdownItem> msf, List<BreakdownItem> cashBorrow});
+      
+      final todaysSalesTotal = salesSummary.$1;
+      final todaysSalesProfit = salesSummary.$2;
+      final walletPermanent = walletData.permanent;
+      final walletTemporary = walletData.temporary;
+      final walletBreakdown = walletData.walletBreakdown;
+      final temporaryBalanceBreakdown = walletData.tempBreakdown;
+      final msfBreakdown = dueBreakdowns.msf;
+      final cashBorrowBreakdown = dueBreakdowns.cashBorrow;
+      
+      debugPrint('✅ MSF: $todaysMSF, Cash Borrow: $todaysCashBorrow');
+      debugPrint('✅ Expenses: $todaysExpenses, Due Collections: $totalDueCollections');
+      debugPrint('✅ Sales Total: $todaysSalesTotal, Profit: $todaysSalesProfit');
+      debugPrint('✅ Wallet Permanent: $walletPermanent, Temporary: $walletTemporary');
+      debugPrint('✅ Yesterday Closing: ${yesterdayClosing?.id ?? "null"}');
+      debugPrint('✅ Due Clear Profit: $dueClearProfit');
+      debugPrint('✅ Breakdowns - Wallet: ${walletBreakdown.length}, Temp: ${temporaryBalanceBreakdown.length}, MSF: ${msfBreakdown.length}, CashBorrow: ${cashBorrowBreakdown.length}, Expense: ${expenseBreakdown.length}');
+      
+      debugPrint('⏱️ Total query time: ${stopwatch.elapsedMilliseconds}ms');
 
       // Calculate subtotal using new formula:
       // Subtotal = (Wallets + HandCash + MSF Due + CashBorrow Due + Expenses)
@@ -586,6 +740,10 @@ class DailyClosingService {
               todaysExpenses) -
           (walletTemporary + totalDueCollections);
 
+      debugPrint('🏗️ Creating DailyClosing model...');
+      debugPrint('📋 Values: subtotal=$subtotal, yesterdaySubtotal=$yesterdaySubtotal, remainingCash=$remainingCash');
+      debugPrint('📋 Total Profit=$totalProfit, Final Balance=$finalClosingBalanceBase');
+      
       // Create model (not yet uploaded to server)
       final closing = DailyClosing(
         id: _firestore.collection(_closingCollection).doc().id,
@@ -616,8 +774,10 @@ class DailyClosingService {
         expenseBreakdown: expenseBreakdown,
       );
 
+      debugPrint('✅ DailyClosing model created successfully with id: ${closing.id}');
       return closing;
     } catch (e) {
+      debugPrint('❌ ERROR creating draft closing: $e');
       throw ValidationException('Failed to create draft closing: $e');
     }
   }
@@ -704,14 +864,14 @@ class DailyClosingService {
           customName: null,
           permanentBalance: amount,
           temporaryBalance: 0,
-          createdAt: DateTime.now(),
+          createdAt: DateTime.now(), // Local for model
           updatedAt: DateTime.now(),
           isActive: true,
         );
         await _firestore
             .collection('wallets')
             .doc(profitWalletId)
-            .set(newWallet.toJson());
+            .set(newWallet.toJsonForCreate()); // Use server timestamp
       } else {
         profitWalletId = profitWalletQuery.docs.first.id;
         // Add to existing wallet permanent balance
@@ -719,7 +879,7 @@ class DailyClosingService {
         final newBalance = wallet.permanentBalance + amount;
         await _firestore.collection('wallets').doc(profitWalletId).update({
           'permanentBalance': newBalance,
-          'updatedAt': DateTime.now(),
+          'updatedAt': FieldValue.serverTimestamp(), // Server timestamp
         });
       }
 
@@ -786,7 +946,7 @@ class DailyClosingService {
         await reportRef.update({
           'amount': existingAmount + totalProfit,
           'closingIds': FieldValue.arrayUnion([closingId]),
-          'lastUpdated': DateTime.now(),
+          'lastUpdated': FieldValue.serverTimestamp(), // Server timestamp
         });
       } else {
         // Create new profit record
@@ -795,8 +955,8 @@ class DailyClosingService {
           'amount': totalProfit,
           'userId': userId,
           'closingIds': [closingId],
-          'createdAt': DateTime.now(),
-          'lastUpdated': DateTime.now(),
+          'createdAt': FieldValue.serverTimestamp(), // Server timestamp
+          'lastUpdated': FieldValue.serverTimestamp(), // Server timestamp
         });
       }
     } catch (e) {

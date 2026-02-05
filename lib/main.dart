@@ -10,13 +10,9 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Enable offline persistence for Firestore
-  // This works for both web and mobile
-  // On Android/iOS, persistence is enabled by default
-  // On web, this enables IndexedDB persistence
+  // Disable offline persistence - app works online only
   FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    persistenceEnabled: false,
   );
 
   runApp(const App());

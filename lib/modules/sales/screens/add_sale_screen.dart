@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/sale.dart';
@@ -769,11 +770,542 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final paidAmountForUi = double.tryParse(_paidAmountController.text) ?? 0;
+    final paidAmountForUi = double.tryParse(_paidAmountController.text) ?? 0.0;
     final realizedProfitUi = _calculateRealizedProfitForUi(paidAmountForUi);
-    final potentialProfitUi = finalProfit > 0
+    final double potentialProfitUi = finalProfit > 0
         ? (finalProfit - realizedProfitUi)
-        : 0;
+        : 0.0;
+
+    final isWideScreen = MediaQuery.of(context).size.width > 1100;
+
+    if (kIsWeb && isWideScreen) {
+      return _buildWebLayout(context, paidAmountForUi, realizedProfitUi, potentialProfitUi);
+    }
+    return _buildMobileLayout(context, paidAmountForUi, realizedProfitUi, potentialProfitUi);
+  }
+
+  Widget _buildWebLayout(BuildContext context, double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          // Web Header
+          Container(
+            height: 70,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.purple.shade700, Colors.purple.shade900]),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('New Sale', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text('Create a new sale transaction', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                  ],
+                ),
+                const Spacer(),
+                // Quick Stats
+                _WebHeaderStat(label: 'Items', value: '${_items.length}', icon: Icons.shopping_cart_rounded),
+                const SizedBox(width: 20),
+                _WebHeaderStat(label: 'Total', value: '৳${finalAmount.toStringAsFixed(0)}', icon: Icons.payments_rounded),
+                const SizedBox(width: 20),
+                _WebHeaderStat(label: 'Profit', value: '৳${finalProfit.toStringAsFixed(0)}', icon: Icons.trending_up_rounded),
+                const SizedBox(width: 24),
+                ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _saveSale,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.purple.shade700,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: _isSubmitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_rounded),
+                  label: Text(_isSubmitting ? 'Saving...' : 'Complete Sale', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+          // Main Content
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Panel - Items & Add
+                  Expanded(
+                    flex: 3,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Add Items Section
+                          _buildWebAddItemsSection(),
+                          const SizedBox(height: 24),
+                          // Items List
+                          _buildWebItemsList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Right Panel - Sale Info & Payment
+                  Container(
+                    width: 400,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(left: BorderSide(color: Colors.grey.shade200)),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(-2, 0))],
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildWebSaleInfo(),
+                          const SizedBox(height: 24),
+                          _buildWebCustomerSection(),
+                          const SizedBox(height: 24),
+                          _buildWebPaymentSection(paidAmountForUi, realizedProfitUi, potentialProfitUi),
+                          const SizedBox(height: 24),
+                          _buildWebSummary(paidAmountForUi, realizedProfitUi, potentialProfitUi),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebAddItemsSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.add_shopping_cart_rounded, color: Colors.purple.shade600, size: 24),
+              ),
+              const SizedBox(width: 14),
+              const Text('Add Items', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _WebAddButton(
+                  icon: Icons.inventory_2_rounded,
+                  label: 'From Inventory',
+                  color: const Color(0xFF9C27B0),
+                  onTap: _addItemFromInventory,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _WebAddButton(
+                  icon: Icons.qr_code_scanner_rounded,
+                  label: 'Scan Barcode',
+                  color: const Color(0xFF2196F3),
+                  onTap: _addItemsFromBarcodeScan,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _WebAddButton(
+                  icon: Icons.edit_rounded,
+                  label: 'Manual Entry',
+                  color: const Color(0xFFFF9800),
+                  onTap: _addItem,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebItemsList() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.list_alt_rounded, color: Colors.green.shade600, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Text('Items (${_items.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              if (_items.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    _items.clear();
+                    _paidAmountController.text = '0.00';
+                  }),
+                  icon: const Icon(Icons.delete_sweep_rounded, size: 18),
+                  label: const Text('Clear All'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_items.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(40),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.shopping_basket_outlined, size: 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text('No items added yet', style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
+                    const SizedBox(height: 8),
+                    Text('Use the buttons above to add items', style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+                  ],
+                ),
+              ),
+            )
+          else
+            Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                  child: Row(
+                    children: [
+                      const Expanded(flex: 3, child: Text('Item', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                      const Expanded(flex: 1, child: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center)),
+                      const Expanded(flex: 2, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.right)),
+                      const Expanded(flex: 2, child: Text('Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.right)),
+                      const SizedBox(width: 50),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Items
+                ...List.generate(_items.length, (index) {
+                  final item = _items[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                              Text(item.itemType == 'service' ? 'Service' : 'Product', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              InkWell(
+                                onTap: () => _updateItemQuantity(index, item.quantity - 1),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(4)),
+                                  child: const Icon(Icons.remove, size: 16),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text('${item.quantity.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                              InkWell(
+                                onTap: () => _updateItemQuantity(index, item.quantity + 1),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(color: Colors.purple.shade100, borderRadius: BorderRadius.circular(4)),
+                                  child: Icon(Icons.add, size: 16, color: Colors.purple.shade700),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(flex: 2, child: Text('৳${item.sellingPrice.toStringAsFixed(2)}', textAlign: TextAlign.right)),
+                        Expanded(flex: 2, child: Text('৳${item.totalSelling.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right)),
+                        SizedBox(
+                          width: 50,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              InkWell(onTap: () => _editItem(index), child: Icon(Icons.edit_rounded, size: 18, color: Colors.blue.shade600)),
+                              const SizedBox(width: 8),
+                              InkWell(onTap: () => _removeItem(index), child: Icon(Icons.delete_rounded, size: 18, color: Colors.red.shade600)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebSaleInfo() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.purple.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_today_rounded, color: Colors.purple.shade700, size: 20),
+              const SizedBox(width: 10),
+              const Text('Sale Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () async {
+              final date = await showDatePicker(context: context, initialDate: _saleDate, firstDate: DateTime(2020), lastDate: DateTime.now());
+              if (date != null) {
+                final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_saleDate));
+                if (time != null) {
+                  setState(() => _saleDate = DateTime(date.year, date.month, date.day, time.hour, time.minute));
+                }
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              child: Row(
+                children: [
+                  Expanded(child: Text(DateFormat('MMM d, y - hh:mm a').format(_saleDate), style: const TextStyle(fontWeight: FontWeight.w600))),
+                  Icon(Icons.edit_rounded, size: 18, color: Colors.purple.shade600),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebCustomerSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.blue.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.person_rounded, color: Colors.blue.shade700, size: 20),
+              const SizedBox(width: 10),
+              const Text('Customer', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: _showCustomerSelectionDialog,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              child: Row(
+                children: [
+                  Icon(_selectedCustomer?.name.toLowerCase() == 'guest' ? Icons.people_rounded : Icons.person_rounded, color: Colors.blue.shade600),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_selectedCustomer?.name ?? 'Select Customer', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        if (_selectedCustomer?.phone != null) Text(_selectedCustomer!.phone!, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down_rounded, color: Colors.blue.shade600),
+                ],
+              ),
+            ),
+          ),
+          if (_selectedCustomer != null && _selectedCustomer!.totalDue > 0) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_rounded, size: 16, color: Colors.red.shade600),
+                  const SizedBox(width: 8),
+                  Text('Previous Due: ৳${_selectedCustomer!.totalDue.toStringAsFixed(2)}', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.w600, fontSize: 13)),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebPaymentSection(double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.green.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.payment_rounded, color: Colors.green.shade700, size: 20),
+              const SizedBox(width: 10),
+              const Text('Payment', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Payment Method
+          Wrap(
+            spacing: 8,
+            children: ['cash', 'card', 'mobile'].map((method) {
+              final isSelected = _paymentMethod == method;
+              return ChoiceChip(
+                label: Text(method[0].toUpperCase() + method.substring(1)),
+                selected: isSelected,
+                onSelected: (selected) => setState(() => _paymentMethod = method),
+                selectedColor: Colors.green.shade200,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          // Paid Amount
+          TextField(
+            controller: _paidAmountController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Paid Amount',
+              prefixText: '৳ ',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.green.shade400)),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+          // Quick Fill Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _paidAmountController.text = finalAmount.toStringAsFixed(2)),
+                  child: const Text('Full'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _paidAmountController.text = (finalAmount / 2).toStringAsFixed(2)),
+                  child: const Text('Half'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _paidAmountController.text = '0.00'),
+                  child: const Text('Due'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebSummary(double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
+    final dueAmount = finalAmount - paidAmountForUi;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.purple.shade600, Colors.purple.shade800]),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          _WebSummaryRow(label: 'Subtotal', value: '৳${totalSelling.toStringAsFixed(2)}'),
+          if (finalDiscount > 0) _WebSummaryRow(label: 'Discount', value: '-৳${finalDiscount.toStringAsFixed(2)}', isNegative: true),
+          const Divider(color: Colors.white24, height: 24),
+          _WebSummaryRow(label: 'Total', value: '৳${finalAmount.toStringAsFixed(2)}', isBold: true, isLarge: true),
+          _WebSummaryRow(label: 'Paid', value: '৳${paidAmountForUi.toStringAsFixed(2)}'),
+          if (dueAmount > 0.01) _WebSummaryRow(label: 'Due', value: '৳${dueAmount.toStringAsFixed(2)}', isWarning: true),
+          const Divider(color: Colors.white24, height: 24),
+          _WebSummaryRow(label: 'Profit', value: '৳${finalProfit.toStringAsFixed(2)}', isProfit: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context, double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
 
     return Scaffold(
       appBar: AppBar(
@@ -2758,6 +3290,131 @@ class _ProductPickerModalState extends State<_ProductPickerModal> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ============= WEB WIDGETS =============
+
+class _WebHeaderStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _WebHeaderStat({required this.label, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white.withOpacity(0.8), size: 18),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
+              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WebAddButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _WebAddButton({required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  State<_WebAddButton> createState() => _WebAddButtonState();
+}
+
+class _WebAddButtonState extends State<_WebAddButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _isHovered ? widget.color.withOpacity(0.1) : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _isHovered ? widget.color : Colors.grey.shade200, width: 2),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: widget.color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(widget.icon, color: widget.color, size: 28),
+              ),
+              const SizedBox(height: 10),
+              Text(widget.label, style: TextStyle(fontWeight: FontWeight.w600, color: _isHovered ? widget.color : Colors.grey.shade700)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WebSummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isBold;
+  final bool isLarge;
+  final bool isNegative;
+  final bool isWarning;
+  final bool isProfit;
+
+  const _WebSummaryRow({
+    required this.label,
+    required this.value,
+    this.isBold = false,
+    this.isLarge = false,
+    this.isNegative = false,
+    this.isWarning = false,
+    this.isProfit = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Color valueColor = Colors.white;
+    if (isNegative) valueColor = Colors.red.shade200;
+    if (isWarning) valueColor = Colors.orange.shade200;
+    if (isProfit) valueColor = Colors.green.shade200;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: isLarge ? 16 : 14)),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontWeight: isBold || isLarge ? FontWeight.bold : FontWeight.w500,
+              fontSize: isLarge ? 22 : 15,
+            ),
+          ),
+        ],
       ),
     );
   }

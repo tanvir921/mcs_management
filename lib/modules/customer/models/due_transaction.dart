@@ -12,7 +12,7 @@ class DueTransaction {
   final bool profitRealized; // Whether profit was added when due cleared
   final double realizedProfitAmount; // Actual profit realized when clearing due
   final String? note;
-  final DateTime createdAt;
+  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
   final String createdBy; // Admin user ID
   final String createdByName; // Admin user name
 
@@ -27,7 +27,7 @@ class DueTransaction {
     this.profitRealized = false,
     this.realizedProfitAmount = 0,
     this.note,
-    required this.createdAt,
+    this.createdAt, // Optional - server timestamp used on create
     required this.createdBy,
     required this.createdByName,
   });
@@ -45,12 +45,32 @@ class DueTransaction {
       realizedProfitAmount:
           (json['realizedProfitAmount'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String?,
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      createdAt: (json['createdAt'] as Timestamp?)?.toDate(),
       createdBy: json['createdBy'] as String,
       createdByName: json['createdByName'] as String,
     );
   }
 
+  /// Use this for creating new documents - uses server timestamp
+  Map<String, dynamic> toJsonForCreate() {
+    return {
+      'id': id,
+      'customerId': customerId,
+      'dueType': dueType,
+      'amount': amount,
+      'isAddition': isAddition,
+      'saleId': saleId,
+      'potentialProfit': potentialProfit,
+      'profitRealized': profitRealized,
+      'realizedProfitAmount': realizedProfitAmount,
+      'note': note,
+      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdBy': createdBy,
+      'createdByName': createdByName,
+    };
+  }
+
+  /// Use this for updates or when createdAt is already set
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -63,7 +83,7 @@ class DueTransaction {
       'profitRealized': profitRealized,
       'realizedProfitAmount': realizedProfitAmount,
       'note': note,
-      'createdAt': Timestamp.fromDate(createdAt),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
       'createdBy': createdBy,
       'createdByName': createdByName,
     };

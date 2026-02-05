@@ -519,13 +519,13 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                       'total': 0.0,
                       'totalAdded': 0.0,
                       'totalExpenses': 0.0,
-                      'records': [],
+                      'records': <Map<String, dynamic>>[],
                       'walletBalance': 0.0,
                     };
-                final records = (data['records'] as List<Map<String, dynamic>>);
-                final total = (data['total'] as num).toDouble();
-                final totalAdded = (data['totalAdded'] as num).toDouble();
-                final totalExpenses = (data['totalExpenses'] as num).toDouble();
+                final records = (data['records'] as List<dynamic>).cast<Map<String, dynamic>>();
+                final total = (data['total'] as num?)?.toDouble() ?? 0.0;
+                final totalAdded = (data['totalAdded'] as num?)?.toDouble() ?? 0.0;
+                final totalExpenses = (data['totalExpenses'] as num?)?.toDouble() ?? 0.0;
 
                 if (records.isEmpty) {
                   return Center(
@@ -724,9 +724,13 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
       floatingActionButton: FutureBuilder<Map<String, dynamic>>(
         future: _getProfitDeductionData(),
         builder: (context, snapshot) {
-          final walletBalance = snapshot.hasData
-              ? (snapshot.data!['walletBalance'] as num?)?.toDouble() ?? 0.0
-              : 0.0;
+          double walletBalance = 0.0;
+          if (snapshot.hasData && snapshot.data != null) {
+            final wb = snapshot.data!['walletBalance'];
+            if (wb is num) {
+              walletBalance = wb.toDouble();
+            }
+          }
 
           return Row(
             mainAxisAlignment: MainAxisAlignment.end,

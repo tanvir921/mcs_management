@@ -245,10 +245,10 @@ class AuthService {
       action: action,
       module: module,
       details: details,
-      timestamp: DateTime.now(),
+      // timestamp will be set by server timestamp
     );
 
-    await _firestore.collection(_logsCollection).doc(log.id).set(log.toJson());
+    await _firestore.collection(_logsCollection).doc(log.id).set(log.toJsonForCreate());
   }
 
   /// Get action logs

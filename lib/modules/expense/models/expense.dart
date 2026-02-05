@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class Expense {
@@ -12,7 +13,7 @@ class Expense {
   final List<String> receiptPhotos; // URLs of receipt photos
   final String createdBy;
   final String createdByName;
-  final DateTime createdAt;
+  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
   final DateTime? updatedAt;
   final bool isActive;
 
@@ -28,7 +29,7 @@ class Expense {
     this.receiptPhotos = const [],
     required this.createdBy,
     required this.createdByName,
-    required this.createdAt,
+    this.createdAt, // Optional - server timestamp used on create
     this.updatedAt,
     this.isActive = true,
   });
@@ -65,7 +66,27 @@ class Expense {
       'receiptPhotos': receiptPhotos,
       'createdBy': createdBy,
       'createdByName': createdByName,
-      'createdAt': createdAt,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'updatedAt': updatedAt,
+      'isActive': isActive,
+    };
+  }
+
+  /// Use this for creating new documents - uses server timestamp
+  Map<String, dynamic> toMapForCreate() {
+    return {
+      'id': id,
+      'expenseNumber': expenseNumber,
+      'expenseDate': expenseDate,
+      'category': category,
+      'amount': amount,
+      'description': description,
+      'paymentMethod': paymentMethod,
+      'notes': notes,
+      'receiptPhotos': receiptPhotos,
+      'createdBy': createdBy,
+      'createdByName': createdByName,
+      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'updatedAt': updatedAt,
       'isActive': isActive,
     };

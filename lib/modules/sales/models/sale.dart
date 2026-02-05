@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'sale_item.dart';
 
 class Sale {
@@ -20,7 +21,7 @@ class Sale {
   final String? notes;
   final String createdBy;
   final String createdByName;
-  final DateTime createdAt;
+  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
   final DateTime? updatedAt;
   final bool isActive;
 
@@ -44,7 +45,7 @@ class Sale {
     this.notes,
     required this.createdBy,
     required this.createdByName,
-    required this.createdAt,
+    this.createdAt, // Optional - server timestamp used on create
     this.updatedAt,
     this.isActive = true,
   });
@@ -106,7 +107,35 @@ class Sale {
       'notes': notes,
       'createdBy': createdBy,
       'createdByName': createdByName,
-      'createdAt': createdAt,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'updatedAt': updatedAt,
+      'isActive': isActive,
+    };
+  }
+
+  /// Use this for creating new documents - uses server timestamp
+  Map<String, dynamic> toMapForCreate() {
+    return {
+      'id': id,
+      'saleNumber': saleNumber,
+      'saleDate': saleDate,
+      'items': items.map((item) => item.toMap()).toList(),
+      'totalCost': totalCost,
+      'totalSelling': totalSelling,
+      'totalProfit': totalProfit,
+      'discountAmount': discountAmount,
+      'discountPercent': discountPercent,
+      'paymentMethod': paymentMethod,
+      'paidAmount': paidAmount,
+      'dueAmount': dueAmount,
+      'realizedProfit': realizedProfit,
+      'potentialProfit': potentialProfit,
+      'customerId': customerId,
+      'customerName': customerName,
+      'notes': notes,
+      'createdBy': createdBy,
+      'createdByName': createdByName,
+      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'updatedAt': updatedAt,
       'isActive': isActive,
     };

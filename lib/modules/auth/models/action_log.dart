@@ -8,7 +8,7 @@ class ActionLog {
   final String action;
   final String module;
   final String? details;
-  final DateTime timestamp;
+  final DateTime? timestamp; // Nullable - will be set by server timestamp on create
 
   const ActionLog({
     required this.id,
@@ -17,7 +17,7 @@ class ActionLog {
     required this.action,
     required this.module,
     this.details,
-    required this.timestamp,
+    this.timestamp, // Optional - server timestamp used on create
   });
 
   factory ActionLog.fromJson(Map<String, dynamic> json) {
@@ -28,10 +28,24 @@ class ActionLog {
       action: json['action'] as String,
       module: json['module'] as String,
       details: json['details'] as String?,
-      timestamp: (json['timestamp'] as Timestamp).toDate(),
+      timestamp: (json['timestamp'] as Timestamp?)?.toDate(),
     );
   }
 
+  /// Use this for creating new documents - uses server timestamp
+  Map<String, dynamic> toJsonForCreate() {
+    return {
+      'id': id,
+      'userId': userId,
+      'userName': userName,
+      'action': action,
+      'module': module,
+      'details': details,
+      'timestamp': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+    };
+  }
+
+  /// Use this for updates or when timestamp is already set
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -40,7 +54,7 @@ class ActionLog {
       'action': action,
       'module': module,
       'details': details,
-      'timestamp': Timestamp.fromDate(timestamp),
+      'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : FieldValue.serverTimestamp(),
     };
   }
 }
