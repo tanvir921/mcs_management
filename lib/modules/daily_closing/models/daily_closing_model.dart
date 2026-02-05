@@ -133,11 +133,11 @@ class DailyClosing {
     return DailyClosing(
       id: json['id'] as String? ?? '',
       userId: json['userId'] as String? ?? '',
-      closingDate: json['closingDate'] != null 
-          ? (json['closingDate'] as Timestamp).toDate() 
+      closingDate: json['closingDate'] != null
+          ? (json['closingDate'] as Timestamp).toDate()
           : DateTime.now(),
-      createdAt: json['createdAt'] != null 
-          ? (json['createdAt'] as Timestamp).toDate() 
+      createdAt: json['createdAt'] != null
+          ? (json['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
       todaysHandCash: (json['todaysHandCash'] as num?)?.toDouble() ?? 0,
       todaysSalesTotal: (json['todaysSalesTotal'] as num?)?.toDouble() ?? 0,

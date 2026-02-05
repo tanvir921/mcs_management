@@ -35,7 +35,7 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     final isWideScreen = MediaQuery.of(context).size.width > 900;
-    
+
     if (kIsWeb && isWideScreen) {
       return _buildWebLayout(context);
     }
@@ -64,63 +64,73 @@ class _SalesScreenState extends State<SalesScreen> {
                       );
                     },
                   ),
-                  
+
                   // Stats Row
                   Consumer<SalesProvider>(
                     builder: (context, salesProvider, _) {
-                      final stats = salesProvider.stats ?? {
-                        'totalSales': 0.0,
-                        'totalProfit': 0.0,
-                        'totalTransactions': 0,
-                        'profitMargin': 0.0,
-                      };
-                      
+                      final stats =
+                          salesProvider.stats ??
+                          {
+                            'totalSales': 0.0,
+                            'totalProfit': 0.0,
+                            'totalTransactions': 0,
+                            'profitMargin': 0.0,
+                          };
+
                       return Row(
                         children: [
-                          Expanded(child: _WebStatCard(
-                            title: 'Total Sales',
-                            value: '৳${(stats['totalSales'] ?? 0).toStringAsFixed(2)}',
-                            icon: Icons.point_of_sale_rounded,
-                            color: const Color(0xFF9C27B0),
-                          )),
+                          Expanded(
+                            child: _WebStatCard(
+                              title: 'Total Sales',
+                              value:
+                                  '৳${(stats['totalSales'] ?? 0).toStringAsFixed(2)}',
+                              icon: Icons.point_of_sale_rounded,
+                              color: const Color(0xFF9C27B0),
+                            ),
+                          ),
                           const SizedBox(width: 24),
-                          Expanded(child: _WebStatCard(
-                            title: 'Total Profit',
-                            value: '৳${(stats['totalProfit'] ?? 0).toStringAsFixed(2)}',
-                            icon: Icons.trending_up_rounded,
-                            color: const Color(0xFF4CAF50),
-                          )),
+                          Expanded(
+                            child: _WebStatCard(
+                              title: 'Total Profit',
+                              value:
+                                  '৳${(stats['totalProfit'] ?? 0).toStringAsFixed(2)}',
+                              icon: Icons.trending_up_rounded,
+                              color: const Color(0xFF4CAF50),
+                            ),
+                          ),
                           const SizedBox(width: 24),
-                          Expanded(child: _WebStatCard(
-                            title: 'Transactions',
-                            value: '${stats['totalTransactions'] ?? 0}',
-                            icon: Icons.receipt_long_rounded,
-                            color: const Color(0xFF2196F3),
-                          )),
+                          Expanded(
+                            child: _WebStatCard(
+                              title: 'Transactions',
+                              value: '${stats['totalTransactions'] ?? 0}',
+                              icon: Icons.receipt_long_rounded,
+                              color: const Color(0xFF2196F3),
+                            ),
+                          ),
                           const SizedBox(width: 24),
-                          Expanded(child: _WebStatCard(
-                            title: 'Profit Margin',
-                            value: '${(stats['profitMargin'] ?? 0).toStringAsFixed(1)}%',
-                            icon: Icons.percent_rounded,
-                            color: const Color(0xFFFF9800),
-                          )),
+                          Expanded(
+                            child: _WebStatCard(
+                              title: 'Profit Margin',
+                              value:
+                                  '${(stats['profitMargin'] ?? 0).toStringAsFixed(1)}%',
+                              icon: Icons.percent_rounded,
+                              color: const Color(0xFFFF9800),
+                            ),
+                          ),
                         ],
                       );
                     },
                   ),
                   const SizedBox(height: 32),
-                  
+
                   // Main Content
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Quick Actions
-                      Expanded(
-                        flex: 2,
-                        child: _buildWebQuickActions(context),
-                      ),
+                      Expanded(flex: 2, child: _buildWebQuickActions(context)),
                       const SizedBox(width: 32),
-                      
+
                       // Side Panel
                       SizedBox(
                         width: 380,
@@ -150,7 +160,11 @@ class _SalesScreenState extends State<SalesScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
@@ -158,18 +172,30 @@ class _SalesScreenState extends State<SalesScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.purple.shade600, Colors.purple.shade800]),
+              gradient: LinearGradient(
+                colors: [Colors.purple.shade600, Colors.purple.shade800],
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.point_of_sale_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 20),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Sales Management', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text('Create and manage sales transactions', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+              const Text(
+                'Sales Management',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Create and manage sales transactions',
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
             ],
           ),
           const Spacer(),
@@ -179,7 +205,14 @@ class _SalesScreenState extends State<SalesScreen> {
                 icon: Icons.shopping_cart_rounded,
                 label: cart.isEmpty ? 'Cart Empty' : 'Cart (${cart.itemCount})',
                 color: cart.isEmpty ? Colors.grey : const Color(0xFF4CAF50),
-                onPressed: cart.isEmpty ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSaleScreen())),
+                onPressed: cart.isEmpty
+                    ? null
+                    : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AddSaleScreen(),
+                        ),
+                      ),
               );
             },
           ),
@@ -188,14 +221,20 @@ class _SalesScreenState extends State<SalesScreen> {
             icon: Icons.add_rounded,
             label: 'New Sale',
             color: const Color(0xFF9C27B0),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSaleScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddSaleScreen()),
+            ),
           ),
           const SizedBox(width: 12),
           _WebActionButton(
             icon: Icons.history_rounded,
             label: 'History',
             color: const Color(0xFFFF9800),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesHistoryScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SalesHistoryScreen()),
+            ),
           ),
         ],
       ),
@@ -206,40 +245,74 @@ class _SalesScreenState extends State<SalesScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF4CAF50), Color(0xFF388E3C)]),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.green.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.shopping_cart_rounded, color: Colors.white, size: 32),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.shopping_cart_rounded,
+              color: Colors.white,
+              size: 32,
+            ),
           ),
           const SizedBox(width: 24),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Shopping Cart', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Shopping Cart',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('${cart.itemCount} items in cart • Total: ৳${cart.totalSelling.toStringAsFixed(2)}', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 15)),
+                Text(
+                  '${cart.itemCount} items in cart • Total: ৳${cart.totalSelling.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 15,
+                  ),
+                ),
               ],
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSaleScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddSaleScreen()),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.green.shade700,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             icon: const Icon(Icons.shopping_bag_rounded),
-            label: const Text('Proceed to Checkout', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              'Proceed to Checkout',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -253,7 +326,11 @@ class _SalesScreenState extends State<SalesScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -263,67 +340,99 @@ class _SalesScreenState extends State<SalesScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(8)),
-                child: Icon(Icons.flash_on_rounded, color: Colors.purple.shade600, size: 20),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.flash_on_rounded,
+                  color: Colors.purple.shade600,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              const Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Quick Actions',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: _WebQuickActionCard(
-                icon: Icons.add_shopping_cart_rounded,
-                title: 'New Sale',
-                subtitle: 'Create a new sale transaction',
-                color: const Color(0xFF9C27B0),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddSaleScreen())),
-              )),
+              Expanded(
+                child: _WebQuickActionCard(
+                  icon: Icons.add_shopping_cart_rounded,
+                  title: 'New Sale',
+                  subtitle: 'Create a new sale transaction',
+                  color: const Color(0xFF9C27B0),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddSaleScreen()),
+                  ),
+                ),
+              ),
               const SizedBox(width: 20),
-              Expanded(child: _WebQuickActionCard(
-                icon: Icons.history_rounded,
-                title: 'Sales History',
-                subtitle: 'View all transactions',
-                color: const Color(0xFFFF9800),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesHistoryScreen())),
-              )),
+              Expanded(
+                child: _WebQuickActionCard(
+                  icon: Icons.history_rounded,
+                  title: 'Sales History',
+                  subtitle: 'View all transactions',
+                  color: const Color(0xFFFF9800),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SalesHistoryScreen(),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(width: 20),
-              Expanded(child: _WebQuickActionCard(
-                icon: Icons.inventory_2_rounded,
-                title: 'Inventory',
-                subtitle: 'Manage products & services',
-                color: const Color(0xFF009688),
-                onTap: () => Navigator.pushNamed(context, AppRoutes.inventory),
-              )),
+              Expanded(
+                child: _WebQuickActionCard(
+                  icon: Icons.inventory_2_rounded,
+                  title: 'Inventory',
+                  subtitle: 'Manage products & services',
+                  color: const Color(0xFF009688),
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.inventory),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _WebQuickActionCard(
-                icon: Icons.people_rounded,
-                title: 'Customers',
-                subtitle: 'Manage customer records',
-                color: const Color(0xFF2196F3),
-                onTap: () => Navigator.pushNamed(context, AppRoutes.customers),
-              )),
+              Expanded(
+                child: _WebQuickActionCard(
+                  icon: Icons.people_rounded,
+                  title: 'Customers',
+                  subtitle: 'Manage customer records',
+                  color: const Color(0xFF2196F3),
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.customers),
+                ),
+              ),
               const SizedBox(width: 20),
-              Expanded(child: _WebQuickActionCard(
-                icon: Icons.analytics_rounded,
-                title: 'Reports',
-                subtitle: 'View sales analytics',
-                color: const Color(0xFF673AB7),
-                onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
-              )),
+              Expanded(
+                child: _WebQuickActionCard(
+                  icon: Icons.analytics_rounded,
+                  title: 'Reports',
+                  subtitle: 'View sales analytics',
+                  color: const Color(0xFF673AB7),
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
+                ),
+              ),
               const SizedBox(width: 20),
-              Expanded(child: _WebQuickActionCard(
-                icon: Icons.refresh_rounded,
-                title: 'Refresh',
-                subtitle: 'Reload sales data',
-                color: const Color(0xFF607D8B),
-                onTap: _loadStats,
-              )),
+              Expanded(
+                child: _WebQuickActionCard(
+                  icon: Icons.refresh_rounded,
+                  title: 'Refresh',
+                  subtitle: 'Reload sales data',
+                  color: const Color(0xFF607D8B),
+                  onTap: _loadStats,
+                ),
+              ),
             ],
           ),
         ],
@@ -338,7 +447,11 @@ class _SalesScreenState extends State<SalesScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -348,11 +461,21 @@ class _SalesScreenState extends State<SalesScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
-                child: Icon(Icons.access_time_rounded, color: Colors.orange.shade600, size: 20),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.access_time_rounded,
+                  color: Colors.orange.shade600,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              const Text('Sales Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Sales Summary',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -361,10 +484,26 @@ class _SalesScreenState extends State<SalesScreen> {
               final stats = salesProvider.stats ?? {};
               return Column(
                 children: [
-                  _SummaryRow(label: 'Total Revenue', value: '৳${(stats['totalSales'] ?? 0).toStringAsFixed(2)}', color: const Color(0xFF9C27B0)),
-                  _SummaryRow(label: 'Total Cost', value: '৳${(stats['totalCost'] ?? 0).toStringAsFixed(2)}', color: const Color(0xFFF44336)),
-                  _SummaryRow(label: 'Net Profit', value: '৳${(stats['totalProfit'] ?? 0).toStringAsFixed(2)}', color: const Color(0xFF4CAF50)),
-                  _SummaryRow(label: 'Average Sale', value: '৳${(stats['averageSale'] ?? 0).toStringAsFixed(2)}', color: const Color(0xFF2196F3)),
+                  _SummaryRow(
+                    label: 'Total Revenue',
+                    value: '৳${(stats['totalSales'] ?? 0).toStringAsFixed(2)}',
+                    color: const Color(0xFF9C27B0),
+                  ),
+                  _SummaryRow(
+                    label: 'Total Cost',
+                    value: '৳${(stats['totalCost'] ?? 0).toStringAsFixed(2)}',
+                    color: const Color(0xFFF44336),
+                  ),
+                  _SummaryRow(
+                    label: 'Net Profit',
+                    value: '৳${(stats['totalProfit'] ?? 0).toStringAsFixed(2)}',
+                    color: const Color(0xFF4CAF50),
+                  ),
+                  _SummaryRow(
+                    label: 'Average Sale',
+                    value: '৳${(stats['averageSale'] ?? 0).toStringAsFixed(2)}',
+                    color: const Color(0xFF2196F3),
+                  ),
                 ],
               );
             },
@@ -378,10 +517,16 @@ class _SalesScreenState extends State<SalesScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.purple.shade600, Colors.purple.shade800]),
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade600, Colors.purple.shade800],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.purple.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -389,9 +534,22 @@ class _SalesScreenState extends State<SalesScreen> {
         children: [
           const Icon(Icons.lightbulb_rounded, color: Colors.white, size: 32),
           const SizedBox(height: 12),
-          const Text('Sales Tips', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            'Sales Tips',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text('Use barcode scanner for faster product entry and reduce errors during checkout.', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+          Text(
+            'Use barcode scanner for faster product entry and reduce errors during checkout.',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -760,7 +918,12 @@ class _WebStatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _WebStatCard({required this.title, required this.value, required this.icon, required this.color});
+  const _WebStatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -770,7 +933,11 @@ class _WebStatCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -788,9 +955,20 @@ class _WebStatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
                 const SizedBox(height: 6),
-                Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -806,7 +984,12 @@ class _WebActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onPressed;
 
-  const _WebActionButton({required this.icon, required this.label, required this.color, required this.onPressed});
+  const _WebActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -822,7 +1005,14 @@ class _WebActionButton extends StatelessWidget {
             children: [
               Icon(icon, color: Colors.white, size: 20),
               const SizedBox(width: 10),
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
@@ -838,7 +1028,13 @@ class _WebQuickActionCard extends StatefulWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _WebQuickActionCard({required this.icon, required this.title, required this.subtitle, required this.color, required this.onTap});
+  const _WebQuickActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   State<_WebQuickActionCard> createState() => _WebQuickActionCardState();
@@ -858,27 +1054,51 @@ class _WebQuickActionCardState extends State<_WebQuickActionCard> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: _isHovered ? widget.color.withOpacity(0.05) : Colors.grey.shade50,
+            color: _isHovered
+                ? widget.color.withOpacity(0.05)
+                : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _isHovered ? widget.color.withOpacity(0.3) : Colors.transparent, width: 2),
+            border: Border.all(
+              color: _isHovered
+                  ? widget.color.withOpacity(0.3)
+                  : Colors.transparent,
+              width: 2,
+            ),
           ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [widget.color, widget.color.withOpacity(0.8)]),
+                  gradient: LinearGradient(
+                    colors: [widget.color, widget.color.withOpacity(0.8)],
+                  ),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
-                    BoxShadow(color: widget.color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: widget.color.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Icon(widget.icon, color: Colors.white, size: 32),
               ),
               const SizedBox(height: 16),
-              Text(widget.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 6),
-              Text(widget.subtitle, style: TextStyle(fontSize: 13, color: Colors.grey.shade600), textAlign: TextAlign.center),
+              Text(
+                widget.subtitle,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -892,7 +1112,11 @@ class _SummaryRow extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _SummaryRow({required this.label, required this.value, required this.color});
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -901,8 +1125,18 @@ class _SummaryRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
-          Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
         ],
       ),
     );

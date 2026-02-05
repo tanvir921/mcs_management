@@ -13,7 +13,8 @@ class Expense {
   final List<String> receiptPhotos; // URLs of receipt photos
   final String createdBy;
   final String createdByName;
-  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
+  final DateTime?
+  createdAt; // Nullable - will be set by server timestamp on create
   final DateTime? updatedAt;
   final bool isActive;
 
@@ -66,7 +67,9 @@ class Expense {
       'receiptPhotos': receiptPhotos,
       'createdBy': createdBy,
       'createdByName': createdByName,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'updatedAt': updatedAt,
       'isActive': isActive,
     };
@@ -86,7 +89,8 @@ class Expense {
       'receiptPhotos': receiptPhotos,
       'createdBy': createdBy,
       'createdByName': createdByName,
-      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdAt':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'updatedAt': updatedAt,
       'isActive': isActive,
     };

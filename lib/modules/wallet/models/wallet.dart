@@ -83,7 +83,8 @@ class Wallet {
       'customName': customName,
       'permanentBalance': permanentBalance,
       'temporaryBalance': temporaryBalance,
-      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdAt':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'updatedAt': FieldValue.serverTimestamp(),
       'isActive': isActive,
     };

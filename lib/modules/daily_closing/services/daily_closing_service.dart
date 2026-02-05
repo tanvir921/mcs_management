@@ -303,7 +303,15 @@ class DailyClosingService {
   }
 
   /// OPTIMIZED: Get wallet balances AND breakdown in one query
-  Future<({double permanent, double temporary, List<BreakdownItem> walletBreakdown, List<BreakdownItem> tempBreakdown})> calculateWalletBalancesWithBreakdown(String userId) async {
+  Future<
+    ({
+      double permanent,
+      double temporary,
+      List<BreakdownItem> walletBreakdown,
+      List<BreakdownItem> tempBreakdown,
+    })
+  >
+  calculateWalletBalancesWithBreakdown(String userId) async {
     try {
       final snapshot = await _firestore
           .collection('wallets')
@@ -319,7 +327,7 @@ class DailyClosingService {
         final wallet = Wallet.fromJson(doc.data());
         permanentTotal += wallet.permanentBalance;
         temporaryTotal += wallet.temporaryBalance;
-        
+
         if (wallet.permanentBalance > 0) {
           walletBreakdown.add(
             BreakdownItem(
@@ -331,7 +339,7 @@ class DailyClosingService {
             ),
           );
         }
-        
+
         if (wallet.temporaryBalance > 0) {
           tempBreakdown.add(
             BreakdownItem(
@@ -352,21 +360,35 @@ class DailyClosingService {
         tempBreakdown: tempBreakdown,
       );
     } catch (e) {
-      throw ValidationException('Failed to calculate wallet balances with breakdown: $e');
+      throw ValidationException(
+        'Failed to calculate wallet balances with breakdown: $e',
+      );
     }
   }
 
   /// OPTIMIZED: Get MSF and CashBorrow breakdown in single query (no N+1 problem)
-  Future<({List<BreakdownItem> msf, List<BreakdownItem> cashBorrow})> getDueTransactionBreakdowns(String userId) async {
+  Future<({List<BreakdownItem> msf, List<BreakdownItem> cashBorrow})>
+  getDueTransactionBreakdowns(String userId) async {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+      final endOfDay = DateTime(
+        today.year,
+        today.month,
+        today.day,
+        23,
+        59,
+        59,
+        999,
+      );
 
       // Single query to get all due transactions for today
       final snapshot = await _firestore
           .collection('due_transactions')
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where(
+            'createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
           .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
@@ -621,7 +643,7 @@ class DailyClosingService {
       );
 
       debugPrint('📅 Date range: $startOfDay to $endOfDay');
-      
+
       final snapshot = await _firestore
           .collection(_closingCollection)
           .where('closingDate', isGreaterThanOrEqualTo: startOfDay)
@@ -639,7 +661,7 @@ class DailyClosingService {
       debugPrint('📅 Raw data keys: ${data.keys.toList()}');
       debugPrint('📅 closingDate type: ${data['closingDate'].runtimeType}');
       debugPrint('📅 createdAt type: ${data['createdAt'].runtimeType}');
-      
+
       return DailyClosing.fromJson(data);
     } catch (e) {
       debugPrint('❌ Error getting yesterday closing: $e');
@@ -656,39 +678,52 @@ class DailyClosingService {
     try {
       debugPrint('🚀 CREATE DRAFT CLOSING STARTED');
       debugPrint('📝 userId: $userId, handCash: $todaysHandCash');
-      
+
       final stopwatch = Stopwatch()..start();
-      
+
       // ===== PHASE 1: Run ALL independent queries in parallel =====
       debugPrint('📊 Phase 1: Running all queries in parallel...');
-      
+
       final results = await Future.wait([
-        calculateTodaysMSFRecharge(userId),           // 0: todaysMSF
-        calculateTodaysCashBorrowDue(userId),         // 1: todaysCashBorrow
-        calculateTodaysExpenses(userId),              // 2: todaysExpenses
-        calculateTotalDueCollections(userId),         // 3: totalDueCollections
-        calculateTodaysSalesSummary(userId),          // 4: (salesTotal, salesProfit)
-        calculateWalletBalancesWithBreakdown(userId), // 5: wallet data with breakdown
-        getYesterdaysClosing(userId),                 // 6: yesterdayClosing
-        calculateTodaysDueClearProfit(userId),        // 7: dueClearProfit
-        getExpenseBreakdown(userId),                  // 8: expenseBreakdown
-        getDueTransactionBreakdowns(userId),          // 9: (msfBreakdown, cashBorrowBreakdown)
+        calculateTodaysMSFRecharge(userId), // 0: todaysMSF
+        calculateTodaysCashBorrowDue(userId), // 1: todaysCashBorrow
+        calculateTodaysExpenses(userId), // 2: todaysExpenses
+        calculateTotalDueCollections(userId), // 3: totalDueCollections
+        calculateTodaysSalesSummary(userId), // 4: (salesTotal, salesProfit)
+        calculateWalletBalancesWithBreakdown(
+          userId,
+        ), // 5: wallet data with breakdown
+        getYesterdaysClosing(userId), // 6: yesterdayClosing
+        calculateTodaysDueClearProfit(userId), // 7: dueClearProfit
+        getExpenseBreakdown(userId), // 8: expenseBreakdown
+        getDueTransactionBreakdowns(
+          userId,
+        ), // 9: (msfBreakdown, cashBorrowBreakdown)
       ]);
-      
+
       debugPrint('✅ Phase 1 completed in ${stopwatch.elapsedMilliseconds}ms');
-      
+
       // Extract results
       final todaysMSF = results[0] as double;
       final todaysCashBorrow = results[1] as double;
       final todaysExpenses = results[2] as double;
       final totalDueCollections = results[3] as double;
       final salesSummary = results[4] as (double, double);
-      final walletData = results[5] as ({double permanent, double temporary, List<BreakdownItem> walletBreakdown, List<BreakdownItem> tempBreakdown});
+      final walletData =
+          results[5]
+              as ({
+                double permanent,
+                double temporary,
+                List<BreakdownItem> walletBreakdown,
+                List<BreakdownItem> tempBreakdown,
+              });
       final yesterdayClosing = results[6] as DailyClosing?;
       final dueClearProfit = results[7] as double;
       final expenseBreakdown = results[8] as List<BreakdownItem>;
-      final dueBreakdowns = results[9] as ({List<BreakdownItem> msf, List<BreakdownItem> cashBorrow});
-      
+      final dueBreakdowns =
+          results[9]
+              as ({List<BreakdownItem> msf, List<BreakdownItem> cashBorrow});
+
       final todaysSalesTotal = salesSummary.$1;
       final todaysSalesProfit = salesSummary.$2;
       final walletPermanent = walletData.permanent;
@@ -697,15 +732,23 @@ class DailyClosingService {
       final temporaryBalanceBreakdown = walletData.tempBreakdown;
       final msfBreakdown = dueBreakdowns.msf;
       final cashBorrowBreakdown = dueBreakdowns.cashBorrow;
-      
+
       debugPrint('✅ MSF: $todaysMSF, Cash Borrow: $todaysCashBorrow');
-      debugPrint('✅ Expenses: $todaysExpenses, Due Collections: $totalDueCollections');
-      debugPrint('✅ Sales Total: $todaysSalesTotal, Profit: $todaysSalesProfit');
-      debugPrint('✅ Wallet Permanent: $walletPermanent, Temporary: $walletTemporary');
+      debugPrint(
+        '✅ Expenses: $todaysExpenses, Due Collections: $totalDueCollections',
+      );
+      debugPrint(
+        '✅ Sales Total: $todaysSalesTotal, Profit: $todaysSalesProfit',
+      );
+      debugPrint(
+        '✅ Wallet Permanent: $walletPermanent, Temporary: $walletTemporary',
+      );
       debugPrint('✅ Yesterday Closing: ${yesterdayClosing?.id ?? "null"}');
       debugPrint('✅ Due Clear Profit: $dueClearProfit');
-      debugPrint('✅ Breakdowns - Wallet: ${walletBreakdown.length}, Temp: ${temporaryBalanceBreakdown.length}, MSF: ${msfBreakdown.length}, CashBorrow: ${cashBorrowBreakdown.length}, Expense: ${expenseBreakdown.length}');
-      
+      debugPrint(
+        '✅ Breakdowns - Wallet: ${walletBreakdown.length}, Temp: ${temporaryBalanceBreakdown.length}, MSF: ${msfBreakdown.length}, CashBorrow: ${cashBorrowBreakdown.length}, Expense: ${expenseBreakdown.length}',
+      );
+
       debugPrint('⏱️ Total query time: ${stopwatch.elapsedMilliseconds}ms');
 
       // Calculate subtotal using new formula:
@@ -741,9 +784,13 @@ class DailyClosingService {
           (walletTemporary + totalDueCollections);
 
       debugPrint('🏗️ Creating DailyClosing model...');
-      debugPrint('📋 Values: subtotal=$subtotal, yesterdaySubtotal=$yesterdaySubtotal, remainingCash=$remainingCash');
-      debugPrint('📋 Total Profit=$totalProfit, Final Balance=$finalClosingBalanceBase');
-      
+      debugPrint(
+        '📋 Values: subtotal=$subtotal, yesterdaySubtotal=$yesterdaySubtotal, remainingCash=$remainingCash',
+      );
+      debugPrint(
+        '📋 Total Profit=$totalProfit, Final Balance=$finalClosingBalanceBase',
+      );
+
       // Create model (not yet uploaded to server)
       final closing = DailyClosing(
         id: _firestore.collection(_closingCollection).doc().id,
@@ -774,7 +821,9 @@ class DailyClosingService {
         expenseBreakdown: expenseBreakdown,
       );
 
-      debugPrint('✅ DailyClosing model created successfully with id: ${closing.id}');
+      debugPrint(
+        '✅ DailyClosing model created successfully with id: ${closing.id}',
+      );
       return closing;
     } catch (e) {
       debugPrint('❌ ERROR creating draft closing: $e');

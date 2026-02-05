@@ -13,7 +13,7 @@ class ExpenseScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWideScreen = MediaQuery.of(context).size.width > 900;
-    
+
     if (kIsWeb && isWideScreen) {
       return _buildWebLayout(context);
     }
@@ -32,12 +32,17 @@ class ExpenseScreen extends StatelessWidget {
               child: Consumer<ExpenseProvider>(
                 builder: (context, expenseProvider, _) {
                   final expenses = expenseProvider.expenses;
-                  final totalExpenses = expenses.fold<double>(0, (sum, e) => sum + e.amount);
+                  final totalExpenses = expenses.fold<double>(
+                    0,
+                    (sum, e) => sum + e.amount,
+                  );
 
                   // Category breakdown
                   final Map<String, double> categoryTotals = {};
                   for (final expense in expenses) {
-                    categoryTotals[expense.category] = (categoryTotals[expense.category] ?? 0) + expense.amount;
+                    categoryTotals[expense.category] =
+                        (categoryTotals[expense.category] ?? 0) +
+                        expense.amount;
                   }
 
                   return Column(
@@ -76,7 +81,9 @@ class ExpenseScreen extends StatelessWidget {
                           Expanded(
                             child: _WebStatCard(
                               title: 'Avg per Record',
-                              value: expenses.isNotEmpty ? 'Tk. ${(totalExpenses / expenses.length).toStringAsFixed(2)}' : 'Tk. 0.00',
+                              value: expenses.isNotEmpty
+                                  ? 'Tk. ${(totalExpenses / expenses.length).toStringAsFixed(2)}'
+                                  : 'Tk. 0.00',
                               icon: Icons.analytics_rounded,
                               color: const Color(0xFFFF9800),
                             ),
@@ -84,7 +91,7 @@ class ExpenseScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 32),
-                      
+
                       // Main Content Row
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +102,7 @@ class ExpenseScreen extends StatelessWidget {
                             child: _buildWebCategorySection(categoryTotals),
                           ),
                           const SizedBox(width: 32),
-                          
+
                           // Right: Quick Actions
                           SizedBox(
                             width: 320,
@@ -121,7 +128,11 @@ class ExpenseScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Row(
@@ -129,18 +140,30 @@ class ExpenseScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF2196F3), Color(0xFF1976D2)]),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.receipt_long_rounded,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 20),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Expense Management', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text('Track and manage all expenses', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+              const Text(
+                'Expense Management',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Track and manage all expenses',
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
             ],
           ),
           const Spacer(),
@@ -148,14 +171,20 @@ class ExpenseScreen extends StatelessWidget {
             icon: Icons.add_rounded,
             label: 'New Expense',
             color: const Color(0xFF4CAF50),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+            ),
           ),
           const SizedBox(width: 12),
           _WebActionButton(
             icon: Icons.history_rounded,
             label: 'View History',
             color: const Color(0xFF2196F3),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpenseHistoryScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ExpenseHistoryScreen()),
+            ),
           ),
         ],
       ),
@@ -164,13 +193,36 @@ class ExpenseScreen extends StatelessWidget {
 
   Widget _buildWebCategorySection(Map<String, double> categoryTotals) {
     final categories = [
-      ('personal', 'Personal Expense', Icons.person_rounded, const Color(0xFF5856D6)),
-      ('shop', 'Shop Expense', Icons.shopping_bag_rounded, const Color(0xFFFF9500)),
-      ('repair', 'Repair & Maintenance', Icons.build_rounded, const Color(0xFFFF3B30)),
-      ('other', 'Other Expense', Icons.more_horiz_rounded, const Color(0xFF007AFF)),
+      (
+        'personal',
+        'Personal Expense',
+        Icons.person_rounded,
+        const Color(0xFF5856D6),
+      ),
+      (
+        'shop',
+        'Shop Expense',
+        Icons.shopping_bag_rounded,
+        const Color(0xFFFF9500),
+      ),
+      (
+        'repair',
+        'Repair & Maintenance',
+        Icons.build_rounded,
+        const Color(0xFFFF3B30),
+      ),
+      (
+        'other',
+        'Other Expense',
+        Icons.more_horiz_rounded,
+        const Color(0xFF007AFF),
+      ),
     ];
 
-    final totalExpenses = categoryTotals.values.fold<double>(0, (sum, v) => sum + v);
+    final totalExpenses = categoryTotals.values.fold<double>(
+      0,
+      (sum, v) => sum + v,
+    );
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -178,7 +230,11 @@ class ExpenseScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -188,18 +244,30 @@ class ExpenseScreen extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-                child: Icon(Icons.pie_chart_rounded, color: Colors.blue.shade600, size: 20),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.pie_chart_rounded,
+                  color: Colors.blue.shade600,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-              const Text('Category Breakdown', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Category Breakdown',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 24),
           ...categories.map((cat) {
             final amount = categoryTotals[cat.$1] ?? 0;
-            final percentage = totalExpenses > 0 ? (amount / totalExpenses * 100) : 0;
-            
+            final percentage = totalExpenses > 0
+                ? (amount / totalExpenses * 100)
+                : 0;
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Row(
@@ -221,8 +289,21 @@ class ExpenseScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(cat.$2, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                            Text('Tk. ${amount.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.bold, color: cat.$4, fontSize: 15)),
+                            Text(
+                              cat.$2,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                            Text(
+                              'Tk. ${amount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: cat.$4,
+                                fontSize: 15,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -250,7 +331,13 @@ class ExpenseScreen extends StatelessWidget {
                             const SizedBox(width: 12),
                             SizedBox(
                               width: 50,
-                              child: Text('${percentage.toStringAsFixed(1)}%', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                              child: Text(
+                                '${percentage.toStringAsFixed(1)}%',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -275,7 +362,11 @@ class ExpenseScreen extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
           child: Column(
@@ -285,11 +376,21 @@ class ExpenseScreen extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-                    child: Icon(Icons.flash_on_rounded, color: Colors.green.shade600, size: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.flash_on_rounded,
+                      color: Colors.green.shade600,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Quick Actions',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -298,7 +399,10 @@ class ExpenseScreen extends StatelessWidget {
                 title: 'Add New Expense',
                 subtitle: 'Record a new expense entry',
                 color: const Color(0xFF4CAF50),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddExpenseScreen())),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+                ),
               ),
               const SizedBox(height: 12),
               _QuickActionTile(
@@ -306,7 +410,12 @@ class ExpenseScreen extends StatelessWidget {
                 title: 'View Full History',
                 subtitle: 'Browse all expense records',
                 color: const Color(0xFF2196F3),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpenseHistoryScreen())),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ExpenseHistoryScreen(),
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               _QuickActionTile(
@@ -323,20 +432,43 @@ class ExpenseScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF667eea), Color(0xFF764ba2)]),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+            ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
-              BoxShadow(color: const Color(0xFF667eea).withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
+              BoxShadow(
+                color: const Color(0xFF667eea).withOpacity(0.4),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.tips_and_updates_rounded, color: Colors.white, size: 32),
+              const Icon(
+                Icons.tips_and_updates_rounded,
+                color: Colors.white,
+                size: 32,
+              ),
               const SizedBox(height: 12),
-              const Text('Expense Tips', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                'Expense Tips',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
-              Text('Keep track of receipts by uploading photos when adding expenses.', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+              Text(
+                'Keep track of receipts by uploading photos when adding expenses.',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
         ),
@@ -810,7 +942,12 @@ class _WebStatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _WebStatCard({required this.title, required this.value, required this.icon, required this.color});
+  const _WebStatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -820,7 +957,11 @@ class _WebStatCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -838,9 +979,20 @@ class _WebStatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
                 const SizedBox(height: 6),
-                Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
@@ -856,7 +1008,12 @@ class _WebActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback onPressed;
 
-  const _WebActionButton({required this.icon, required this.label, required this.color, required this.onPressed});
+  const _WebActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -872,7 +1029,14 @@ class _WebActionButton extends StatelessWidget {
             children: [
               Icon(icon, color: Colors.white, size: 20),
               const SizedBox(width: 10),
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
@@ -888,7 +1052,13 @@ class _QuickActionTile extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _QuickActionTile({required this.icon, required this.title, required this.subtitle, required this.color, required this.onTap});
+  const _QuickActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -915,13 +1085,29 @@ class _QuickActionTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey.shade400, size: 16),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.grey.shade400,
+                size: 16,
+              ),
             ],
           ),
         ),

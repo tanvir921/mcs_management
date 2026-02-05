@@ -522,10 +522,13 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                       'records': <Map<String, dynamic>>[],
                       'walletBalance': 0.0,
                     };
-                final records = (data['records'] as List<dynamic>).cast<Map<String, dynamic>>();
+                final records = (data['records'] as List<dynamic>)
+                    .cast<Map<String, dynamic>>();
                 final total = (data['total'] as num?)?.toDouble() ?? 0.0;
-                final totalAdded = (data['totalAdded'] as num?)?.toDouble() ?? 0.0;
-                final totalExpenses = (data['totalExpenses'] as num?)?.toDouble() ?? 0.0;
+                final totalAdded =
+                    (data['totalAdded'] as num?)?.toDouble() ?? 0.0;
+                final totalExpenses =
+                    (data['totalExpenses'] as num?)?.toDouble() ?? 0.0;
 
                 if (records.isEmpty) {
                   return Center(

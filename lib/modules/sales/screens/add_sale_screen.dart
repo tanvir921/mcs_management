@@ -779,12 +779,27 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     final isWideScreen = MediaQuery.of(context).size.width > 1100;
 
     if (kIsWeb && isWideScreen) {
-      return _buildWebLayout(context, paidAmountForUi, realizedProfitUi, potentialProfitUi);
+      return _buildWebLayout(
+        context,
+        paidAmountForUi,
+        realizedProfitUi,
+        potentialProfitUi,
+      );
     }
-    return _buildMobileLayout(context, paidAmountForUi, realizedProfitUi, potentialProfitUi);
+    return _buildMobileLayout(
+      context,
+      paidAmountForUi,
+      realizedProfitUi,
+      potentialProfitUi,
+    );
   }
 
-  Widget _buildWebLayout(BuildContext context, double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
+  Widget _buildWebLayout(
+    BuildContext context,
+    double paidAmountForUi,
+    double realizedProfitUi,
+    double potentialProfitUi,
+  ) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
@@ -794,48 +809,105 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             height: 70,
             padding: const EdgeInsets.symmetric(horizontal: 32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.purple.shade700, Colors.purple.shade900]),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+              gradient: LinearGradient(
+                colors: [Colors.purple.shade700, Colors.purple.shade900],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.point_of_sale_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('New Sale', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    Text('Create a new sale transaction', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                    const Text(
+                      'New Sale',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Create a new sale transaction',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 const Spacer(),
                 // Quick Stats
-                _WebHeaderStat(label: 'Items', value: '${_items.length}', icon: Icons.shopping_cart_rounded),
+                _WebHeaderStat(
+                  label: 'Items',
+                  value: '${_items.length}',
+                  icon: Icons.shopping_cart_rounded,
+                ),
                 const SizedBox(width: 20),
-                _WebHeaderStat(label: 'Total', value: '৳${finalAmount.toStringAsFixed(0)}', icon: Icons.payments_rounded),
+                _WebHeaderStat(
+                  label: 'Total',
+                  value: '৳${finalAmount.toStringAsFixed(0)}',
+                  icon: Icons.payments_rounded,
+                ),
                 const SizedBox(width: 20),
-                _WebHeaderStat(label: 'Profit', value: '৳${finalProfit.toStringAsFixed(0)}', icon: Icons.trending_up_rounded),
+                _WebHeaderStat(
+                  label: 'Profit',
+                  value: '৳${finalProfit.toStringAsFixed(0)}',
+                  icon: Icons.trending_up_rounded,
+                ),
                 const SizedBox(width: 24),
                 ElevatedButton.icon(
                   onPressed: _isSubmitting ? null : _saveSale,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.purple.shade700,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  icon: _isSubmitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save_rounded),
-                  label: Text(_isSubmitting ? 'Saving...' : 'Complete Sale', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_rounded),
+                  label: Text(
+                    _isSubmitting ? 'Saving...' : 'Complete Sale',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -869,8 +941,16 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     width: 400,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(left: BorderSide(color: Colors.grey.shade200)),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(-2, 0))],
+                      border: Border(
+                        left: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(-2, 0),
+                        ),
+                      ],
                     ),
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(24),
@@ -881,9 +961,17 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           const SizedBox(height: 24),
                           _buildWebCustomerSection(),
                           const SizedBox(height: 24),
-                          _buildWebPaymentSection(paidAmountForUi, realizedProfitUi, potentialProfitUi),
+                          _buildWebPaymentSection(
+                            paidAmountForUi,
+                            realizedProfitUi,
+                            potentialProfitUi,
+                          ),
                           const SizedBox(height: 24),
-                          _buildWebSummary(paidAmountForUi, realizedProfitUi, potentialProfitUi),
+                          _buildWebSummary(
+                            paidAmountForUi,
+                            realizedProfitUi,
+                            potentialProfitUi,
+                          ),
                         ],
                       ),
                     ),
@@ -903,7 +991,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -912,11 +1006,21 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.add_shopping_cart_rounded, color: Colors.purple.shade600, size: 24),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.add_shopping_cart_rounded,
+                  color: Colors.purple.shade600,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 14),
-              const Text('Add Items', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Add Items',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -961,7 +1065,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -970,11 +1080,24 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.list_alt_rounded, color: Colors.green.shade600, size: 24),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.list_alt_rounded,
+                  color: Colors.green.shade600,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 14),
-              Text('Items (${_items.length})', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                'Items (${_items.length})',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const Spacer(),
               if (_items.isNotEmpty)
                 TextButton.icon(
@@ -995,11 +1118,27 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.shopping_basket_outlined, size: 64, color: Colors.grey.shade300),
+                    Icon(
+                      Icons.shopping_basket_outlined,
+                      size: 64,
+                      color: Colors.grey.shade300,
+                    ),
                     const SizedBox(height: 16),
-                    Text('No items added yet', style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
+                    Text(
+                      'No items added yet',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 16,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text('Use the buttons above to add items', style: TextStyle(color: Colors.grey.shade400, fontSize: 13)),
+                    Text(
+                      'Use the buttons above to add items',
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1009,14 +1148,59 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Row(
                     children: [
-                      const Expanded(flex: 3, child: Text('Item', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-                      const Expanded(flex: 1, child: Text('Qty', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.center)),
-                      const Expanded(flex: 2, child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.right)),
-                      const Expanded(flex: 2, child: Text('Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13), textAlign: TextAlign.right)),
+                      const Expanded(
+                        flex: 3,
+                        child: Text(
+                          'Item',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Qty',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Price',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                      const Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Total',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
                       const SizedBox(width: 50),
                     ],
                   ),
@@ -1040,8 +1224,21 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.itemName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              Text(item.itemType == 'service' ? 'Service' : 'Product', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                              Text(
+                                item.itemName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                item.itemType == 'service'
+                                    ? 'Service'
+                                    : 'Product',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1051,38 +1248,88 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               InkWell(
-                                onTap: () => _updateItemQuantity(index, item.quantity - 1),
+                                onTap: () => _updateItemQuantity(
+                                  index,
+                                  item.quantity - 1,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(4)),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                   child: const Icon(Icons.remove, size: 16),
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                child: Text('${item.quantity.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: Text(
+                                  '${item.quantity.toInt()}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                               InkWell(
-                                onTap: () => _updateItemQuantity(index, item.quantity + 1),
+                                onTap: () => _updateItemQuantity(
+                                  index,
+                                  item.quantity + 1,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(color: Colors.purple.shade100, borderRadius: BorderRadius.circular(4)),
-                                  child: Icon(Icons.add, size: 16, color: Colors.purple.shade700),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.shade100,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                    size: 16,
+                                    color: Colors.purple.shade700,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Expanded(flex: 2, child: Text('৳${item.sellingPrice.toStringAsFixed(2)}', textAlign: TextAlign.right)),
-                        Expanded(flex: 2, child: Text('৳${item.totalSelling.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.right)),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            '৳${item.sellingPrice.toStringAsFixed(2)}',
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            '৳${item.totalSelling.toStringAsFixed(2)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
                         SizedBox(
                           width: 50,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              InkWell(onTap: () => _editItem(index), child: Icon(Icons.edit_rounded, size: 18, color: Colors.blue.shade600)),
+                              InkWell(
+                                onTap: () => _editItem(index),
+                                child: Icon(
+                                  Icons.edit_rounded,
+                                  size: 18,
+                                  color: Colors.blue.shade600,
+                                ),
+                              ),
                               const SizedBox(width: 8),
-                              InkWell(onTap: () => _removeItem(index), child: Icon(Icons.delete_rounded, size: 18, color: Colors.red.shade600)),
+                              InkWell(
+                                onTap: () => _removeItem(index),
+                                child: Icon(
+                                  Icons.delete_rounded,
+                                  size: 18,
+                                  color: Colors.red.shade600,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -1110,29 +1357,64 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today_rounded, color: Colors.purple.shade700, size: 20),
+              Icon(
+                Icons.calendar_today_rounded,
+                color: Colors.purple.shade700,
+                size: 20,
+              ),
               const SizedBox(width: 10),
-              const Text('Sale Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Sale Date & Time',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           InkWell(
             onTap: () async {
-              final date = await showDatePicker(context: context, initialDate: _saleDate, firstDate: DateTime(2020), lastDate: DateTime.now());
+              final date = await showDatePicker(
+                context: context,
+                initialDate: _saleDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
               if (date != null) {
-                final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_saleDate));
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(_saleDate),
+                );
                 if (time != null) {
-                  setState(() => _saleDate = DateTime(date.year, date.month, date.day, time.hour, time.minute));
+                  setState(
+                    () => _saleDate = DateTime(
+                      date.year,
+                      date.month,
+                      date.day,
+                      time.hour,
+                      time.minute,
+                    ),
+                  );
                 }
               }
             },
             child: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(
                 children: [
-                  Expanded(child: Text(DateFormat('MMM d, y - hh:mm a').format(_saleDate), style: const TextStyle(fontWeight: FontWeight.w600))),
-                  Icon(Icons.edit_rounded, size: 18, color: Colors.purple.shade600),
+                  Expanded(
+                    child: Text(
+                      DateFormat('MMM d, y - hh:mm a').format(_saleDate),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(
+                    Icons.edit_rounded,
+                    size: 18,
+                    color: Colors.purple.shade600,
+                  ),
                 ],
               ),
             ),
@@ -1157,7 +1439,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             children: [
               Icon(Icons.person_rounded, color: Colors.blue.shade700, size: 20),
               const SizedBox(width: 10),
-              const Text('Customer', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Customer',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1165,21 +1450,42 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             onTap: _showCustomerSelectionDialog,
             child: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(
                 children: [
-                  Icon(_selectedCustomer?.name.toLowerCase() == 'guest' ? Icons.people_rounded : Icons.person_rounded, color: Colors.blue.shade600),
+                  Icon(
+                    _selectedCustomer?.name.toLowerCase() == 'guest'
+                        ? Icons.people_rounded
+                        : Icons.person_rounded,
+                    color: Colors.blue.shade600,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_selectedCustomer?.name ?? 'Select Customer', style: const TextStyle(fontWeight: FontWeight.w600)),
-                        if (_selectedCustomer?.phone != null) Text(_selectedCustomer!.phone!, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                        Text(
+                          _selectedCustomer?.name ?? 'Select Customer',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        if (_selectedCustomer?.phone != null)
+                          Text(
+                            _selectedCustomer!.phone!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  Icon(Icons.arrow_drop_down_rounded, color: Colors.blue.shade600),
+                  Icon(
+                    Icons.arrow_drop_down_rounded,
+                    color: Colors.blue.shade600,
+                  ),
                 ],
               ),
             ),
@@ -1188,12 +1494,26 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_rounded, size: 16, color: Colors.red.shade600),
+                  Icon(
+                    Icons.warning_rounded,
+                    size: 16,
+                    color: Colors.red.shade600,
+                  ),
                   const SizedBox(width: 8),
-                  Text('Previous Due: ৳${_selectedCustomer!.totalDue.toStringAsFixed(2)}', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text(
+                    'Previous Due: ৳${_selectedCustomer!.totalDue.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1203,7 +1523,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     );
   }
 
-  Widget _buildWebPaymentSection(double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
+  Widget _buildWebPaymentSection(
+    double paidAmountForUi,
+    double realizedProfitUi,
+    double potentialProfitUi,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1216,9 +1540,16 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.payment_rounded, color: Colors.green.shade700, size: 20),
+              Icon(
+                Icons.payment_rounded,
+                color: Colors.green.shade700,
+                size: 20,
+              ),
               const SizedBox(width: 10),
-              const Text('Payment', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Payment',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -1230,7 +1561,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               return ChoiceChip(
                 label: Text(method[0].toUpperCase() + method.substring(1)),
                 selected: isSelected,
-                onSelected: (selected) => setState(() => _paymentMethod = method),
+                onSelected: (selected) =>
+                    setState(() => _paymentMethod = method),
                 selectedColor: Colors.green.shade200,
               );
             }).toList(),
@@ -1245,8 +1577,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               prefixText: '৳ ',
               filled: true,
               fillColor: Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.green.shade400)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Colors.green.shade400),
+              ),
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -1256,21 +1594,28 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => setState(() => _paidAmountController.text = finalAmount.toStringAsFixed(2)),
+                  onPressed: () => setState(
+                    () => _paidAmountController.text = finalAmount
+                        .toStringAsFixed(2),
+                  ),
                   child: const Text('Full'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => setState(() => _paidAmountController.text = (finalAmount / 2).toStringAsFixed(2)),
+                  onPressed: () => setState(
+                    () => _paidAmountController.text = (finalAmount / 2)
+                        .toStringAsFixed(2),
+                  ),
                   child: const Text('Half'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => setState(() => _paidAmountController.text = '0.00'),
+                  onPressed: () =>
+                      setState(() => _paidAmountController.text = '0.00'),
                   child: const Text('Due'),
                 ),
               ),
@@ -1281,32 +1626,67 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     );
   }
 
-  Widget _buildWebSummary(double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
+  Widget _buildWebSummary(
+    double paidAmountForUi,
+    double realizedProfitUi,
+    double potentialProfitUi,
+  ) {
     final dueAmount = finalAmount - paidAmountForUi;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.purple.shade600, Colors.purple.shade800]),
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade600, Colors.purple.shade800],
+        ),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
-          _WebSummaryRow(label: 'Subtotal', value: '৳${totalSelling.toStringAsFixed(2)}'),
-          if (finalDiscount > 0) _WebSummaryRow(label: 'Discount', value: '-৳${finalDiscount.toStringAsFixed(2)}', isNegative: true),
+          _WebSummaryRow(
+            label: 'Subtotal',
+            value: '৳${totalSelling.toStringAsFixed(2)}',
+          ),
+          if (finalDiscount > 0)
+            _WebSummaryRow(
+              label: 'Discount',
+              value: '-৳${finalDiscount.toStringAsFixed(2)}',
+              isNegative: true,
+            ),
           const Divider(color: Colors.white24, height: 24),
-          _WebSummaryRow(label: 'Total', value: '৳${finalAmount.toStringAsFixed(2)}', isBold: true, isLarge: true),
-          _WebSummaryRow(label: 'Paid', value: '৳${paidAmountForUi.toStringAsFixed(2)}'),
-          if (dueAmount > 0.01) _WebSummaryRow(label: 'Due', value: '৳${dueAmount.toStringAsFixed(2)}', isWarning: true),
+          _WebSummaryRow(
+            label: 'Total',
+            value: '৳${finalAmount.toStringAsFixed(2)}',
+            isBold: true,
+            isLarge: true,
+          ),
+          _WebSummaryRow(
+            label: 'Paid',
+            value: '৳${paidAmountForUi.toStringAsFixed(2)}',
+          ),
+          if (dueAmount > 0.01)
+            _WebSummaryRow(
+              label: 'Due',
+              value: '৳${dueAmount.toStringAsFixed(2)}',
+              isWarning: true,
+            ),
           const Divider(color: Colors.white24, height: 24),
-          _WebSummaryRow(label: 'Profit', value: '৳${finalProfit.toStringAsFixed(2)}', isProfit: true),
+          _WebSummaryRow(
+            label: 'Profit',
+            value: '৳${finalProfit.toStringAsFixed(2)}',
+            isProfit: true,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context, double paidAmountForUi, double realizedProfitUi, double potentialProfitUi) {
-
+  Widget _buildMobileLayout(
+    BuildContext context,
+    double paidAmountForUi,
+    double realizedProfitUi,
+    double potentialProfitUi,
+  ) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -3302,13 +3682,20 @@ class _WebHeaderStat extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _WebHeaderStat({required this.label, required this.value, required this.icon});
+  const _WebHeaderStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(
         children: [
           Icon(icon, color: Colors.white.withOpacity(0.8), size: 18),
@@ -3317,8 +3704,21 @@ class _WebHeaderStat extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11)),
-              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ],
@@ -3333,7 +3733,12 @@ class _WebAddButton extends StatefulWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _WebAddButton({required this.icon, required this.label, required this.color, required this.onTap});
+  const _WebAddButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   State<_WebAddButton> createState() => _WebAddButtonState();
@@ -3353,19 +3758,33 @@ class _WebAddButtonState extends State<_WebAddButton> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _isHovered ? widget.color.withOpacity(0.1) : Colors.grey.shade50,
+            color: _isHovered
+                ? widget.color.withOpacity(0.1)
+                : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isHovered ? widget.color : Colors.grey.shade200, width: 2),
+            border: Border.all(
+              color: _isHovered ? widget.color : Colors.grey.shade200,
+              width: 2,
+            ),
           ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: widget.color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Icon(widget.icon, color: widget.color, size: 28),
               ),
               const SizedBox(height: 10),
-              Text(widget.label, style: TextStyle(fontWeight: FontWeight.w600, color: _isHovered ? widget.color : Colors.grey.shade700)),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: _isHovered ? widget.color : Colors.grey.shade700,
+                ),
+              ),
             ],
           ),
         ),
@@ -3405,7 +3824,13 @@ class _WebSummaryRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: isLarge ? 16 : 14)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: isLarge ? 16 : 14,
+            ),
+          ),
           Text(
             value,
             style: TextStyle(

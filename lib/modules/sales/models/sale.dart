@@ -21,7 +21,8 @@ class Sale {
   final String? notes;
   final String createdBy;
   final String createdByName;
-  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
+  final DateTime?
+  createdAt; // Nullable - will be set by server timestamp on create
   final DateTime? updatedAt;
   final bool isActive;
 
@@ -107,7 +108,9 @@ class Sale {
       'notes': notes,
       'createdBy': createdBy,
       'createdByName': createdByName,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'updatedAt': updatedAt,
       'isActive': isActive,
     };
@@ -135,7 +138,8 @@ class Sale {
       'notes': notes,
       'createdBy': createdBy,
       'createdByName': createdByName,
-      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdAt':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'updatedAt': updatedAt,
       'isActive': isActive,
     };

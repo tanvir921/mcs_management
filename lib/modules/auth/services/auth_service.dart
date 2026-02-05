@@ -248,7 +248,10 @@ class AuthService {
       // timestamp will be set by server timestamp
     );
 
-    await _firestore.collection(_logsCollection).doc(log.id).set(log.toJsonForCreate());
+    await _firestore
+        .collection(_logsCollection)
+        .doc(log.id)
+        .set(log.toJsonForCreate());
   }
 
   /// Get action logs

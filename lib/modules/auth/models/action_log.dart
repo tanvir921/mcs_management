@@ -8,7 +8,8 @@ class ActionLog {
   final String action;
   final String module;
   final String? details;
-  final DateTime? timestamp; // Nullable - will be set by server timestamp on create
+  final DateTime?
+  timestamp; // Nullable - will be set by server timestamp on create
 
   const ActionLog({
     required this.id,
@@ -41,7 +42,8 @@ class ActionLog {
       'action': action,
       'module': module,
       'details': details,
-      'timestamp': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'timestamp':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
     };
   }
 
@@ -54,7 +56,9 @@ class ActionLog {
       'action': action,
       'module': module,
       'details': details,
-      'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : FieldValue.serverTimestamp(),
+      'timestamp': timestamp != null
+          ? Timestamp.fromDate(timestamp!)
+          : FieldValue.serverTimestamp(),
     };
   }
 }

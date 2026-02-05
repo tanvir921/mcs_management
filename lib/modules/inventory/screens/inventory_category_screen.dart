@@ -622,7 +622,9 @@ class _CategoryCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          DateFormat('MMM d, y').format(category.createdAt ?? DateTime.now()),
+                          DateFormat(
+                            'MMM d, y',
+                          ).format(category.createdAt ?? DateTime.now()),
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey.shade500,

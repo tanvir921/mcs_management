@@ -12,7 +12,8 @@ class DueTransaction {
   final bool profitRealized; // Whether profit was added when due cleared
   final double realizedProfitAmount; // Actual profit realized when clearing due
   final String? note;
-  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
+  final DateTime?
+  createdAt; // Nullable - will be set by server timestamp on create
   final String createdBy; // Admin user ID
   final String createdByName; // Admin user name
 
@@ -64,7 +65,8 @@ class DueTransaction {
       'profitRealized': profitRealized,
       'realizedProfitAmount': realizedProfitAmount,
       'note': note,
-      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdAt':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'createdBy': createdBy,
       'createdByName': createdByName,
     };
@@ -83,7 +85,9 @@ class DueTransaction {
       'profitRealized': profitRealized,
       'realizedProfitAmount': realizedProfitAmount,
       'note': note,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       'createdBy': createdBy,
       'createdByName': createdByName,
     };

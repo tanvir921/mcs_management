@@ -169,7 +169,9 @@ class InventoryService {
         createdAt: DateTime.now(), // Local time for return value
         updatedAt: DateTime.now(),
       );
-      await docRef.set(newItem.toJsonForCreate()); // Use server timestamp for Firestore
+      await docRef.set(
+        newItem.toJsonForCreate(),
+      ); // Use server timestamp for Firestore
       return newItem;
     } catch (e) {
       throw Exception('Failed to create item: $e');

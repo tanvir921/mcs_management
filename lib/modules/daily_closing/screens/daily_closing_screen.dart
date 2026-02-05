@@ -192,43 +192,91 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 height: 70,
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade900]),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade900],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Daily Closing', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                        Text(DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now()), style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                        const Text(
+                          'Daily Closing',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          DateFormat(
+                            'EEEE, MMMM d, yyyy',
+                          ).format(DateTime.now()),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                     const Spacer(),
                     // Stats in header
                     if (closingProvider.draftClosing != null) ...[
-                      _WebHeaderStat(label: 'Subtotal', value: '৳${closingProvider.draftClosing!.subtotal.toStringAsFixed(0)}', icon: Icons.calculate),
+                      _WebHeaderStat(
+                        label: 'Subtotal',
+                        value:
+                            '৳${closingProvider.draftClosing!.subtotal.toStringAsFixed(0)}',
+                        icon: Icons.calculate,
+                      ),
                       const SizedBox(width: 24),
-                      _WebHeaderStat(label: 'Profit', value: '৳${closingProvider.draftClosing!.totalProfit.toStringAsFixed(0)}', icon: Icons.trending_up),
+                      _WebHeaderStat(
+                        label: 'Profit',
+                        value:
+                            '৳${closingProvider.draftClosing!.totalProfit.toStringAsFixed(0)}',
+                        icon: Icons.trending_up,
+                      ),
                       const SizedBox(width: 24),
                     ],
                     OutlinedButton.icon(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ClosingHistoryScreen()));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ClosingHistoryScreen(),
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.history, size: 18),
                       label: const Text('History'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: BorderSide(color: Colors.white.withOpacity(0.5)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -237,14 +285,23 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               // Content
               Expanded(
                 child: closingProvider.isLoading
-                    ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.blue.shade600)))
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(
+                            Colors.blue.shade600,
+                          ),
+                        ),
+                      )
                     : SingleChildScrollView(
                         padding: const EdgeInsets.all(32),
                         child: !_showCalculations
                             ? _buildWebInputSection()
                             : closingProvider.draftClosing != null
-                                ? _buildWebClosingReport(context, closingProvider.draftClosing!)
-                                : const SizedBox(),
+                            ? _buildWebClosingReport(
+                                context,
+                                closingProvider.draftClosing!,
+                              )
+                            : const SizedBox(),
                       ),
               ),
             ],
@@ -263,26 +320,56 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             // Welcome Card
             Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [Colors.blue.shade600, Colors.blue.shade700]),
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade600, Colors.blue.shade700],
+                ),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               padding: const EdgeInsets.all(32),
               child: Row(
                 children: [
                   Container(
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.all(16),
-                    child: const Icon(Icons.wallet, color: Colors.white, size: 32),
+                    child: const Icon(
+                      Icons.wallet,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                   const SizedBox(width: 24),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Daily Closing', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                        Text(
+                          'Daily Closing',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                        Text(
+                          DateFormat(
+                            'EEEE, MMMM d, yyyy',
+                          ).format(DateTime.now()),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -293,15 +380,28 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             // Input Card
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hand Cash Entry', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Hand Cash Entry',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    Text('Enter the cash amount you have on hand', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                    Text(
+                      'Enter the cash amount you have on hand',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
+                    ),
                     const SizedBox(height: 32),
                     TextField(
                       controller: _handCashController,
@@ -310,11 +410,15 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                         hintText: 'Enter amount',
                         prefixIcon: const Icon(Icons.currency_exchange),
                         suffixText: '৳',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(height: 32),
@@ -323,11 +427,19 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                       child: FilledButton.icon(
                         onPressed: _createDraftClosing,
                         icon: const Icon(Icons.calculate, size: 20),
-                        label: const Text('Calculate Daily Closing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        label: const Text(
+                          'Calculate Daily Closing',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           backgroundColor: Colors.blue.shade600,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
@@ -353,11 +465,32 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               // Summary Cards Row
               Row(
                 children: [
-                  Expanded(child: _buildWebSummaryCard('Wallet Balance', closing.walletBalancesTotal, Icons.account_balance_wallet, Colors.blue)),
+                  Expanded(
+                    child: _buildWebSummaryCard(
+                      'Wallet Balance',
+                      closing.walletBalancesTotal,
+                      Icons.account_balance_wallet,
+                      Colors.blue,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildWebSummaryCard('Total Expenses', closing.todaysExpenses, Icons.trending_down, Colors.red)),
+                  Expanded(
+                    child: _buildWebSummaryCard(
+                      'Total Expenses',
+                      closing.todaysExpenses,
+                      Icons.trending_down,
+                      Colors.red,
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildWebSummaryCard('Today\'s Subtotal', closing.subtotal, Icons.calculate, Colors.green)),
+                  Expanded(
+                    child: _buildWebSummaryCard(
+                      'Today\'s Subtotal',
+                      closing.subtotal,
+                      Icons.calculate,
+                      Colors.green,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -365,9 +498,23 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _buildWebBreakdownCard('Income', Icons.arrow_upward, Colors.green, _buildIncomeBreakdown(closing))),
+                  Expanded(
+                    child: _buildWebBreakdownCard(
+                      'Income',
+                      Icons.arrow_upward,
+                      Colors.green,
+                      _buildIncomeBreakdown(closing),
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildWebBreakdownCard('Deductions', Icons.arrow_downward, Colors.red, _buildExpensesBreakdown(closing))),
+                  Expanded(
+                    child: _buildWebBreakdownCard(
+                      'Deductions',
+                      Icons.arrow_downward,
+                      Colors.red,
+                      _buildExpensesBreakdown(closing),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -377,7 +524,10 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               if (closing.yesterdaySubtotal > 0)
                 _buildComparisonCard(context, closing)
               else
-                _buildInfoCard('No previous closing found (first closing)', Colors.amber),
+                _buildInfoCard(
+                  'No previous closing found (first closing)',
+                  Colors.amber,
+                ),
               const SizedBox(height: 24),
               // Profits & Deduction
               Row(
@@ -385,7 +535,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 children: [
                   Expanded(child: _buildProfitsSection(context, closing)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildProfitDeductionSection(context, closing)),
+                  Expanded(
+                    child: _buildProfitDeductionSection(context, closing),
+                  ),
                 ],
               ),
             ],
@@ -403,7 +555,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               // Remarks
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -411,9 +565,19 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.note_outlined, color: Colors.blue.shade400, size: 20),
+                          Icon(
+                            Icons.note_outlined,
+                            color: Colors.blue.shade400,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
-                          const Text('Remarks', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          const Text(
+                            'Remarks',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -422,7 +586,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                         decoration: InputDecoration(
                           hintText: 'Add any notes about today\'s closing...',
                           hintStyle: TextStyle(color: Colors.grey.shade400),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           filled: true,
                           fillColor: Colors.grey.shade50,
                         ),
@@ -450,8 +616,13 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                       label: const Text('Cancel'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: Colors.grey.shade300, width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -464,7 +635,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.green.shade600,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -477,32 +650,69 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     );
   }
 
-  Widget _buildWebSummaryCard(String label, double amount, IconData icon, Color color) {
+  Widget _buildWebSummaryCard(
+    String label,
+    double amount,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [color.withOpacity(0.85), color.withOpacity(0.65)]),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withOpacity(0.85), color.withOpacity(0.65)],
+        ),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.25), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(10),
+            ),
             padding: const EdgeInsets.all(10),
             child: Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(height: 16),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text('৳${amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(
+            '৳${amount.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildWebBreakdownCard(String title, IconData icon, Color color, Widget content) {
+  Widget _buildWebBreakdownCard(
+    String title,
+    IconData icon,
+    Color color,
+    Widget content,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -515,11 +725,20 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Icon(icon, color: color, size: 22),
                 ),
                 const SizedBox(width: 14),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -2216,28 +2435,56 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
             height: 70,
             padding: const EdgeInsets.symmetric(horizontal: 32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade900]),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade700, Colors.blue.shade900],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.history_rounded, color: Colors.white, size: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.history_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Closing History', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    Text('View past daily closings', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    Text(
+                      'Closing History',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'View past daily closings',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
                   ],
                 ),
               ],
@@ -2248,7 +2495,11 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
             child: Consumer<DailyClosingProvider>(
               builder: (context, closingProvider, child) {
                 if (closingProvider.isLoading) {
-                  return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.blue.shade600)));
+                  return Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation(Colors.blue.shade600),
+                    ),
+                  );
                 }
 
                 if (closingProvider.closingHistory.isEmpty) {
@@ -2256,9 +2507,19 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history, size: 80, color: Colors.grey.shade300),
+                        Icon(
+                          Icons.history,
+                          size: 80,
+                          color: Colors.grey.shade300,
+                        ),
                         const SizedBox(height: 16),
-                        Text('No closing history found', style: TextStyle(fontSize: 18, color: Colors.grey.shade600)),
+                        Text(
+                          'No closing history found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -2272,11 +2533,26 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                       // Summary Stats
                       Row(
                         children: [
-                          _buildWebStatCard('Total Closings', closingProvider.closingHistory.length.toString(), Icons.calendar_month, Colors.blue),
+                          _buildWebStatCard(
+                            'Total Closings',
+                            closingProvider.closingHistory.length.toString(),
+                            Icons.calendar_month,
+                            Colors.blue,
+                          ),
                           const SizedBox(width: 16),
-                          _buildWebStatCard('Total Profit', '৳${closingProvider.closingHistory.fold<double>(0, (sum, c) => sum + c.totalProfit).toStringAsFixed(0)}', Icons.trending_up, Colors.green),
+                          _buildWebStatCard(
+                            'Total Profit',
+                            '৳${closingProvider.closingHistory.fold<double>(0, (sum, c) => sum + c.totalProfit).toStringAsFixed(0)}',
+                            Icons.trending_up,
+                            Colors.green,
+                          ),
                           const SizedBox(width: 16),
-                          _buildWebStatCard('Avg. Balance', '৳${(closingProvider.closingHistory.fold<double>(0, (sum, c) => sum + c.finalClosingBalance) / closingProvider.closingHistory.length).toStringAsFixed(0)}', Icons.account_balance, Colors.purple),
+                          _buildWebStatCard(
+                            'Avg. Balance',
+                            '৳${(closingProvider.closingHistory.fold<double>(0, (sum, c) => sum + c.finalClosingBalance) / closingProvider.closingHistory.length).toStringAsFixed(0)}',
+                            Icons.account_balance,
+                            Colors.purple,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -2284,23 +2560,75 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                       Expanded(
                         child: Card(
                           elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           child: Column(
                             children: [
                               // Table Header
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 16,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.grey.shade50,
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(16),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Expanded(flex: 2, child: Text('Date', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
-                                    const Expanded(flex: 2, child: Text('Balance', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
-                                    const Expanded(flex: 2, child: Text('Profit', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
-                                    const Expanded(flex: 2, child: Text('Subtotal', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
-                                    const Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54))),
+                                    const Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        'Date',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
+                                    const Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        'Balance',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
+                                    const Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        'Profit',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
+                                    const Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        'Subtotal',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
+                                    const Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        'Status',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
                                     const SizedBox(width: 50),
                                   ],
                                 ),
@@ -2309,46 +2637,112 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                               // Table Body
                               Expanded(
                                 child: ListView.separated(
-                                  itemCount: closingProvider.closingHistory.length,
-                                  separatorBuilder: (_, __) => const Divider(height: 1),
+                                  itemCount:
+                                      closingProvider.closingHistory.length,
+                                  separatorBuilder: (_, __) =>
+                                      const Divider(height: 1),
                                   itemBuilder: (context, index) {
-                                    final closing = closingProvider.closingHistory[index];
-                                    final isPositive = closing.finalClosingBalance >= 0;
+                                    final closing =
+                                        closingProvider.closingHistory[index];
+                                    final isPositive =
+                                        closing.finalClosingBalance >= 0;
                                     return InkWell(
-                                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClosingDetailScreen(closing: closing))),
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ClosingDetailScreen(
+                                            closing: closing,
+                                          ),
+                                        ),
+                                      ),
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 16,
+                                        ),
                                         child: Row(
                                           children: [
                                             Expanded(
                                               flex: 2,
-                                              child: Text(DateFormat('EEEE, MMM d, yyyy').format(closing.closingDate), style: const TextStyle(fontWeight: FontWeight.w500)),
+                                              child: Text(
+                                                DateFormat(
+                                                  'EEEE, MMM d, yyyy',
+                                                ).format(closing.closingDate),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
                                             ),
                                             Expanded(
                                               flex: 2,
-                                              child: Text('৳${closing.finalClosingBalance.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w600, color: isPositive ? Colors.green : Colors.red)),
+                                              child: Text(
+                                                '৳${closing.finalClosingBalance.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isPositive
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                                ),
+                                              ),
                                             ),
                                             Expanded(
                                               flex: 2,
-                                              child: Text('৳${closing.totalProfit.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w500)),
+                                              child: Text(
+                                                '৳${closing.totalProfit.toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  color: Colors.green,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
                                             ),
                                             Expanded(
                                               flex: 2,
-                                              child: Text('৳${closing.subtotal.toStringAsFixed(2)}', style: TextStyle(color: Colors.grey.shade700)),
+                                              child: Text(
+                                                '৳${closing.subtotal.toStringAsFixed(2)}',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade700,
+                                                ),
+                                              ),
                                             ),
                                             Expanded(
                                               flex: 1,
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 4,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: isPositive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(20),
+                                                  color: isPositive
+                                                      ? Colors.green
+                                                            .withOpacity(0.1)
+                                                      : Colors.red.withOpacity(
+                                                          0.1,
+                                                        ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
                                                 ),
-                                                child: Text(isPositive ? 'Positive' : 'Negative', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isPositive ? Colors.green : Colors.red)),
+                                                child: Text(
+                                                  isPositive
+                                                      ? 'Positive'
+                                                      : 'Negative',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: isPositive
+                                                        ? Colors.green
+                                                        : Colors.red,
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(width: 20),
-                                            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+                                            Icon(
+                                              Icons.arrow_forward_ios,
+                                              size: 16,
+                                              color: Colors.grey.shade400,
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -2371,7 +2765,12 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
     );
   }
 
-  Widget _buildWebStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildWebStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -2379,22 +2778,41 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withOpacity(0.2)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                Text(
+                  label,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
                 const SizedBox(height: 4),
-                Text(value, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ],
@@ -2604,34 +3022,72 @@ class ClosingDetailScreen extends StatelessWidget {
             height: 70,
             padding: const EdgeInsets.symmetric(horizontal: 32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.blue.shade700, Colors.blue.shade900]),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 2))],
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade700, Colors.blue.shade900],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(DateFormat('EEEE, MMMM d, yyyy').format(closing.closingDate), style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                    const Text('Closing Details', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    Text(
+                      DateFormat(
+                        'EEEE, MMMM d, yyyy',
+                      ).format(closing.closingDate),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Text(
+                      'Closing Details',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
                   ],
                 ),
                 const Spacer(),
-                _WebHeaderStatDetail(label: 'Balance', value: '৳${closing.finalClosingBalance.toStringAsFixed(0)}', color: isPositive ? Colors.greenAccent : Colors.redAccent),
+                _WebHeaderStatDetail(
+                  label: 'Balance',
+                  value: '৳${closing.finalClosingBalance.toStringAsFixed(0)}',
+                  color: isPositive ? Colors.greenAccent : Colors.redAccent,
+                ),
                 const SizedBox(width: 24),
-                _WebHeaderStatDetail(label: 'Profit', value: '৳${closing.totalProfit.toStringAsFixed(0)}', color: Colors.greenAccent),
+                _WebHeaderStatDetail(
+                  label: 'Profit',
+                  value: '৳${closing.totalProfit.toStringAsFixed(0)}',
+                  color: Colors.greenAccent,
+                ),
               ],
             ),
           ),
@@ -2652,12 +3108,23 @@ class ClosingDetailScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                isPositive ? Colors.green.shade600 : Colors.red.shade600,
-                                isPositive ? Colors.green.shade700 : Colors.red.shade700,
+                                isPositive
+                                    ? Colors.green.shade600
+                                    : Colors.red.shade600,
+                                isPositive
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [BoxShadow(color: (isPositive ? Colors.green : Colors.red).withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isPositive ? Colors.green : Colors.red)
+                                    .withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           padding: const EdgeInsets.all(28),
                           child: Row(
@@ -2666,26 +3133,64 @@ class ClosingDetailScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Final Closing Balance', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
+                                    const Text(
+                                      'Final Closing Balance',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                     const SizedBox(height: 8),
-                                    Text('৳${closing.finalClosingBalance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 36)),
+                                    Text(
+                                      '৳${closing.finalClosingBalance.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 36,
+                                      ),
+                                    ),
                                     const SizedBox(height: 16),
                                     Row(
                                       children: [
-                                        _buildDetailMetric(label: 'Profit', amount: closing.totalProfit, icon: Icons.trending_up, color: Colors.white),
+                                        _buildDetailMetric(
+                                          label: 'Profit',
+                                          amount: closing.totalProfit,
+                                          icon: Icons.trending_up,
+                                          color: Colors.white,
+                                        ),
                                         const SizedBox(width: 16),
-                                        _buildDetailMetric(label: 'Remaining', amount: closing.remainingCash, icon: Icons.compare_arrows, color: Colors.white),
+                                        _buildDetailMetric(
+                                          label: 'Remaining',
+                                          amount: closing.remainingCash,
+                                          icon: Icons.compare_arrows,
+                                          color: Colors.white,
+                                        ),
                                         const SizedBox(width: 16),
-                                        _buildDetailMetric(label: 'Subtotal', amount: closing.subtotal, icon: Icons.calculate, color: Colors.white),
+                                        _buildDetailMetric(
+                                          label: 'Subtotal',
+                                          amount: closing.subtotal,
+                                          icon: Icons.calculate,
+                                          color: Colors.white,
+                                        ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
                               Container(
-                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                                 padding: const EdgeInsets.all(20),
-                                child: Icon(isPositive ? Icons.trending_up : Icons.trending_down, color: Colors.white, size: 50),
+                                child: Icon(
+                                  isPositive
+                                      ? Icons.trending_up
+                                      : Icons.trending_down,
+                                  color: Colors.white,
+                                  size: 50,
+                                ),
                               ),
                             ],
                           ),
@@ -2695,22 +3200,52 @@ class ClosingDetailScreen extends StatelessWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _buildDetailedBreakdownSection(title: 'Wallet Balances', breakdown: closing.walletBreakdown, total: closing.walletBalancesTotal)),
+                            Expanded(
+                              child: _buildDetailedBreakdownSection(
+                                title: 'Wallet Balances',
+                                breakdown: closing.walletBreakdown,
+                                total: closing.walletBalancesTotal,
+                              ),
+                            ),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildDetailedBreakdownSection(title: 'Expenses', breakdown: closing.expenseBreakdown, total: closing.todaysExpenses, isNegative: true)),
+                            Expanded(
+                              child: _buildDetailedBreakdownSection(
+                                title: 'Expenses',
+                                breakdown: closing.expenseBreakdown,
+                                total: closing.todaysExpenses,
+                                isNegative: true,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _buildDetailedBreakdownSection(title: 'MSF/Recharge', breakdown: closing.msfBreakdown, total: closing.todaysMSFRecharge)),
+                            Expanded(
+                              child: _buildDetailedBreakdownSection(
+                                title: 'MSF/Recharge',
+                                breakdown: closing.msfBreakdown,
+                                total: closing.todaysMSFRecharge,
+                              ),
+                            ),
                             const SizedBox(width: 16),
-                            Expanded(child: _buildDetailedBreakdownSection(title: 'Cash Borrow Due', breakdown: closing.cashBorrowBreakdown, total: closing.todaysCashBorrowDue)),
+                            Expanded(
+                              child: _buildDetailedBreakdownSection(
+                                title: 'Cash Borrow Due',
+                                breakdown: closing.cashBorrowBreakdown,
+                                total: closing.todaysCashBorrowDue,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _buildDetailedBreakdownSection(title: 'Temporary Wallet Balance', breakdown: closing.temporaryBalanceBreakdown, total: closing.temporaryBalancesTotal, isNegative: true),
+                        _buildDetailedBreakdownSection(
+                          title: 'Temporary Wallet Balance',
+                          breakdown: closing.temporaryBalanceBreakdown,
+                          total: closing.temporaryBalancesTotal,
+                          isNegative: true,
+                        ),
                       ],
                     ),
                   ),
@@ -2723,18 +3258,42 @@ class ClosingDetailScreen extends StatelessWidget {
                         // Quick Stats
                         Card(
                           elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Quick Stats', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                const Text(
+                                  'Quick Stats',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
                                 const SizedBox(height: 16),
-                                _buildQuickStatRow('Hand Cash', closing.todaysHandCash, Icons.account_balance_wallet),
-                                _buildQuickStatRow('Total Sales', closing.todaysSalesTotal, Icons.shopping_cart),
-                                _buildQuickStatRow('Sales Profit', closing.todaysSalesProfit, Icons.trending_up),
-                                _buildQuickStatRow('Cashout Charge', closing.cashoutCharge, Icons.attach_money),
+                                _buildQuickStatRow(
+                                  'Hand Cash',
+                                  closing.todaysHandCash,
+                                  Icons.account_balance_wallet,
+                                ),
+                                _buildQuickStatRow(
+                                  'Total Sales',
+                                  closing.todaysSalesTotal,
+                                  Icons.shopping_cart,
+                                ),
+                                _buildQuickStatRow(
+                                  'Sales Profit',
+                                  closing.todaysSalesProfit,
+                                  Icons.trending_up,
+                                ),
+                                _buildQuickStatRow(
+                                  'Cashout Charge',
+                                  closing.cashoutCharge,
+                                  Icons.attach_money,
+                                ),
                               ],
                             ),
                           ),
@@ -2744,32 +3303,64 @@ class ClosingDetailScreen extends StatelessWidget {
                         if (closing.profitEntries.isNotEmpty)
                           Card(
                             elevation: 2,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Profit Entries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                  const SizedBox(height: 16),
-                                  ...closing.profitEntries.map((entry) => Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(entry.source, style: const TextStyle(fontWeight: FontWeight.w500)),
-                                              if (entry.note != null) Text(entry.note!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                            ],
-                                          ),
-                                        ),
-                                        Text('৳${entry.amount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600)),
-                                      ],
+                                  const Text(
+                                    'Profit Entries',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
                                     ),
-                                  )),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ...closing.profitEntries.map(
+                                    (entry) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  entry.source,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                if (entry.note != null)
+                                                  Text(
+                                                    entry.note!,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                          Text(
+                                            '৳${entry.amount.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                              color: Colors.green,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -2780,7 +3371,9 @@ class ClosingDetailScreen extends StatelessWidget {
                           Card(
                             elevation: 2,
                             color: Colors.green.shade50,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(20),
                               child: Column(
@@ -2788,17 +3381,43 @@ class ClosingDetailScreen extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.verified, color: Colors.green.shade600, size: 20),
+                                      Icon(
+                                        Icons.verified,
+                                        color: Colors.green.shade600,
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 8),
-                                      const Text('Approved', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                      const Text(
+                                        'Approved',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 12),
-                                  Text('By: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}', style: const TextStyle(fontSize: 14)),
-                                  Text('At: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+                                  Text(
+                                    'By: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    'At: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
                                   if (closing.remarks != null) ...[
                                     const SizedBox(height: 8),
-                                    Text('Remarks: ${closing.remarks}', style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
+                                    Text(
+                                      'Remarks: ${closing.remarks}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey.shade700,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
                                   ],
                                 ],
                               ),
@@ -2824,7 +3443,10 @@ class ClosingDetailScreen extends StatelessWidget {
           Icon(icon, size: 18, color: Colors.blue.shade400),
           const SizedBox(width: 12),
           Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-          Text('৳${amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(
+            '৳${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
@@ -3255,7 +3877,11 @@ class _WebHeaderStat extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _WebHeaderStat({required this.label, required this.value, required this.icon});
+  const _WebHeaderStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -3273,8 +3899,18 @@ class _WebHeaderStat extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label, style: const TextStyle(color: Colors.white60, fontSize: 11)),
-              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white60, fontSize: 11),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ],
@@ -3289,7 +3925,11 @@ class _WebHeaderStatDetail extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _WebHeaderStatDetail({required this.label, required this.value, required this.color});
+  const _WebHeaderStatDetail({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -3303,8 +3943,18 @@ class _WebHeaderStatDetail extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white60, fontSize: 11)),
-          Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white60, fontSize: 11),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );

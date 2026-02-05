@@ -175,7 +175,8 @@ class InventoryItem {
       'image': image,
       'metadata': metadata,
       'isActive': isActive,
-      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdAt':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
       'updatedAt': FieldValue.serverTimestamp(),
       'createdBy': createdBy,
       'updatedBy': updatedBy,
@@ -222,7 +223,8 @@ class InventoryCategory {
   final String? icon;
   final ItemType type; // Which type this category is for
   final bool isActive;
-  final DateTime? createdAt; // Nullable - will be set by server timestamp on create
+  final DateTime?
+  createdAt; // Nullable - will be set by server timestamp on create
 
   InventoryCategory({
     required this.id,
@@ -244,7 +246,9 @@ class InventoryCategory {
       'icon': icon,
       'type': type.value,
       'isActive': isActive,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
     };
   }
 
@@ -258,7 +262,8 @@ class InventoryCategory {
       'icon': icon,
       'type': type.value,
       'isActive': isActive,
-      'createdAt': FieldValue.serverTimestamp(), // Server timestamp for accuracy
+      'createdAt':
+          FieldValue.serverTimestamp(), // Server timestamp for accuracy
     };
   }
 
