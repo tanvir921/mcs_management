@@ -8,6 +8,7 @@ import '../shared/widgets/home_screen.dart';
 import '../modules/customer/screens/customer_list_screen.dart';
 import '../modules/customer/screens/add_customer_screen.dart';
 import '../modules/customer/screens/edit_customer_screen.dart';
+import '../modules/customer/screens/customer_due_tracker_screen.dart';
 import '../modules/customer/models/customer_model.dart';
 import '../modules/sales/screens/sales_screen.dart';
 import '../modules/sales/screens/add_sale_screen.dart';
@@ -30,6 +31,7 @@ class AppRoutes {
   static const String customers = '/customers';
   static const String customerAdd = '/customer/add';
   static const String customerEdit = '/customer/edit';
+  static const String customerDueTracker = '/customer-due-tracker';
   static const String sales = '/sales';
   static const String saleAdd = '/sale/add';
   static const String saleDetail = '/sale/detail';
@@ -183,6 +185,11 @@ class AppRoutes {
       case profitDeduction:
         return MaterialPageRoute(
           builder: (_) => const ProfitDeductionScreen(),
+          settings: settings,
+        );
+      case customerDueTracker:
+        return MaterialPageRoute(
+          builder: (_) => const CustomerDueTrackerScreen(),
           settings: settings,
         );
       default:

@@ -422,4 +422,40 @@ class CustomerService {
       throw ValidationException('Failed to delete customer: $e');
     }
   }
+
+  /// Get customer by phone number (for customer due tracker)
+  Future<Customer?> getCustomerByPhone(String phone) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .where('phone', isEqualTo: phone)
+          .where('isActive', isEqualTo: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+
+      return Customer.fromJson(snapshot.docs.first.data());
+    } catch (e) {
+      throw ValidationException('Failed to get customer by phone: $e');
+    }
+  }
+
+  /// Get due transactions for a customer (for customer due tracker)
+  Future<List<DueTransaction>> getDueTransactions(String customerId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(_transactionsCollection)
+          .where('customerId', isEqualTo: customerId)
+          .orderBy('createdAt', descending: true)
+          .limit(50) // Limit to last 50 transactions
+          .get();
+
+      return snapshot.docs
+          .map((doc) => DueTransaction.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      throw ValidationException('Failed to get due transactions: $e');
+    }
+  }
 }
