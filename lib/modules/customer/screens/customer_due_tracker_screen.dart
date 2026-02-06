@@ -17,7 +17,7 @@ class CustomerDueTrackerScreen extends StatefulWidget {
 class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final CustomerService _customerService = CustomerService();
-  
+
   bool _isLoading = false;
   String? _errorMessage;
   Customer? _customer;
@@ -69,7 +69,9 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
         return;
       }
 
-      final transactions = await _customerService.getDueTransactions(customer.id);
+      final transactions = await _customerService.getDueTransactions(
+        customer.id,
+      );
       final purchases = await _customerService.getPurchaseHistory(customer.id);
 
       setState(() {
@@ -115,11 +117,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
   @override
   Widget build(BuildContext context) {
     if (!kIsWeb) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
@@ -142,10 +140,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: isMobile ? 20 : 40),
-                
+
                 // Header
                 _buildHeader(isMobile),
-                
+
                 SizedBox(height: isMobile ? 20 : 32),
 
                 // Search Card
@@ -161,22 +159,22 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                 if (_customer != null) ...[
                   SizedBox(height: isMobile ? 16 : 24),
                   _buildCustomerInfo(isMobile),
-                  
+
                   SizedBox(height: isMobile ? 16 : 24),
                   _buildDueSummary(isMobile),
-                  
+
                   SizedBox(height: isMobile ? 16 : 24),
                   _buildTabSelector(isMobile),
-                  
+
                   SizedBox(height: isMobile ? 12 : 16),
                   _buildHistorySection(isMobile),
                 ],
 
                 SizedBox(height: isMobile ? 30 : 40),
-                
+
                 // Footer
                 _buildFooter(),
-                
+
                 SizedBox(height: isMobile ? 20 : 40),
               ],
             ),
@@ -198,11 +196,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1976D2),
-              Color(0xFF1565C0),
-              Color(0xFF0D47A1),
-            ],
+            colors: [Color(0xFF1976D2), Color(0xFF1565C0), Color(0xFF0D47A1)],
           ),
           borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
         ),
@@ -293,11 +287,17 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 1.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE0E0E0),
+                    width: 1.5,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF1976D2), width: 2),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF1976D2),
+                    width: 2,
+                  ),
                 ),
                 filled: true,
                 fillColor: Colors.grey[50],
@@ -323,9 +323,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : Row(
@@ -361,11 +359,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            const Icon(
-              Icons.error_outline,
-              color: Color(0xFFC62828),
-              size: 24,
-            ),
+            const Icon(Icons.error_outline, color: Color(0xFFC62828), size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -455,7 +449,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               ],
             ),
             const Divider(height: 32, thickness: 1),
-            
+
             // Payment Request Message
             Container(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -464,10 +458,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                   colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFFFB300),
-                  width: 2,
-                ),
+                border: Border.all(color: const Color(0xFFFFB300), width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFFFB300).withOpacity(0.2),
@@ -541,10 +532,11 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: (_customer!.totalDue > 0
-                            ? const Color(0xFFD32F2F)
-                            : const Color(0xFF388E3C))
-                        .withOpacity(0.4),
+                    color:
+                        (_customer!.totalDue > 0
+                                ? const Color(0xFFD32F2F)
+                                : const Color(0xFF388E3C))
+                            .withOpacity(0.4),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -586,9 +578,9 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: isMobile ? 20 : 28),
-            
+
             // Due Breakdown Header
             Row(
               children: [
@@ -608,9 +600,9 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                 ),
               ],
             ),
-            
+
             SizedBox(height: isMobile ? 16 : 20),
-            
+
             Container(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               decoration: BoxDecoration(
@@ -620,15 +612,40 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               ),
               child: Column(
                 children: [
-                  _buildDueItem('পণ্য বকেয়া', _customer!.productDue, Icons.shopping_bag, isMobile),
+                  _buildDueItem(
+                    'পণ্য বকেয়া',
+                    _customer!.productDue,
+                    Icons.shopping_bag,
+                    isMobile,
+                  ),
                   _buildDueDivider(),
-                  _buildDueItem('সার্ভিস বকেয়া', _customer!.serviceDue, Icons.build, isMobile),
+                  _buildDueItem(
+                    'সার্ভিস বকেয়া',
+                    _customer!.serviceDue,
+                    Icons.build,
+                    isMobile,
+                  ),
                   _buildDueDivider(),
-                  _buildDueItem('MSF/রিচার্জ বকেয়া', _customer!.msfRechargeDue, Icons.sim_card, isMobile),
+                  _buildDueItem(
+                    'MSF/রিচার্জ বকেয়া',
+                    _customer!.msfRechargeDue,
+                    Icons.sim_card,
+                    isMobile,
+                  ),
                   _buildDueDivider(),
-                  _buildDueItem('নগদ ঋণ', _customer!.cashBorrowDue, Icons.money, isMobile),
+                  _buildDueItem(
+                    'নগদ ঋণ',
+                    _customer!.cashBorrowDue,
+                    Icons.money,
+                    isMobile,
+                  ),
                   _buildDueDivider(),
-                  _buildDueItem('পূর্ববর্তী বকেয়া', _customer!.previousDue, Icons.history, isMobile),
+                  _buildDueItem(
+                    'পূর্ববর্তী বকেয়া',
+                    _customer!.previousDue,
+                    Icons.history,
+                    isMobile,
+                  ),
                 ],
               ),
             ),
@@ -688,7 +705,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
     required bool isMobile,
   }) {
     final isSelected = _selectedTab == index;
-    
+
     return InkWell(
       onTap: () => setState(() => _selectedTab = index),
       borderRadius: BorderRadius.circular(12),
@@ -733,8 +750,12 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                       label,
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF757575),
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF757575),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -825,7 +846,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1976D2).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -895,7 +919,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1976D2).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -991,17 +1018,19 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
           const SizedBox(height: 8),
           Text(
             '© ${DateTime.now().year} All Rights Reserved',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF9E9E9E),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF9E9E9E)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDueItem(String label, double amount, IconData icon, bool isMobile) {
+  Widget _buildDueItem(
+    String label,
+    double amount,
+    IconData icon,
+    bool isMobile,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: isMobile ? 8 : 10),
       child: Row(
@@ -1036,8 +1065,8 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
             style: TextStyle(
               fontSize: isMobile ? 15 : 17,
               fontWeight: FontWeight.bold,
-              color: amount > 0 
-                  ? const Color(0xFFD32F2F) 
+              color: amount > 0
+                  ? const Color(0xFFD32F2F)
                   : const Color(0xFF757575),
             ),
           ),
@@ -1048,24 +1077,20 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
 
   Widget _buildTransactionItem(DueTransaction transaction, bool isMobile) {
     final isAddition = transaction.isAddition;
-    final color = isAddition ? const Color(0xFFD32F2F) : const Color(0xFF388E3C);
-    
+    final color = isAddition
+        ? const Color(0xFFD32F2F)
+        : const Color(0xFF388E3C);
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 14 : 18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.08),
-            color.withOpacity(0.05),
-          ],
+          colors: [color.withOpacity(0.08), color.withOpacity(0.05)],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1.5,
-        ),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1122,7 +1147,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                   if (isAddition)
                     Container(
                       margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFD32F2F).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(10),
@@ -1139,7 +1167,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                   else
                     Container(
                       margin: const EdgeInsets.only(top: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF388E3C).withOpacity(0.15),
                         borderRadius: BorderRadius.circular(10),
@@ -1200,10 +1231,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFE3F2FD),
-            Color(0xFFBBDEFB),
-          ],
+          colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -1276,7 +1304,9 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF1976D2).withOpacity(0.2)),
+                border: Border.all(
+                  color: const Color(0xFF1976D2).withOpacity(0.2),
+                ),
               ),
               child: Row(
                 children: [

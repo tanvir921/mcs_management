@@ -23,6 +23,7 @@ import '../modules/daily_closing/screens/profit_deduction_screen.dart';
 import '../modules/inventory/screens/inventory_list_screen.dart';
 import '../modules/reports/screens/reports_screen.dart';
 import '../modules/admin/screens/admin_tools_screen.dart';
+import 'auth_wrapper.dart';
 
 class AppRoutes {
   // Route names
@@ -52,7 +53,15 @@ class AppRoutes {
 
   // Route generator
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
+    // Handle null or empty route as root
+    final routeName = settings.name ?? '/';
+    
+    switch (routeName) {
+      case '/':
+        return MaterialPageRoute(
+          builder: (_) => const AuthWrapper(),
+          settings: settings,
+        );
       case login:
         return MaterialPageRoute(
           builder: (_) => const LoginScreen(),
