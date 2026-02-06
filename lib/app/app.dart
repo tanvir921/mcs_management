@@ -30,7 +30,8 @@ class _AppState extends State<App> {
     if (kIsWeb) {
       // Check the current URL path
       final uri = Uri.base;
-      if (uri.path == '/customer-due-tracker' || uri.path == '/customer-due-tracker/') {
+      if (uri.path == '/customer-due-tracker' ||
+          uri.path == '/customer-due-tracker/') {
         _initialRoute = '/customer-due-tracker';
       }
     }
@@ -54,7 +55,7 @@ class _AppState extends State<App> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         themeMode: ThemeMode.light,
-        home: _initialRoute == '/customer-due-tracker' 
+        home: _initialRoute == '/customer-due-tracker'
             ? const CustomerDueTrackerScreen()
             : const AuthWrapper(),
         onGenerateRoute: AppRoutes.onGenerateRoute,

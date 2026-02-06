@@ -55,7 +55,7 @@ class AppRoutes {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     // Handle null or empty route as root
     final routeName = settings.name ?? '/';
-    
+
     switch (routeName) {
       case '/':
         return MaterialPageRoute(
