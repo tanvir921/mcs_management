@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'app/app.dart';
 import 'firebase_options.dart';
+import 'core/utils/app_time.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,10 +11,12 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Disable offline persistence - app works online only
+  // Enable offline persistence so khosra_entries local queue works offline
   FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: false,
+    persistenceEnabled: true,
   );
+
+  await AppTime.sync();
 
   runApp(const App());
 }

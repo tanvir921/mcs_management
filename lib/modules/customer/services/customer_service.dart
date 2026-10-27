@@ -90,7 +90,7 @@ class CustomerService {
   }
 
   /// Update customer due and save transaction history
-  Future<void> updateDue({
+  Future<String> updateDue({
     required String customerId,
     required double amount,
     required String dueType,
@@ -99,6 +99,8 @@ class CustomerService {
     String? note,
     required String userId,
     required String userName,
+    DateTime? createdAt,
+    String? saleId,
   }) async {
     try {
       final customer = await getCustomerById(customerId);
@@ -156,10 +158,11 @@ class CustomerService {
         dueType: dueType,
         amount: amount,
         isAddition: isAddition,
+        saleId: saleId,
         realizedProfitAmount: realizedProfit,
         profitRealized: realizedProfit > 0,
         note: note,
-        // createdAt will be set by server timestamp
+        createdAt: createdAt,
         createdBy: userId,
         createdByName: userName,
       );
@@ -174,17 +177,20 @@ class CustomerService {
 
       batch.set(
         _firestore.collection(_transactionsCollection).doc(transactionId),
-        transaction.toJsonForCreate(), // Use server timestamp
+        createdAt != null
+            ? transaction.toJson()
+            : transaction.toJsonForCreate(),
       );
 
       await batch.commit();
+      return transactionId;
     } catch (e) {
       throw ValidationException('Failed to update due: $e');
     }
   }
 
   /// Add due transaction with profit tracking
-  Future<void> addDueTransaction({
+  Future<String> addDueTransaction({
     required String customerId,
     required String dueType,
     required double amount,
@@ -194,6 +200,7 @@ class CustomerService {
     String? note,
     required String createdBy,
     required String createdByName,
+    DateTime? createdAt,
   }) async {
     try {
       final customer = await getCustomerById(customerId);
@@ -256,7 +263,7 @@ class CustomerService {
         potentialProfit: potentialProfit,
         profitRealized: false,
         note: note,
-        // createdAt will be set by server timestamp
+        createdAt: createdAt,
         createdBy: createdBy,
         createdByName: createdByName,
       );
@@ -271,10 +278,13 @@ class CustomerService {
 
       batch.set(
         _firestore.collection(_transactionsCollection).doc(transactionId),
-        transaction.toJsonForCreate(), // Use server timestamp
+        createdAt != null
+            ? transaction.toJson()
+            : transaction.toJsonForCreate(),
       );
 
       await batch.commit();
+      return transactionId;
     } catch (e) {
       throw ValidationException('Failed to add due transaction: $e');
     }
@@ -397,7 +407,7 @@ class CustomerService {
       );
       return transactions.fold<double>(
         0,
-        (sum, t) => sum + t.realizedProfitAmount,
+        (acc, t) => acc + t.realizedProfitAmount,
       );
     } catch (e) {
       return 0;

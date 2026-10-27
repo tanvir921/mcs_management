@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/app_time.dart';
 
 class BalanceHistory {
   final String id;
@@ -34,7 +35,7 @@ class BalanceHistory {
       newBalance: (json['newBalance'] as num?)?.toDouble() ?? 0,
       change: (json['change'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String? ?? '',
-      changedAt: (json['changedAt'] as Timestamp).toDate(),
+      changedAt: AppTime.toBusiness((json['changedAt'] as Timestamp).toDate()),
       changedBy: json['changedBy'] as String? ?? '',
       changedByName: json['changedByName'] as String? ?? '',
     );
@@ -49,7 +50,7 @@ class BalanceHistory {
       'newBalance': newBalance,
       'change': change,
       'note': note,
-      'changedAt': Timestamp.fromDate(changedAt),
+      'changedAt': Timestamp.fromDate(AppTime.toUtcFromBusiness(changedAt)),
       'changedBy': changedBy,
       'changedByName': changedByName,
     };

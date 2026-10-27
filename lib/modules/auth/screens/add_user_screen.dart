@@ -346,7 +346,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
                               controlAffinity: ListTileControlAffinity.leading,
                             );
                           })
-                          .toList(),
+                          ,
                     ],
                   ),
                 ),

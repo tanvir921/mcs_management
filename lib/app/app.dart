@@ -9,6 +9,7 @@ import '../modules/wallet/providers/wallet_provider.dart';
 import '../modules/expense/providers/expense_provider.dart';
 import '../modules/daily_closing/providers/daily_closing_provider.dart';
 import '../modules/inventory/providers/inventory_provider.dart';
+import '../modules/khosra/providers/khosra_provider.dart';
 import 'auth_wrapper.dart';
 import 'app_routes.dart';
 import 'app_theme.dart';
@@ -49,6 +50,7 @@ class _AppState extends State<App> {
         ChangeNotifierProvider(create: (_) => ExpenseProvider()),
         ChangeNotifierProvider(create: (_) => DailyClosingProvider()),
         ChangeNotifierProvider(create: (_) => InventoryProvider()),
+        ChangeNotifierProvider(create: (_) => KhosraProvider()),
       ],
       child: MaterialApp(
         title: 'MCS Management',

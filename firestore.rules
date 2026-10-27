@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Existing app collections + Khosra collections
+    match /users/{userId} {
+      allow read, write: if isSignedIn();
+    }
+    match /action_logs/{logId} {
+      allow read, write: if isSignedIn();
+    }
+    match /customers/{customerId} {
+      allow read, write: if isSignedIn();
+    }
+    match /due_transactions/{txId} {
+      allow read, write: if isSignedIn();
+    }
+    match /purchase_history/{docId} {
+      allow read, write: if isSignedIn();
+    }
+    match /sales/{saleId} {
+      allow read, write: if isSignedIn();
+    }
+    match /expenses/{expenseId} {
+      allow read, write: if isSignedIn();
+    }
+    match /daily_closing/{closingId} {
+      allow read, write: if isSignedIn();
+    }
+    match /inventory_items/{itemId} {
+      allow read, write: if isSignedIn();
+    }
+    match /wallets/{walletId} {
+      allow read, write: if isSignedIn();
+    }
+    match /balance_history/{historyId} {
+      allow read, write: if isSignedIn();
+    }
+    match /_meta/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Khosra (খসড়া) scratch entries & commit lock
+    match /khosra_entries/{entryId} {
+      allow read, write: if isSignedIn();
+    }
+    match /khosra_meta/{docId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}
+

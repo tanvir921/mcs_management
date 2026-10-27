@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../models/expense.dart';
+import '../../../core/utils/app_time.dart';
 
 class ExpenseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -11,7 +12,7 @@ class ExpenseService {
 
   // Generate expense number: EXP-YYYYMM-XXXX
   Future<String> _generateExpenseNumber() async {
-    final now = DateTime.now();
+    final now = AppTime.businessNow();
     final prefix = 'EXP-${now.year}${now.month.toString().padLeft(2, '0')}';
 
     final query = await _db
@@ -43,7 +44,7 @@ class ExpenseService {
       final photoUrls = <String>[];
       for (int i = 0; i < photos.length; i++) {
         final ref = _storage.ref().child(
-          '$_storagePath/$expenseId/receipt_${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
+          '$_storagePath/$expenseId/receipt_${AppTime.utcNow().millisecondsSinceEpoch}_$i.jpg',
         );
         await ref.putFile(photos[i]);
         final url = await ref.getDownloadURL();
@@ -59,6 +60,7 @@ class ExpenseService {
   Future<String> createExpense(
     Expense expense, {
     List<File>? receiptPhotos,
+    bool preserveCreatedAt = false,
   }) async {
     try {
       final docRef = _db.collection(_collection).doc();
@@ -76,7 +78,11 @@ class ExpenseService {
         receiptPhotos: photoUrls,
       );
 
-      await docRef.set(newExpense.toMapForCreate()); // Use server timestamp
+      final data = (preserveCreatedAt && newExpense.createdAt != null)
+          ? newExpense.toMap()
+          : newExpense.toMapForCreate();
+
+      await docRef.set(data);
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create expense: $e');
@@ -135,7 +141,7 @@ class ExpenseService {
   // Update expense
   Future<void> updateExpense(Expense expense) async {
     try {
-      final updatedExpense = expense.copyWith(updatedAt: DateTime.now());
+      final updatedExpense = expense.copyWith(updatedAt: AppTime.utcNow());
       await _db
           .collection(_collection)
           .doc(expense.id)
@@ -150,7 +156,7 @@ class ExpenseService {
     try {
       await _db.collection(_collection).doc(id).update({
         'isActive': false,
-        'updatedAt': DateTime.now(),
+        'updatedAt': Timestamp.fromDate(AppTime.utcNow()),
       });
     } catch (e) {
       throw Exception('Failed to delete expense: $e');
@@ -188,12 +194,14 @@ class ExpenseService {
         totalExpenses += expense.amount;
         switch (expense.category) {
           case 'shop':
+          case 'stock_purchase':
+          case 'electricity_wifi':
             shopExpenses += expense.amount;
             break;
           case 'personal':
             personalExpenses += expense.amount;
             break;
-          case 'other':
+          default:
             otherExpenses += expense.amount;
             break;
         }

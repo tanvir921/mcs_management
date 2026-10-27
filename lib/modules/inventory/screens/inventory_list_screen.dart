@@ -534,7 +534,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                               _StatisticColumn(
                                 label: 'Total Stock',
                                 value:
-                                    '${(stats['totalStockValue'] as num).toStringAsFixed(0)}',
+                                    (stats['totalStockValue'] as num).toStringAsFixed(0),
                                 icon: Icons.storage,
                                 color: Colors.blue,
                               ),
@@ -726,7 +726,7 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Added ${item.name} to cart (${quantity} ${item.unit})',
+              'Added ${item.name} to cart ($quantity ${item.unit})',
             ),
             duration: const Duration(seconds: 2),
             action: SnackBarAction(
@@ -1020,7 +1020,7 @@ class _InventoryItemCardState extends State<_InventoryItemCard> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: profitColor.withOpacity(0.15),
+                                color: profitColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(

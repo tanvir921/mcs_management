@@ -1,13 +1,53 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/app_time.dart';
 import '../models/sale.dart';
 
 class SalesService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _salesCollection = 'sales';
 
+  /// Shared profit calculation logic used by AddSaleScreen and Khosra commit.
+  static ({double finalProfit, double realizedProfit, double potentialProfit})
+  calculateProfitSplit({
+    required double totalSelling,
+    required double totalCost,
+    double discountAmount = 0,
+    required double paidAmount,
+  }) {
+    final finalProfit = (totalSelling - totalCost) - discountAmount;
+    if (finalProfit <= 0) {
+      return (
+        finalProfit: finalProfit,
+        realizedProfit: 0.0,
+        potentialProfit: finalProfit,
+      );
+    }
+
+    final costAfterDiscount = totalCost;
+    double realizedProfit = 0;
+    double potentialProfit = finalProfit;
+
+    if (paidAmount > costAfterDiscount) {
+      final profitFromPayment = paidAmount - costAfterDiscount;
+      realizedProfit = profitFromPayment > finalProfit
+          ? finalProfit
+          : profitFromPayment;
+      potentialProfit = finalProfit - realizedProfit;
+    } else {
+      realizedProfit = 0;
+      potentialProfit = finalProfit;
+    }
+
+    return (
+      finalProfit: finalProfit,
+      realizedProfit: realizedProfit,
+      potentialProfit: potentialProfit,
+    );
+  }
+
   // Generate sale number
   Future<String> _generateSaleNumber() async {
-    final now = DateTime.now();
+    final now = AppTime.businessNow();
     final prefix = 'SAL-${now.year}${now.month.toString().padLeft(2, '0')}';
 
     final query = await _firestore
@@ -28,7 +68,10 @@ class SalesService {
   }
 
   // Create sale
-  Future<String> createSale(Sale sale) async {
+  Future<String> createSale(
+    Sale sale, {
+    bool preserveCreatedAt = false,
+  }) async {
     try {
       final saleNumber = await _generateSaleNumber();
       final docRef = _firestore.collection(_salesCollection).doc();
@@ -38,7 +81,11 @@ class SalesService {
         saleNumber: saleNumber,
       );
 
-      await docRef.set(saleWithNumber.toMapForCreate()); // Use server timestamp
+      final data = (preserveCreatedAt && saleWithNumber.createdAt != null)
+          ? saleWithNumber.toMap()
+          : saleWithNumber.toMapForCreate();
+
+      await docRef.set(data);
       return docRef.id;
     } catch (e) {
       throw Exception('Failed to create sale: $e');
@@ -94,7 +141,7 @@ class SalesService {
       await _firestore
           .collection(_salesCollection)
           .doc(sale.id)
-          .update(sale.copyWith(updatedAt: DateTime.now()).toMap());
+          .update(sale.copyWith(updatedAt: AppTime.utcNow()).toMap());
     } catch (e) {
       throw Exception('Failed to update sale: $e');
     }
@@ -105,7 +152,7 @@ class SalesService {
     try {
       await _firestore.collection(_salesCollection).doc(id).update({
         'isActive': false,
-        'updatedAt': DateTime.now(),
+        'updatedAt': Timestamp.fromDate(AppTime.utcNow()),
       });
     } catch (e) {
       throw Exception('Failed to delete sale: $e');
@@ -167,9 +214,9 @@ class SalesService {
 
   // Get today's sales
   Future<List<Sale>> getTodaySales() async {
-    final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day);
-    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+    final now = AppTime.businessNow();
+    final startOfDay = AppTime.startOfBusinessDayUtc(now);
+    final endOfDay = AppTime.endOfBusinessDayUtc(now);
 
     return getAllSales(startDate: startOfDay, endDate: endOfDay);
   }

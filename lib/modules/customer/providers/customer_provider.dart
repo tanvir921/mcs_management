@@ -66,7 +66,7 @@ class CustomerProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateDue({
+  Future<String> updateDue({
     required String customerId,
     required double amount,
     required String dueType,
@@ -75,9 +75,11 @@ class CustomerProvider extends ChangeNotifier {
     String? note,
     required String userId,
     required String userName,
+    DateTime? createdAt,
+    String? saleId,
   }) async {
     try {
-      await _customerService.updateDue(
+      final txId = await _customerService.updateDue(
         customerId: customerId,
         amount: amount,
         dueType: dueType,
@@ -86,8 +88,11 @@ class CustomerProvider extends ChangeNotifier {
         note: note,
         userId: userId,
         userName: userName,
+        createdAt: createdAt,
+        saleId: saleId,
       );
       await loadCustomers();
+      return txId;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -95,7 +100,7 @@ class CustomerProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> addDueTransaction({
+  Future<String> addDueTransaction({
     required String customerId,
     required String dueType,
     required double amount,
@@ -105,9 +110,10 @@ class CustomerProvider extends ChangeNotifier {
     String? note,
     required String createdBy,
     required String createdByName,
+    DateTime? createdAt,
   }) async {
     try {
-      await _customerService.addDueTransaction(
+      final txId = await _customerService.addDueTransaction(
         customerId: customerId,
         dueType: dueType,
         amount: amount,
@@ -117,8 +123,10 @@ class CustomerProvider extends ChangeNotifier {
         note: note,
         createdBy: createdBy,
         createdByName: createdByName,
+        createdAt: createdAt,
       );
       await loadCustomers();
+      return txId;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
@@ -143,6 +151,7 @@ class CustomerProvider extends ChangeNotifier {
     required String userId,
     required String userName,
     String? note,
+    DateTime? createdAt,
   }) async {
     try {
       await _customerService.addPurchase(
@@ -152,6 +161,7 @@ class CustomerProvider extends ChangeNotifier {
         userId: userId,
         userName: userName,
         note: note,
+        createdAt: createdAt,
       );
     } catch (e) {
       _error = e.toString();

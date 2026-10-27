@@ -83,7 +83,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
           // Overlay with scanning frame
           Container(
-            decoration: BoxDecoration(color: Colors.black.withOpacity(0.5)),
+            decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.5)),
             child: Stack(
               children: [
                 // Center scanning area (transparent)
@@ -137,7 +137,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
+                          color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Text(
@@ -172,7 +172,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     icon: const Icon(Icons.keyboard),
                     label: const Text('Enter Manually'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -214,7 +214,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white24),
       ),

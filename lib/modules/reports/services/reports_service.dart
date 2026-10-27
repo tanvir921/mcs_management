@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../expense/services/expense_service.dart';
+import '../../../core/utils/app_time.dart';
 
 enum DateFilter { today, yesterday, thisMonth, thisYear }
 
@@ -27,29 +28,43 @@ class ReportsService {
 
   /// Get start and end DateTime for the given filter (inclusive)
   Map<String, DateTime> _getRange(DateFilter filter) {
-    final now = DateTime.now();
+    final now = AppTime.businessNow();
     late DateTime start;
     late DateTime end;
 
     switch (filter) {
       case DateFilter.today:
-        start = DateTime(now.year, now.month, now.day);
-        end = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+        start = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day),
+        );
+        end = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day, 23, 59, 59, 999),
+        );
         break;
       case DateFilter.yesterday:
         final y = now.subtract(const Duration(days: 1));
-        start = DateTime(y.year, y.month, y.day);
-        end = DateTime(y.year, y.month, y.day, 23, 59, 59, 999);
+        start = AppTime.toUtcFromBusiness(
+          DateTime.utc(y.year, y.month, y.day),
+        );
+        end = AppTime.toUtcFromBusiness(
+          DateTime.utc(y.year, y.month, y.day, 23, 59, 59, 999),
+        );
         break;
       case DateFilter.thisMonth:
-        start = DateTime(now.year, now.month, 1);
+        start = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, 1),
+        );
         // End of month
-        final nextMonth = DateTime(now.year, now.month + 1, 1);
-        end = nextMonth.subtract(const Duration(milliseconds: 1));
+        final nextMonth = DateTime.utc(now.year, now.month + 1, 1);
+        end = AppTime.toUtcFromBusiness(
+          nextMonth.subtract(const Duration(milliseconds: 1)),
+        );
         break;
       case DateFilter.thisYear:
-        start = DateTime(now.year, 1, 1);
-        end = DateTime(now.year, 12, 31, 23, 59, 59, 999);
+        start = AppTime.toUtcFromBusiness(DateTime.utc(now.year, 1, 1));
+        end = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, 12, 31, 23, 59, 59, 999),
+        );
         break;
     }
     return {'start': start, 'end': end};

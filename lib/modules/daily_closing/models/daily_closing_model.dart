@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/app_time.dart';
 
 /// Detailed breakdown item for wallet, expense, transaction
 class BreakdownItem {
@@ -130,15 +131,21 @@ class DailyClosing {
   });
 
   factory DailyClosing.fromJson(Map<String, dynamic> json) {
+    DateTime readBusinessDate(dynamic value) {
+      if (value is Timestamp) {
+        return AppTime.toBusiness(value.toDate());
+      }
+      if (value is DateTime) {
+        return AppTime.toBusiness(value);
+      }
+      return AppTime.businessNow();
+    }
+
     return DailyClosing(
       id: json['id'] as String? ?? '',
       userId: json['userId'] as String? ?? '',
-      closingDate: json['closingDate'] != null
-          ? (json['closingDate'] as Timestamp).toDate()
-          : DateTime.now(),
-      createdAt: json['createdAt'] != null
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
+      closingDate: readBusinessDate(json['closingDate']),
+      createdAt: readBusinessDate(json['createdAt']),
       todaysHandCash: (json['todaysHandCash'] as num?)?.toDouble() ?? 0,
       todaysSalesTotal: (json['todaysSalesTotal'] as num?)?.toDouble() ?? 0,
       todaysSalesProfit: (json['todaysSalesProfit'] as num?)?.toDouble() ?? 0,
@@ -194,8 +201,8 @@ class DailyClosing {
       isUploaded: json['isUploaded'] as bool? ?? false,
       approvedBy: json['approvedBy'] as String?,
       approvedByName: json['approvedByName'] as String?,
-      approvedAt: json['approvedAt'] != null
-          ? (json['approvedAt'] as Timestamp).toDate()
+        approvedAt: json['approvedAt'] != null
+          ? AppTime.toBusiness((json['approvedAt'] as Timestamp).toDate())
           : null,
       pdfUrl: json['pdfUrl'] as String?,
       remarks: json['remarks'] as String?,
@@ -206,8 +213,10 @@ class DailyClosing {
     return {
       'id': id,
       'userId': userId,
-      'closingDate': Timestamp.fromDate(closingDate),
-      'createdAt': Timestamp.fromDate(createdAt),
+      'closingDate':
+          Timestamp.fromDate(AppTime.toUtcFromBusiness(closingDate)),
+      'createdAt':
+          Timestamp.fromDate(AppTime.toUtcFromBusiness(createdAt)),
       'todaysHandCash': todaysHandCash,
       'todaysSalesTotal': todaysSalesTotal,
       'todaysSalesProfit': todaysSalesProfit,
@@ -240,7 +249,9 @@ class DailyClosing {
       'isUploaded': isUploaded,
       'approvedBy': approvedBy,
       'approvedByName': approvedByName,
-      'approvedAt': approvedAt != null ? Timestamp.fromDate(approvedAt!) : null,
+      'approvedAt': approvedAt != null
+          ? Timestamp.fromDate(AppTime.toUtcFromBusiness(approvedAt!))
+          : null,
       'pdfUrl': pdfUrl,
       'remarks': remarks,
     };

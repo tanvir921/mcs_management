@@ -308,7 +308,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
                             controlAffinity: ListTileControlAffinity.leading,
                           );
                         })
-                        .toList(),
+                        ,
                   ],
                 ),
               ),

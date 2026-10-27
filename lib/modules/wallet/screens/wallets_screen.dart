@@ -354,7 +354,7 @@ class _BalanceSummary extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: color.withOpacity(0.8), fontSize: 12),
+          style: TextStyle(color: color.withValues(alpha: 0.8), fontSize: 12),
         ),
         const SizedBox(height: 4),
         Text(
@@ -415,7 +415,7 @@ class _WalletCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -497,7 +497,7 @@ class _BalanceChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

@@ -275,7 +275,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       builder: (context) => AlertDialog(
         title: const Text('Confirm Deletion'),
         content: Text(
-          'Are you sure you want to delete ${selected.length} ${_activeModule} record(s)?\n\nThis action cannot be undone!',
+          'Are you sure you want to delete ${selected.length} $_activeModule record(s)?\n\nThis action cannot be undone!',
           style: const TextStyle(
             color: Colors.red,
             fontWeight: FontWeight.bold,
@@ -535,7 +535,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String?>(
-                        value: _selectedModule,
+                        initialValue: _selectedModule,
                         decoration: const InputDecoration(
                           labelText: 'Module',
                           border: OutlineInputBorder(),
@@ -562,7 +562,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String?>(
-                        value: _selectedUser,
+                        initialValue: _selectedUser,
                         decoration: const InputDecoration(
                           labelText: 'User',
                           border: OutlineInputBorder(),
@@ -721,7 +721,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getModuleColor(log.module).withOpacity(0.2),
+          backgroundColor: _getModuleColor(log.module).withValues(alpha: 0.2),
           child: Icon(
             _getModuleIcon(log.module),
             color: _getModuleColor(log.module),
@@ -738,7 +738,7 @@ class _AdminToolsScreenState extends State<AdminToolsScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: _getModuleColor(log.module).withOpacity(0.1),
+                color: _getModuleColor(log.module).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

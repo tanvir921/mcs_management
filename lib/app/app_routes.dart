@@ -10,9 +10,12 @@ import '../modules/customer/screens/add_customer_screen.dart';
 import '../modules/customer/screens/edit_customer_screen.dart';
 import '../modules/customer/screens/customer_due_tracker_screen.dart';
 import '../modules/customer/models/customer_model.dart';
+import '../modules/sales/models/sale.dart';
 import '../modules/sales/screens/sales_screen.dart';
 import '../modules/sales/screens/add_sale_screen.dart';
+import '../modules/sales/screens/sale_detail_screen.dart';
 import '../modules/sales/screens/sales_history_screen.dart';
+import '../modules/sales/screens/qr_scanner_screen.dart';
 import '../modules/wallet/screens/wallets_screen.dart';
 import '../modules/expense/screens/expense_screen.dart';
 import '../modules/expense/screens/add_expense_screen.dart';
@@ -23,6 +26,8 @@ import '../modules/daily_closing/screens/profit_deduction_screen.dart';
 import '../modules/inventory/screens/inventory_list_screen.dart';
 import '../modules/reports/screens/reports_screen.dart';
 import '../modules/admin/screens/admin_tools_screen.dart';
+import '../modules/khosra/screens/khosra_home_screen.dart';
+import '../modules/khosra/screens/khosra_review_screen.dart';
 import 'auth_wrapper.dart';
 
 class AppRoutes {
@@ -37,6 +42,7 @@ class AppRoutes {
   static const String saleAdd = '/sale/add';
   static const String saleDetail = '/sale/detail';
   static const String salesHistory = '/sales/history';
+  static const String barcodeScanner = '/barcode-scanner';
   static const String wallets = '/wallets';
   static const String expenses = '/expenses';
   static const String expenseAdd = '/expense/add';
@@ -50,10 +56,11 @@ class AppRoutes {
   static const String reports = '/reports';
   static const String profitDeduction = '/profit-deduction';
   static const String adminTools = '/admin/tools';
+  static const String khosra = '/khosra';
+  static const String khosraReview = '/khosra/review';
 
   // Route generator
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    // Handle null or empty route as root
     final routeName = settings.name ?? '/';
 
     switch (routeName) {
@@ -130,14 +137,29 @@ class AppRoutes {
           settings: settings,
         );
       case saleDetail:
-        final saleId = settings.arguments as String?;
-        if (saleId == null) {
+        final arg = settings.arguments;
+        if (arg is Sale) {
+          return MaterialPageRoute(
+            builder: (_) => SaleDetailScreen(saleId: arg.id, initialSale: arg),
+            settings: settings,
+          );
+        }
+        final saleId = arg as String?;
+        if (saleId == null || saleId.isEmpty) {
           return MaterialPageRoute(
             builder: (_) => const _PlaceholderScreen(title: 'Invalid Sale'),
           );
         }
         return MaterialPageRoute(
-          builder: (_) => const SalesHistoryScreen(),
+          builder: (_) => SaleDetailScreen(saleId: saleId),
+          settings: settings,
+        );
+      case barcodeScanner:
+        return MaterialPageRoute<String>(
+          builder: (_) => const QrScannerScreen(
+            title: 'Scan Barcode',
+            subtitle: 'Point camera at product barcode',
+          ),
           settings: settings,
         );
       case wallets:
@@ -201,6 +223,16 @@ class AppRoutes {
           builder: (_) => const CustomerDueTrackerScreen(),
           settings: settings,
         );
+      case khosra:
+        return MaterialPageRoute(
+          builder: (_) => const KhosraHomeScreen(),
+          settings: settings,
+        );
+      case khosraReview:
+        return MaterialPageRoute(
+          builder: (_) => const KhosraReviewScreen(),
+          settings: settings,
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => const _PlaceholderScreen(title: 'Not Found'),
@@ -209,7 +241,6 @@ class AppRoutes {
   }
 }
 
-// Placeholder screen for routes
 class _PlaceholderScreen extends StatelessWidget {
   final String title;
 
@@ -225,7 +256,7 @@ class _PlaceholderScreen extends StatelessWidget {
           children: [
             Text(title, style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 16),
-            const Text('Coming soon'),
+            const Text('Screen not available'),
           ],
         ),
       ),

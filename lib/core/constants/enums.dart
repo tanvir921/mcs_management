@@ -10,6 +10,7 @@ enum Permission {
   reports,
   dailyClosing,
   userManagement,
+  khosra,
 }
 
 extension UserRoleExtension on UserRole {
@@ -57,6 +58,8 @@ extension PermissionExtension on Permission {
         return 'Daily Closing';
       case Permission.userManagement:
         return 'User Management';
+      case Permission.khosra:
+        return 'Khosra (খসড়া)';
     }
   }
 
@@ -76,6 +79,8 @@ extension PermissionExtension on Permission {
         return 'Perform daily closing operations';
       case Permission.userManagement:
         return 'Manage sub-admin users and permissions';
+      case Permission.khosra:
+        return 'Review and confirm daily khosra entries';
     }
   }
 }

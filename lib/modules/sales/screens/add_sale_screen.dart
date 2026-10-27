@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/sale.dart';
 import '../models/sale_item.dart';
+import '../services/sales_service.dart';
 import '../providers/sales_provider.dart';
 import '../providers/cart_provider.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -12,6 +13,7 @@ import '../../customer/models/customer_model.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import '../../inventory/models/inventory_item.dart';
 import '../../../core/config/environment.dart';
+import '../../../core/utils/app_time.dart';
 import 'barcode_scanner_screen.dart';
 import 'sale_invoice_screen.dart';
 
@@ -24,7 +26,7 @@ class AddSaleScreen extends StatefulWidget {
 
 class _AddSaleScreenState extends State<AddSaleScreen> {
   final _formKey = GlobalKey<FormState>();
-  DateTime _saleDate = DateTime.now();
+  DateTime _saleDate = AppTime.businessNow();
   String _paymentMethod = 'cash';
   Customer? _selectedCustomer;
   String? _notes;
@@ -92,8 +94,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           cashBorrowDue: 0,
           previousDue: 0,
           isActive: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          createdAt: AppTime.utcNow(),
+          updatedAt: AppTime.utcNow(),
         ),
       );
 
@@ -143,21 +145,13 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   }
 
   double _calculateRealizedProfitForUi(double paidAmount) {
-    if (finalProfit <= 0) {
-      return finalProfit;
-    }
-
-    final costAfterDiscount = totalCost;
-
-    if (paidAmount > costAfterDiscount) {
-      final profitFromPayment = paidAmount - costAfterDiscount;
-      if (profitFromPayment <= 0) {
-        return 0;
-      }
-      return profitFromPayment > finalProfit ? finalProfit : profitFromPayment;
-    }
-
-    return 0;
+    final split = SalesService.calculateProfitSplit(
+      totalSelling: totalSelling,
+      totalCost: totalCost,
+      discountAmount: finalDiscount,
+      paidAmount: paidAmount,
+    );
+    return split.finalProfit <= 0 ? split.finalProfit : split.realizedProfit;
   }
 
   Future<void> _ensureGuestCustomer() async {
@@ -186,8 +180,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         cashBorrowDue: 0,
         previousDue: 0,
         isActive: true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: AppTime.utcNow(),
+        updatedAt: AppTime.utcNow(),
       );
 
       try {
@@ -603,8 +597,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             stock: 0,
             unit: '',
             sku: '',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
+            createdAt: AppTime.utcNow(),
+            updatedAt: AppTime.utcNow(),
           ),
         );
 
@@ -626,27 +620,15 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           ? 0.0
           : finalAmount - paidAmount;
 
-      // Calculate realized and potential profit
-      // Formula: profit = max(0, paidAmount - cost), capped at total profit
-      double realizedProfit = 0;
-      double potentialProfit = finalProfit; // Initially all profit is potential
-
-      final costAfterDiscount = totalCost; // Cost remains same
-
-      // Calculate how much profit is realized based on payment
-      if (paidAmount > costAfterDiscount) {
-        // Customer paid more than cost
-        // Realized profit = min(paidAmount - cost, totalProfit)
-        final profitFromPayment = paidAmount - costAfterDiscount;
-        realizedProfit = profitFromPayment > finalProfit
-            ? finalProfit
-            : profitFromPayment;
-        potentialProfit = finalProfit - realizedProfit;
-      } else {
-        // Customer paid less than or equal to cost, no profit yet
-        realizedProfit = 0;
-        potentialProfit = finalProfit;
-      }
+      // Calculate realized and potential profit via shared SalesService helper
+      final profitSplit = SalesService.calculateProfitSplit(
+        totalSelling: totalSelling,
+        totalCost: totalCost,
+        discountAmount: finalDiscount,
+        paidAmount: paidAmount,
+      );
+      final double realizedProfit = profitSplit.realizedProfit;
+      final double potentialProfit = profitSplit.potentialProfit;
 
       final sale = Sale(
         id: '',
@@ -668,7 +650,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         notes: _notes,
         createdBy: currentUser.id,
         createdByName: currentUser.name,
-        createdAt: DateTime.now(),
+        createdAt: AppTime.utcNow(),
         isActive: true,
       );
 
@@ -814,7 +796,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -833,7 +815,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -858,7 +840,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     Text(
                       'Create a new sale transaction',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 13,
                       ),
                     ),
@@ -946,7 +928,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(-2, 0),
                         ),
@@ -993,7 +975,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1067,7 +1049,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1372,20 +1354,28 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           const SizedBox(height: 12),
           InkWell(
             onTap: () async {
+              final now = AppTime.businessNow();
+              final pickerDate = DateTime(
+                _saleDate.year,
+                _saleDate.month,
+                _saleDate.day,
+                _saleDate.hour,
+                _saleDate.minute,
+              );
               final date = await showDatePicker(
                 context: context,
-                initialDate: _saleDate,
+                initialDate: pickerDate,
                 firstDate: DateTime(2020),
-                lastDate: DateTime.now(),
+                lastDate: DateTime(now.year, now.month, now.day),
               );
               if (date != null) {
                 final time = await showTimePicker(
                   context: context,
-                  initialTime: TimeOfDay.fromDateTime(_saleDate),
+                  initialTime: TimeOfDay.fromDateTime(pickerDate),
                 );
                 if (time != null) {
                   setState(
-                    () => _saleDate = DateTime(
+                    () => _saleDate = DateTime.utc(
                       date.year,
                       date.month,
                       date.day,
@@ -1711,7 +1701,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
@@ -1728,7 +1718,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.purple.shade50.withOpacity(0.3),
+              Colors.purple.shade50.withValues(alpha: 0.3),
               Colors.white,
               Colors.grey.shade50,
             ],
@@ -1804,7 +1794,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.purple.shade50,
-                                Colors.purple.shade100.withOpacity(0.3),
+                                Colors.purple.shade100.withValues(alpha: 0.3),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(12),
@@ -1816,22 +1806,30 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(12),
                             onTap: () async {
+                              final now = AppTime.businessNow();
+                              final pickerDate = DateTime(
+                                _saleDate.year,
+                                _saleDate.month,
+                                _saleDate.day,
+                                _saleDate.hour,
+                                _saleDate.minute,
+                              );
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: _saleDate,
+                                initialDate: pickerDate,
                                 firstDate: DateTime(2020),
-                                lastDate: DateTime.now(),
+                                lastDate: DateTime(now.year, now.month, now.day),
                               );
                               if (date != null) {
                                 final time = await showTimePicker(
                                   context: context,
                                   initialTime: TimeOfDay.fromDateTime(
-                                    _saleDate,
+                                    pickerDate,
                                   ),
                                 );
                                 if (time != null) {
                                   setState(() {
-                                    _saleDate = DateTime(
+                                    _saleDate = DateTime.utc(
                                       date.year,
                                       date.month,
                                       date.day,
@@ -1979,7 +1977,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.purple.shade100.withOpacity(0.5),
+                                      Colors.purple.shade100.withValues(alpha: 0.5),
                                       Colors.purple.shade50,
                                     ],
                                     begin: Alignment.topLeft,
@@ -1992,7 +1990,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   borderRadius: BorderRadius.circular(14),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.purple.shade100.withOpacity(
+                                      color: Colors.purple.shade100.withValues(alpha: 
                                         0.5,
                                       ),
                                       blurRadius: 8,
@@ -2114,7 +2112,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                               color: Colors.purple.shade600,
                             ),
                             filled: true,
-                            fillColor: Colors.purple.shade50.withOpacity(0.3),
+                            fillColor: Colors.purple.shade50.withValues(alpha: 0.3),
                           ),
                           maxLines: 3,
                           textCapitalization: TextCapitalization.sentences,
@@ -2165,7 +2163,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
@@ -2191,7 +2189,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   Text(
                                     '${_items.length} item${_items.length > 1 ? 's' : ''} ready to checkout',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -2212,7 +2210,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 Text(
                                   'Total Amount',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -2233,7 +2231,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 Text(
                                   'Total Profit',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -2315,6 +2313,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           itemBuilder: (context) => [
                             PopupMenuItem<String>(
                               value: 'barcode',
+                              onTap: _addItemsFromBarcodeScan,
                               child: Row(
                                 children: [
                                   const Icon(Icons.qr_code_2, size: 20),
@@ -2322,10 +2321,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   const Text('Scan Barcode'),
                                 ],
                               ),
-                              onTap: _addItemsFromBarcodeScan,
                             ),
                             PopupMenuItem<String>(
                               value: 'inventory',
+                              onTap: _addItemFromInventory,
                               child: Row(
                                 children: [
                                   const Icon(Icons.inventory_2, size: 20),
@@ -2333,10 +2332,10 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   const Text('From Inventory'),
                                 ],
                               ),
-                              onTap: _addItemFromInventory,
                             ),
                             PopupMenuItem<String>(
                               value: 'manual',
+                              onTap: _addItem,
                               child: Row(
                                 children: [
                                   const Icon(Icons.edit, size: 20),
@@ -2344,7 +2343,6 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                   const Text('Manual Entry'),
                                 ],
                               ),
-                              onTap: _addItem,
                             ),
                           ],
                         ),
@@ -2464,7 +2462,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                             horizontal: 8,
                                           ),
                                           child: Text(
-                                            '${item.quantity.toStringAsFixed(0)}',
+                                            item.quantity.toStringAsFixed(0),
                                             textAlign: TextAlign.center,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
@@ -2520,7 +2518,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       end: Alignment.bottomRight,
                       colors: [
                         Colors.purple.shade50,
-                        Colors.purple.shade100.withOpacity(0.7),
+                        Colors.purple.shade100.withValues(alpha: 0.7),
                         Colors.white,
                       ],
                     ),
@@ -2668,7 +2666,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                           gradient: LinearGradient(
                             colors: [
                               Colors.green.shade50,
-                              Colors.green.shade100.withOpacity(0.3),
+                              Colors.green.shade100.withValues(alpha: 0.3),
                             ],
                           ),
                           border: Border.all(
@@ -2773,7 +2771,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -2804,7 +2802,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -2956,7 +2954,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Icon(
@@ -3119,7 +3117,7 @@ class _ItemDialogState extends State<_ItemDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _unit,
+                      initialValue: _unit,
                       decoration: const InputDecoration(
                         labelText: 'Unit',
                         border: OutlineInputBorder(),
@@ -3693,12 +3691,12 @@ class _WebHeaderStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white.withOpacity(0.8), size: 18),
+          Icon(icon, color: Colors.white.withValues(alpha: 0.8), size: 18),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3707,7 +3705,7 @@ class _WebHeaderStat extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 11,
                 ),
               ),
@@ -3759,7 +3757,7 @@ class _WebAddButtonState extends State<_WebAddButton> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: _isHovered
-                ? widget.color.withOpacity(0.1)
+                ? widget.color.withValues(alpha: 0.1)
                 : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
@@ -3772,7 +3770,7 @@ class _WebAddButtonState extends State<_WebAddButton> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.1),
+                  color: widget.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(widget.icon, color: widget.color, size: 28),
@@ -3827,7 +3825,7 @@ class _WebSummaryRow extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: isLarge ? 16 : 14,
             ),
           ),

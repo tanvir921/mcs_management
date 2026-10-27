@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/app_time.dart';
 
 class Expense {
   final String id;
   final String expenseNumber;
   final DateTime expenseDate;
-  final String category; // personal, shop, repair, other
+  final String category; // personal, shop, stock_purchase, electricity_wifi, repair, other
   final double amount;
   final String description;
   final String paymentMethod; // cash, card, mobile_banking
@@ -36,10 +37,37 @@ class Expense {
   });
 
   factory Expense.fromMap(Map<String, dynamic> map) {
+    final rawExpenseDate = map['expenseDate'];
+    final rawCreatedAt = map['createdAt'];
+    final rawUpdatedAt = map['updatedAt'];
+
+    DateTime expenseDate;
+    if (rawExpenseDate is Timestamp) {
+      expenseDate = AppTime.toBusiness(rawExpenseDate.toDate());
+    } else if (rawExpenseDate is DateTime) {
+      expenseDate = AppTime.toBusiness(rawExpenseDate);
+    } else {
+      expenseDate = AppTime.businessNow();
+    }
+
+    DateTime? createdAt;
+    if (rawCreatedAt is Timestamp) {
+      createdAt = AppTime.toBusiness(rawCreatedAt.toDate());
+    } else if (rawCreatedAt is DateTime) {
+      createdAt = AppTime.toBusiness(rawCreatedAt);
+    }
+
+    DateTime? updatedAt;
+    if (rawUpdatedAt is Timestamp) {
+      updatedAt = AppTime.toBusiness(rawUpdatedAt.toDate());
+    } else if (rawUpdatedAt is DateTime) {
+      updatedAt = AppTime.toBusiness(rawUpdatedAt);
+    }
+
     return Expense(
       id: map['id'] ?? '',
       expenseNumber: map['expenseNumber'] ?? '',
-      expenseDate: map['expenseDate']?.toDate() ?? DateTime.now(),
+      expenseDate: expenseDate,
       category: map['category'] ?? 'other',
       amount: (map['amount'] ?? 0).toDouble(),
       description: map['description'] ?? '',
@@ -48,8 +76,8 @@ class Expense {
       receiptPhotos: List<String>.from(map['receiptPhotos'] ?? []),
       createdBy: map['createdBy'] ?? '',
       createdByName: map['createdByName'] ?? '',
-      createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
-      updatedAt: map['updatedAt']?.toDate(),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       isActive: map['isActive'] ?? true,
     );
   }
@@ -58,7 +86,8 @@ class Expense {
     return {
       'id': id,
       'expenseNumber': expenseNumber,
-      'expenseDate': expenseDate,
+      'expenseDate':
+          Timestamp.fromDate(AppTime.toUtcFromBusiness(expenseDate)),
       'category': category,
       'amount': amount,
       'description': description,
@@ -68,9 +97,10 @@ class Expense {
       'createdBy': createdBy,
       'createdByName': createdByName,
       'createdAt': createdAt != null
-          ? Timestamp.fromDate(createdAt!)
+          ? Timestamp.fromDate(createdAt!.toUtc())
           : FieldValue.serverTimestamp(),
-      'updatedAt': updatedAt,
+      'updatedAt':
+          updatedAt != null ? Timestamp.fromDate(updatedAt!.toUtc()) : null,
       'isActive': isActive,
     };
   }
@@ -80,7 +110,8 @@ class Expense {
     return {
       'id': id,
       'expenseNumber': expenseNumber,
-      'expenseDate': expenseDate,
+      'expenseDate':
+          Timestamp.fromDate(AppTime.toUtcFromBusiness(expenseDate)),
       'category': category,
       'amount': amount,
       'description': description,
@@ -136,6 +167,10 @@ class Expense {
         return 'Shop Expense';
       case 'personal':
         return 'Personal Expense';
+      case 'stock_purchase':
+        return 'Stock Purchase (মালামাল)';
+      case 'electricity_wifi':
+        return 'Electricity & WiFi';
       case 'repair':
         return 'Repair & Maintenance';
       case 'other':
@@ -151,6 +186,10 @@ class Expense {
         return Icons.shopping_bag_rounded;
       case 'personal':
         return Icons.person_rounded;
+      case 'stock_purchase':
+        return Icons.inventory_2_rounded;
+      case 'electricity_wifi':
+        return Icons.wifi_tethering_rounded;
       case 'repair':
         return Icons.build_rounded;
       case 'other':
@@ -166,6 +205,10 @@ class Expense {
         return const Color(0xFFFF9500); // Orange
       case 'personal':
         return const Color(0xFF5856D6); // Purple
+      case 'stock_purchase':
+        return const Color(0xFF34C759); // Green
+      case 'electricity_wifi':
+        return const Color(0xFF00C7BE); // Teal
       case 'repair':
         return const Color(0xFFFF3B30); // Red
       case 'other':

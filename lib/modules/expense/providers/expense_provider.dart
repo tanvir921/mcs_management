@@ -76,12 +76,14 @@ class ExpenseProvider with ChangeNotifier {
   Future<String?> createExpense(
     Expense expense, {
     List<File>? receiptPhotos,
+    bool preserveCreatedAt = false,
   }) async {
     try {
       _error = null;
       final id = await _service.createExpense(
         expense,
         receiptPhotos: receiptPhotos,
+        preserveCreatedAt: preserveCreatedAt,
       );
       return id;
     } catch (e) {

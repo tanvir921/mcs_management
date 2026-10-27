@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'wallet_type.dart';
+import '../../../core/utils/app_time.dart';
 
 class Wallet {
   final String id;
@@ -35,12 +36,17 @@ class Wallet {
   double get totalBalance => permanentBalance + temporaryBalance;
 
   static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    if (value is Timestamp) return value.toDate();
-    if (value is DateTime) return value;
-    if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
-    if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
-    return DateTime.now();
+    if (value == null) return AppTime.businessNow();
+    if (value is Timestamp) return AppTime.toBusiness(value.toDate());
+    if (value is DateTime) return AppTime.toBusiness(value);
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      return parsed != null ? AppTime.toBusiness(parsed) : AppTime.businessNow();
+    }
+    if (value is int) {
+      return AppTime.toBusiness(DateTime.fromMillisecondsSinceEpoch(value));
+    }
+    return AppTime.businessNow();
   }
 
   factory Wallet.fromJson(Map<String, dynamic> json) {
@@ -68,8 +74,8 @@ class Wallet {
       'customName': customName,
       'permanentBalance': permanentBalance,
       'temporaryBalance': temporaryBalance,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      'createdAt': Timestamp.fromDate(AppTime.toUtcFromBusiness(createdAt)),
+      'updatedAt': Timestamp.fromDate(AppTime.toUtcFromBusiness(updatedAt)),
       'isActive': isActive,
     };
   }

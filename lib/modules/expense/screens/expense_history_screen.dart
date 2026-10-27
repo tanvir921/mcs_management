@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import 'expense_detail_screen.dart';
+import '../../../core/utils/app_time.dart';
 
 class ExpenseHistoryScreen extends StatefulWidget {
   const ExpenseHistoryScreen({super.key});
@@ -37,24 +38,34 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   void _applyFilter(String period) {
     setState(() {
       _filterPeriod = period;
-      final now = DateTime.now();
+      final now = AppTime.businessNow();
+      DateTime start;
+      DateTime end;
 
       switch (period) {
         case 'today':
-          _startDate = DateTime(now.year, now.month, now.day);
-          _endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+          start = DateTime.utc(now.year, now.month, now.day);
+          end = DateTime.utc(now.year, now.month, now.day, 23, 59, 59, 999);
+          _startDate = AppTime.toUtcFromBusiness(start);
+          _endDate = AppTime.toUtcFromBusiness(end);
           break;
         case 'week':
-          _startDate = now.subtract(const Duration(days: 7));
-          _endDate = now;
+          start = now.subtract(const Duration(days: 7));
+          end = now;
+          _startDate = AppTime.toUtcFromBusiness(start);
+          _endDate = AppTime.toUtcFromBusiness(end);
           break;
         case 'month':
-          _startDate = DateTime(now.year, now.month, 1);
-          _endDate = now;
+          start = DateTime.utc(now.year, now.month, 1);
+          end = now;
+          _startDate = AppTime.toUtcFromBusiness(start);
+          _endDate = AppTime.toUtcFromBusiness(end);
           break;
         case 'year':
-          _startDate = DateTime(now.year, 1, 1);
-          _endDate = now;
+          start = DateTime.utc(now.year, 1, 1);
+          end = now;
+          _startDate = AppTime.toUtcFromBusiness(start);
+          _endDate = AppTime.toUtcFromBusiness(end);
           break;
         default:
           _startDate = null;
@@ -68,9 +79,28 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     final range = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: DateTime(
+        AppTime.businessNow().year,
+        AppTime.businessNow().month,
+        AppTime.businessNow().day,
+      ),
       initialDateRange: _startDate != null && _endDate != null
-          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          ? (() {
+              final startBusiness = AppTime.toBusiness(_startDate!);
+              final endBusiness = AppTime.toBusiness(_endDate!);
+              return DateTimeRange(
+                start: DateTime(
+                  startBusiness.year,
+                  startBusiness.month,
+                  startBusiness.day,
+                ),
+                end: DateTime(
+                  endBusiness.year,
+                  endBusiness.month,
+                  endBusiness.day,
+                ),
+              );
+            })()
           : null,
       builder: (context, child) {
         return Theme(
@@ -85,8 +115,22 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     if (range != null) {
       setState(() {
         _filterPeriod = 'custom';
-        _startDate = range.start;
-        _endDate = range.end;
+        final start = DateTime.utc(
+          range.start.year,
+          range.start.month,
+          range.start.day,
+        );
+        final end = DateTime.utc(
+          range.end.year,
+          range.end.month,
+          range.end.day,
+          23,
+          59,
+          59,
+          999,
+        );
+        _startDate = AppTime.toUtcFromBusiness(start);
+        _endDate = AppTime.toUtcFromBusiness(end);
       });
       _loadData();
     }
@@ -325,7 +369,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         color: isSelected ? color : Colors.grey.shade700,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
       ),
-      selectedColor: color.withOpacity(0.15),
+      selectedColor: color.withValues(alpha: 0.15),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
@@ -374,7 +418,7 @@ class _ExpenseCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: categoryColor.withOpacity(0.15),
+                      color: categoryColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(categoryIcon, color: categoryColor, size: 24),
@@ -403,7 +447,7 @@ class _ExpenseCard extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: categoryColor.withOpacity(0.12),
+                            color: categoryColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(

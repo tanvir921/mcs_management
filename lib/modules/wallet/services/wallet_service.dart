@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/wallet.dart';
 import '../models/wallet_transaction.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/utils/app_time.dart';
 
 class WalletService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -100,7 +101,7 @@ class WalletService {
       final updatedWallet = wallet.copyWith(
         permanentBalance: permanentBalance,
         temporaryBalance: temporaryBalance,
-        updatedAt: DateTime.now(),
+        updatedAt: AppTime.utcNow(),
       );
 
       // Create balance history record
@@ -116,7 +117,7 @@ class WalletService {
         newBalance: newBalance,
         change: change,
         note: note,
-        changedAt: DateTime.now(),
+        changedAt: AppTime.utcNow(),
         changedBy: userId,
         changedByName: userName,
       );
@@ -167,7 +168,7 @@ class WalletService {
 
       final updatedWallet = wallet.copyWith(
         isActive: false,
-        updatedAt: DateTime.now(),
+        updatedAt: AppTime.utcNow(),
       );
 
       await updateWallet(updatedWallet);

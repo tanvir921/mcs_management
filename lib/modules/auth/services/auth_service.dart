@@ -21,6 +21,8 @@ String _getPermissionDisplayName(Permission p) {
       return 'Daily Closing';
     case Permission.userManagement:
       return 'User Management';
+    case Permission.khosra:
+      return 'Khosra (খসড়া)';
   }
 }
 

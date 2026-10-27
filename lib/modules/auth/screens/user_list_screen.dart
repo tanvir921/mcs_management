@@ -161,7 +161,7 @@ class _UserListScreenState extends State<UserListScreen> {
                                 (user.role == UserRole.masterAdmin
                                         ? Colors.red
                                         : Colors.blue)
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),

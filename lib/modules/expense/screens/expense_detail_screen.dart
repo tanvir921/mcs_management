@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/app_time.dart';
 
 class ExpenseDetailScreen extends StatefulWidget {
   final String expenseId;
@@ -174,7 +175,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: categoryColor.withOpacity(0.1),
+                      color: categoryColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -208,7 +209,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: categoryColor.withOpacity(0.1),
+                      color: categoryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -294,7 +295,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     label: 'Created At',
                     value: DateFormat(
                       'MMM dd, yyyy hh:mm a',
-                    ).format(_expense!.createdAt ?? DateTime.now()),
+                    ).format(_expense!.createdAt ?? AppTime.businessNow()),
                   ),
                   if (_expense!.updatedAt != null) ...[
                     const SizedBox(height: 12),

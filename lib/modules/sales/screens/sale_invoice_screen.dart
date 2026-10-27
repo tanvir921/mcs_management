@@ -442,32 +442,31 @@ class SaleInvoiceScreen extends StatelessWidget {
                     const SizedBox(height: 16),
 
                     // Sold By
-                    if (sale.createdByName != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.purple.shade200),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.person_outline,
-                              color: Colors.purple.shade700,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Sold by: ${sale.createdByName}',
-                              style: TextStyle(
-                                color: Colors.purple.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.purple.shade200),
                       ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            color: Colors.purple.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Sold by: ${sale.createdByName}',
+                            style: TextStyle(
+                              color: Colors.purple.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 24),
 
                     // Footer
@@ -888,25 +887,24 @@ class SaleInvoiceScreen extends StatelessWidget {
               pw.SizedBox(height: 12),
 
               // Sold By
-              if (sale.createdByName != null)
-                pw.Container(
-                  width: double.infinity,
-                  padding: const pw.EdgeInsets.all(12),
-                  decoration: pw.BoxDecoration(
-                    color: PdfColors.purple50,
-                    borderRadius: pw.BorderRadius.circular(8),
-                    border: pw.Border.all(color: PdfColors.purple200),
-                  ),
-                  child: pw.Center(
-                    child: pw.Text(
-                      'Sold by: ${sale.createdByName}',
-                      style: pw.TextStyle(
-                        color: PdfColors.purple800,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(12),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.purple50,
+                  borderRadius: pw.BorderRadius.circular(8),
+                  border: pw.Border.all(color: PdfColors.purple200),
+                ),
+                child: pw.Center(
+                  child: pw.Text(
+                    'Sold by: ${sale.createdByName}',
+                    style: pw.TextStyle(
+                      color: PdfColors.purple800,
+                      fontWeight: pw.FontWeight.bold,
                     ),
                   ),
                 ),
+              ),
               pw.Spacer(),
 
               // Footer

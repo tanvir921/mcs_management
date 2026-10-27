@@ -271,29 +271,29 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<bool>(
-                        title: const Text('Add'),
-                        value: true,
-                        groupValue: isAddition,
-                        onChanged: (value) {
-                          setDialogState(() => isAddition = value!);
-                        },
+                RadioGroup<bool>(
+                  groupValue: isAddition,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => isAddition = value);
+                    }
+                  },
+                  child: const Row(
+                    children: [
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          title: Text('Add'),
+                          value: true,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<bool>(
-                        title: const Text('Clear'),
-                        value: false,
-                        groupValue: isAddition,
-                        onChanged: (value) {
-                          setDialogState(() => isAddition = value!);
-                        },
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          title: Text('Clear'),
+                          value: false,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -661,7 +661,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -705,7 +705,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
+                                color: Colors.blue.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),

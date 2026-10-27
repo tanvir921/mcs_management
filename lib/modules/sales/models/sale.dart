@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/app_time.dart';
 import 'sale_item.dart';
 
 class Sale {
@@ -57,10 +58,37 @@ class Sale {
   double get finalAmount => totalSelling - discountAmount;
 
   factory Sale.fromMap(Map<String, dynamic> map) {
+    final rawSaleDate = map['saleDate'];
+    final rawCreatedAt = map['createdAt'];
+    final rawUpdatedAt = map['updatedAt'];
+
+    DateTime saleDate;
+    if (rawSaleDate is Timestamp) {
+      saleDate = AppTime.toBusiness(rawSaleDate.toDate());
+    } else if (rawSaleDate is DateTime) {
+      saleDate = AppTime.toBusiness(rawSaleDate);
+    } else {
+      saleDate = AppTime.businessNow();
+    }
+
+    DateTime? createdAt;
+    if (rawCreatedAt is Timestamp) {
+      createdAt = AppTime.toBusiness(rawCreatedAt.toDate());
+    } else if (rawCreatedAt is DateTime) {
+      createdAt = AppTime.toBusiness(rawCreatedAt);
+    }
+
+    DateTime? updatedAt;
+    if (rawUpdatedAt is Timestamp) {
+      updatedAt = AppTime.toBusiness(rawUpdatedAt.toDate());
+    } else if (rawUpdatedAt is DateTime) {
+      updatedAt = AppTime.toBusiness(rawUpdatedAt);
+    }
+
     return Sale(
       id: map['id'] ?? '',
       saleNumber: map['saleNumber'] ?? '',
-      saleDate: map['saleDate']?.toDate() ?? DateTime.now(),
+      saleDate: saleDate,
       items:
           (map['items'] as List<dynamic>?)
               ?.map((item) => SaleItem.fromMap(item as Map<String, dynamic>))
@@ -81,8 +109,8 @@ class Sale {
       notes: map['notes'],
       createdBy: map['createdBy'] ?? '',
       createdByName: map['createdByName'] ?? '',
-      createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
-      updatedAt: map['updatedAt']?.toDate(),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       isActive: map['isActive'] ?? true,
     );
   }
@@ -91,7 +119,7 @@ class Sale {
     return {
       'id': id,
       'saleNumber': saleNumber,
-      'saleDate': saleDate,
+      'saleDate': Timestamp.fromDate(AppTime.toUtcFromBusiness(saleDate)),
       'items': items.map((item) => item.toMap()).toList(),
       'totalCost': totalCost,
       'totalSelling': totalSelling,
@@ -109,9 +137,10 @@ class Sale {
       'createdBy': createdBy,
       'createdByName': createdByName,
       'createdAt': createdAt != null
-          ? Timestamp.fromDate(createdAt!)
+          ? Timestamp.fromDate(createdAt!.toUtc())
           : FieldValue.serverTimestamp(),
-      'updatedAt': updatedAt,
+      'updatedAt':
+          updatedAt != null ? Timestamp.fromDate(updatedAt!.toUtc()) : null,
       'isActive': isActive,
     };
   }
@@ -121,7 +150,7 @@ class Sale {
     return {
       'id': id,
       'saleNumber': saleNumber,
-      'saleDate': saleDate,
+      'saleDate': Timestamp.fromDate(AppTime.toUtcFromBusiness(saleDate)),
       'items': items.map((item) => item.toMap()).toList(),
       'totalCost': totalCost,
       'totalSelling': totalSelling,

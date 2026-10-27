@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../../core/utils/app_time.dart';
 import '../models/daily_closing_model.dart';
 import '../providers/daily_closing_provider.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -197,7 +198,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -208,7 +209,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -233,9 +234,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                         Text(
                           DateFormat(
                             'EEEE, MMMM d, yyyy',
-                          ).format(DateTime.now()),
+                          ).format(AppTime.businessNow()),
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 13,
                           ),
                         ),
@@ -272,7 +273,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                       label: const Text('History'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        side: BorderSide(color: Colors.white.withOpacity(0.5)),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -326,7 +327,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
+                    color: Colors.blue.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -337,7 +338,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.all(16),
@@ -364,7 +365,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                         Text(
                           DateFormat(
                             'EEEE, MMMM d, yyyy',
-                          ).format(DateTime.now()),
+                          ).format(AppTime.businessNow()),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -661,12 +662,12 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color.withOpacity(0.85), color.withOpacity(0.65)],
+          colors: [color.withValues(alpha: 0.85), color.withValues(alpha: 0.65)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.25),
+            color: color.withValues(alpha: 0.25),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -678,7 +679,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(10),
             ),
             padding: const EdgeInsets.all(10),
@@ -726,7 +727,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: color, size: 22),
@@ -837,7 +838,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     padding: const EdgeInsets.all(12),
@@ -863,7 +864,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                         Text(
                           DateFormat(
                             'EEEE, MMMM d, yyyy',
-                          ).format(DateTime.now()),
+                          ).format(AppTime.businessNow()),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -962,7 +963,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.25),
+                color: Colors.blue.withValues(alpha: 0.25),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -999,9 +1000,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 padding: const EdgeInsets.all(14),
                 child: const Icon(
@@ -1138,7 +1139,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(icon, color: color, size: 22),
@@ -1157,7 +1158,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -1370,6 +1371,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildSectionCardWithBreakdown({
     required String title,
     required List<BreakdownItem> breakdown,
@@ -1392,7 +1394,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 if (icon != null)
                   Container(
                     decoration: BoxDecoration(
-                      color: (color ?? Colors.blue).withOpacity(0.1),
+                      color: (color ?? Colors.blue).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     padding: const EdgeInsets.all(8),
@@ -1555,12 +1557,12 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color.withOpacity(0.85), color.withOpacity(0.65)],
+          colors: [color.withValues(alpha: 0.85), color.withValues(alpha: 0.65)],
         ),
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.25),
+            color: color.withValues(alpha: 0.25),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1572,7 +1574,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(8),
@@ -1605,6 +1607,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildModernItemCard({
     required String title,
     required double amount,
@@ -1620,7 +1623,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(12),
@@ -1664,12 +1667,12 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.35),
+            color: color.withValues(alpha: 0.35),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
           BoxShadow(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1707,7 +1710,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.all(16),
@@ -1722,9 +1725,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
           const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
@@ -1753,7 +1756,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -1761,7 +1764,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [color.withOpacity(0.05), color.withOpacity(0.02)],
+            colors: [color.withValues(alpha: 0.05), color.withValues(alpha: 0.02)],
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -1786,7 +1789,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -1794,7 +1797,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
             ),
             Container(
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(12),
@@ -1816,13 +1819,13 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: color.withValues(alpha: 0.2)),
       ),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.06), color.withOpacity(0.02)],
+            colors: [color.withValues(alpha: 0.06), color.withValues(alpha: 0.02)],
           ),
         ),
         padding: const EdgeInsets.all(18),
@@ -1834,7 +1837,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -1883,7 +1886,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.arrow_forward, color: color, size: 20),
@@ -1916,9 +1919,9 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: color.withOpacity(0.3)),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Center(
                 child: Column(
@@ -1927,7 +1930,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                       'Difference',
                       style: TextStyle(
                         fontSize: 12,
-                        color: color.withOpacity(0.7),
+                        color: color.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.2,
                       ),
@@ -1947,7 +1950,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
                       isPositive ? '(Small Sales / Card)' : '(Loss)',
                       style: TextStyle(
                         fontSize: 12,
-                        color: color.withOpacity(0.7),
+                        color: color.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1963,7 +1966,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
 
   Widget _buildInfoCard(String message, Color color) {
     return Card(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
@@ -2162,7 +2165,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.amber.withOpacity(0.3)),
+        side: BorderSide(color: Colors.amber.withValues(alpha: 0.3)),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -2362,7 +2365,7 @@ class _DailyClosingScreenState extends State<DailyClosingScreen> {
               }
 
               final newEntry = ProfitEntry(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                id: AppTime.utcNow().millisecondsSinceEpoch.toString(),
                 source: sourceController.text,
                 amount: amount,
                 note: noteController.text.isEmpty ? null : noteController.text,
@@ -2398,20 +2401,40 @@ class ClosingHistoryScreen extends StatefulWidget {
 }
 
 class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
+  bool _hasLoaded = false;
+
   @override
   void initState() {
     super.initState();
     _loadHistory();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasLoaded) return;
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.currentUser != null) {
+      _hasLoaded = true;
+      _loadHistory();
+    }
+  }
+
   Future<void> _loadHistory() async {
     final authProvider = context.read<AuthProvider>();
     final currentUser = authProvider.currentUser;
+    debugPrint('[DailyClosing] history load url=${Uri.base}');
 
     if (currentUser != null) {
+      debugPrint(
+        '[DailyClosing] history load start userId=${currentUser.id}',
+      );
       await context.read<DailyClosingProvider>().loadClosingHistory(
         currentUser.id,
       );
+      debugPrint('[DailyClosing] history load done');
+    } else {
+      debugPrint('[DailyClosing] history load skipped: no currentUser');
     }
   }
 
@@ -2440,7 +2463,7 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -2459,7 +2482,7 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -2498,6 +2521,47 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                   return Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation(Colors.blue.shade600),
+                    ),
+                  );
+                }
+
+                if (closingProvider.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 72,
+                          color: Colors.red.shade300,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Failed to load closing history',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            closingProvider.error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _loadHistory,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -2715,8 +2779,8 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                                                 decoration: BoxDecoration(
                                                   color: isPositive
                                                       ? Colors.green
-                                                            .withOpacity(0.1)
-                                                      : Colors.red.withOpacity(
+                                                            .withValues(alpha: 0.1)
+                                                      : Colors.red.withValues(alpha: 
                                                           0.1,
                                                         ),
                                                   borderRadius:
@@ -2777,10 +2841,10 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -2791,7 +2855,7 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -2861,6 +2925,47 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
               );
             }
 
+            if (closingProvider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red.shade300,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Failed to load history',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        closingProvider.error!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _loadHistory,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
             if (closingProvider.closingHistory.isEmpty) {
               return Center(
                 child: Column(
@@ -2908,8 +3013,8 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                         gradient: LinearGradient(
                           colors: [
                             isPositive
-                                ? Colors.green.withOpacity(0.05)
-                                : Colors.red.withOpacity(0.05),
+                                ? Colors.green.withValues(alpha: 0.05)
+                                : Colors.red.withValues(alpha: 0.05),
                             Colors.transparent,
                           ],
                         ),
@@ -2921,8 +3026,8 @@ class _ClosingHistoryScreenState extends State<ClosingHistoryScreen> {
                             Container(
                               decoration: BoxDecoration(
                                 color: isPositive
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.red.withOpacity(0.1),
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : Colors.red.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               padding: const EdgeInsets.all(12),
@@ -3027,7 +3132,7 @@ class ClosingDetailScreen extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -3046,7 +3151,7 @@ class ClosingDetailScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
@@ -3120,7 +3225,7 @@ class ClosingDetailScreen extends StatelessWidget {
                             boxShadow: [
                               BoxShadow(
                                 color: (isPositive ? Colors.green : Colors.red)
-                                    .withOpacity(0.3),
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -3180,7 +3285,7 @@ class ClosingDetailScreen extends StatelessWidget {
                               ),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 padding: const EdgeInsets.all(20),
@@ -3402,7 +3507,7 @@ class ClosingDetailScreen extends StatelessWidget {
                                     style: const TextStyle(fontSize: 14),
                                   ),
                                   Text(
-                                    'At: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}',
+                                    'At: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? AppTime.businessNow())}',
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey.shade700,
@@ -3506,7 +3611,7 @@ class ClosingDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: (isPositive ? Colors.green : Colors.red).withOpacity(
+                    color: (isPositive ? Colors.green : Colors.red).withValues(alpha: 
                       0.3,
                     ),
                     blurRadius: 12,
@@ -3536,7 +3641,7 @@ class ClosingDetailScreen extends StatelessWidget {
                           Text(
                             'Final Balance',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -3725,7 +3830,7 @@ class ClosingDetailScreen extends StatelessWidget {
                         'Approved by: ${closing.approvedByName ?? closing.approvedBy ?? 'Unknown'}',
                       ),
                       Text(
-                        'Approved at: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? DateTime.now())}',
+                        'Approved at: ${DateFormat('MMM d, yyyy HH:mm').format(closing.approvedAt ?? AppTime.businessNow())}',
                       ),
                       if (closing.remarks != null) ...[
                         const SizedBox(height: 8),
@@ -3749,7 +3854,7 @@ class ClosingDetailScreen extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(12),
@@ -3760,7 +3865,7 @@ class ClosingDetailScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(color: color.withOpacity(0.9), fontSize: 12),
+            style: TextStyle(color: color.withValues(alpha: 0.9), fontSize: 12),
           ),
           const SizedBox(height: 4),
           Text(
@@ -3888,7 +3993,7 @@ class _WebHeaderStat extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -3936,7 +4041,7 @@ class _WebHeaderStatDetail extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

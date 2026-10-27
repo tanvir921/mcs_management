@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../inventory/models/inventory_item.dart';
 import '../../inventory/providers/inventory_provider.dart';
 import 'qr_scanner_screen.dart';
+import '../../../core/utils/app_time.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -13,7 +14,7 @@ class BarcodeScannerScreen extends StatefulWidget {
 
 class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   final _barcodeController = TextEditingController();
-  List<InventoryItem> _scannedProducts = [];
+  final List<InventoryItem> _scannedProducts = [];
 
   @override
   void dispose() {
@@ -53,8 +54,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         stock: 0,
         unit: '',
         sku: '',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: AppTime.utcNow(),
+        updatedAt: AppTime.utcNow(),
       ),
     );
 

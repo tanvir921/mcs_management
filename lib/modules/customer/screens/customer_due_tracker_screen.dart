@@ -205,7 +205,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
             Container(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -230,7 +230,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               'MCS Management System',
               style: TextStyle(
                 fontSize: isMobile ? 14 : 18,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 letterSpacing: 1,
               ),
               textAlign: TextAlign.center,
@@ -399,7 +399,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1976D2).withOpacity(0.3),
+                        color: const Color(0xFF1976D2).withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -461,7 +461,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                 border: Border.all(color: const Color(0xFFFFB300), width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFB300).withOpacity(0.2),
+                    color: const Color(0xFFFFB300).withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -472,7 +472,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE65100).withOpacity(0.1),
+                      color: const Color(0xFFE65100).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -536,7 +536,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                         (_customer!.totalDue > 0
                                 ? const Color(0xFFD32F2F)
                                 : const Color(0xFF388E3C))
-                            .withOpacity(0.4),
+                            .withValues(alpha: 0.4),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -559,7 +559,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                         'মোট বকেয়া',
                         style: TextStyle(
                           fontSize: isMobile ? 18 : 22,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -726,7 +726,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF1976D2).withOpacity(0.3),
+                    color: const Color(0xFF1976D2).withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -781,7 +781,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.white.withOpacity(0.2)
+                    ? Colors.white.withValues(alpha: 0.2)
                     : Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -851,7 +851,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1976D2).withOpacity(0.1),
+                    color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -924,7 +924,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1976D2).withOpacity(0.1),
+                    color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -1039,7 +1039,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: amount > 0
-                  ? const Color(0xFFD32F2F).withOpacity(0.1)
+                  ? const Color(0xFFD32F2F).withValues(alpha: 0.1)
                   : Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
             ),
@@ -1087,10 +1087,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color.withOpacity(0.08), color.withOpacity(0.05)],
+          colors: [color.withValues(alpha: 0.08), color.withValues(alpha: 0.05)],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1100,7 +1100,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -1152,7 +1152,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD32F2F).withOpacity(0.15),
+                        color: const Color(0xFFD32F2F).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -1172,7 +1172,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF388E3C).withOpacity(0.15),
+                        color: const Color(0xFF388E3C).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -1193,7 +1193,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey[300]!),
               ),
@@ -1235,12 +1235,12 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF1976D2).withOpacity(0.3),
+          color: const Color(0xFF1976D2).withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1976D2).withOpacity(0.1),
+            color: const Color(0xFF1976D2).withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -1254,7 +1254,7 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withOpacity(0.15),
+                  color: const Color(0xFF1976D2).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -1302,10 +1302,10 @@ class _CustomerDueTrackerScreenState extends State<CustomerDueTrackerScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color(0xFF1976D2).withOpacity(0.2),
+                  color: const Color(0xFF1976D2).withValues(alpha: 0.2),
                 ),
               ),
               child: Row(

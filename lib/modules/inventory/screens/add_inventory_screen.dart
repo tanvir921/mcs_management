@@ -304,7 +304,7 @@ class _AddInventoryScreenState extends State<AddInventoryScreen> {
                     children: [
                       if (categories.isNotEmpty && !_createNewCategory)
                         DropdownButtonFormField<String>(
-                          value: _selectedCategory,
+                          initialValue: _selectedCategory,
                           decoration: InputDecoration(
                             labelText: 'Select Category',
                             border: OutlineInputBorder(

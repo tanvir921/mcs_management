@@ -5,6 +5,7 @@ import '../models/wallet.dart';
 import '../models/wallet_type.dart';
 import '../providers/wallet_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/app_time.dart';
 
 class AddWalletScreen extends StatefulWidget {
   const AddWalletScreen({super.key});
@@ -69,8 +70,8 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
             : null,
         permanentBalance: permanentBalance,
         temporaryBalance: temporaryBalance,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: AppTime.utcNow(),
+        updatedAt: AppTime.utcNow(),
         isActive: true,
       );
 
@@ -123,7 +124,7 @@ class _AddWalletScreenState extends State<AddWalletScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<WalletType>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.account_balance_wallet),

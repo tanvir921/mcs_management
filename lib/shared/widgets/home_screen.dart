@@ -1,13 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../app/app_routes.dart';
-import '../../modules/auth/providers/auth_provider.dart';
-import '../../modules/reports/services/reports_service.dart';
 import '../../core/constants/enums.dart';
+import '../../core/utils/app_time.dart';
 import '../../core/utils/responsive.dart';
+import '../../modules/auth/providers/auth_provider.dart';
+import '../../modules/khosra/models/khosra_entry.dart';
+import '../../modules/khosra/providers/khosra_provider.dart';
+import '../../modules/reports/services/reports_service.dart';
 
 String _getRoleDisplayName(UserRole role) {
   switch (role) {
@@ -26,86 +29,165 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final ReportsService _reportsService = ReportsService();
+
+  double _todaySales = 0;
+  double _todayDuesAdded = 0;
+  double _todayCollections = 0;
+  double _todayExpenses = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodayStats();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<KhosraProvider>().init();
+      }
+    });
+  }
+
+  Future<void> _loadTodayStats() async {
+    if (mounted) {
+      setState(() => _isLoadingStats = true);
+    }
+    try {
+      final summary = await _reportsService.getSummary(DateFilter.today);
+      final now = AppTime.businessNow();
+      final todayStart = AppTime.startOfBusinessDayUtc(now);
+      final todayEnd = AppTime.endOfBusinessDayUtc(now);
+
+      final salesSnapshot = await FirebaseFirestore.instance
+          .collection('sales')
+          .where(
+            'saleDate',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart),
+          )
+          .where('saleDate', isLessThanOrEqualTo: Timestamp.fromDate(todayEnd))
+          .get();
+
+      double totalSales = 0;
+      for (final doc in salesSnapshot.docs) {
+        final data = doc.data();
+        if (data['isActive'] == false) continue;
+        final totalSelling = (data['totalSelling'] as num?)?.toDouble() ?? 0;
+        final discountAmount =
+            (data['discountAmount'] as num?)?.toDouble() ?? 0;
+        totalSales += (totalSelling - discountAmount);
+      }
+
+      if (mounted) {
+        setState(() {
+          _todaySales = totalSales;
+          _todayDuesAdded = summary.totalDuesAdded;
+          _todayCollections = summary.totalCollections;
+          _todayExpenses =
+              (summary.expenseStats?['totalExpenses'] as num?)?.toDouble() ?? 0;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading today stats: $e');
+      if (mounted) {
+        setState(() => _isLoadingStats = false);
+      }
+    }
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount >= 1000000) {
+      return '৳${(amount / 1000000).toStringAsFixed(1)}M';
+    } else if (amount >= 100000) {
+      return '৳${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return '৳${amount.toStringAsFixed(0)}';
+  }
+
+  Future<void> _navigateAndRefresh(String routeName) async {
+    await Navigator.pushNamed(context, routeName);
+    if (mounted) {
+      _loadTodayStats();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isLargeScreen = Responsive.isLargeScreen(context);
 
     return Scaffold(
-      appBar: isLargeScreen ? null : _buildAppBar(context),
+      backgroundColor: const Color(0xFFF4F6FA),
+      appBar: isLargeScreen ? null : _buildMobileAppBar(context),
       body: isLargeScreen
           ? _buildWebLayout(context)
           : _buildMobileLayout(context),
     );
   }
 
-  String _formatCurrency(double amount) {
-    if (amount >= 1000000) {
-      return '৳${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '৳${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '৳${amount.toStringAsFixed(0)}';
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
+  PreferredSizeWidget _buildMobileAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('MCS Management'),
+      title: const Row(
+        children: [
+          Icon(Icons.storefront_rounded, size: 22, color: Colors.white),
+          SizedBox(width: 8),
+          Text('MCS Management'),
+        ],
+      ),
       elevation: 0,
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.blue.shade600, Colors.blue.shade800],
+            colors: [Colors.blue.shade700, Colors.indigo.shade800],
           ),
         ),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded),
+          tooltip: 'Refresh Dashboard',
+          onPressed: _loadTodayStats,
+        ),
         Consumer<AuthProvider>(
-          builder: (context, authProvider, child) {
+          builder: (context, authProvider, _) {
+            final user = authProvider.currentUser;
             return PopupMenuButton<String>(
-              icon: const Icon(Icons.account_circle),
+              icon: const Icon(Icons.account_circle_rounded),
               itemBuilder: (context) => [
                 PopupMenuItem<String>(
                   value: 'user',
                   enabled: false,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.person_outline, size: 18),
-                      const SizedBox(width: 8),
-                      Text(authProvider.currentUser?.name ?? 'User'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'role',
-                  enabled: false,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.security, size: 18),
-                      const SizedBox(width: 8),
                       Text(
-                        authProvider.currentUser != null
-                            ? _getRoleDisplayName(
-                                authProvider.currentUser!.role,
-                              )
-                            : '',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        user?.name ?? 'User',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
+                      if (user != null)
+                        Text(
+                          _getRoleDisplayName(user.role),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 const PopupMenuDivider(),
                 PopupMenuItem<String>(
                   value: 'logout',
-                  onTap: () async => await authProvider.signOut(),
+                  onTap: () => authProvider.signOut(),
                   child: const Row(
                     children: [
-                      Icon(Icons.logout, size: 20),
+                      Icon(Icons.logout_rounded, size: 18, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Logout'),
+                      Text('Logout', style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 ),
@@ -117,9 +199,369 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMobileLayout(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        final user = authProvider.currentUser;
+        if (user == null) return const SizedBox();
+
+        final moduleCards = _buildModuleCards(context, user);
+
+        return RefreshIndicator(
+          onRefresh: _loadTodayStats,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+            children: [
+              // Compact greeting + live date/time bar
+              _buildCompactWelcomeHeader(user),
+              const SizedBox(height: 12),
+
+              // Prominent Khosra (খসড়া খাতা) live card
+              _buildKhosraHeroCard(context),
+              const SizedBox(height: 12),
+
+              // Today's 4 live stats in a compact 2x2 grid
+              _buildMobileStatsGrid(),
+              const SizedBox(height: 14),
+
+              // 1-Tap Quick Actions row
+              _buildQuickActionsStrip(context, user),
+              const SizedBox(height: 16),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'সকল মডিউল (Modules)',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  Text(
+                    '${moduleCards.length} items',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 1.45,
+                ),
+                itemCount: moduleCards.length,
+                itemBuilder: (context, index) {
+                  final card = moduleCards[index];
+                  return _ModuleCard(
+                    title: card.title,
+                    subtitle: card.subtitle,
+                    icon: card.icon,
+                    color: card.color,
+                    onTap: card.onTap,
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCompactWelcomeHeader(dynamic user) {
+    final now = AppTime.businessNow();
+    final dateStr = DateFormat('EEE, d MMM yyyy').format(now);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.blue.shade700, Colors.indigo.shade800],
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
+            child: Text(
+              user.name.toString().trim().isNotEmpty
+                  ? user.name.toString().trim()[0].toUpperCase()
+                  : 'U',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_getRoleDisplayName(user.role)} • $dateStr',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKhosraHeroCard(BuildContext context) {
+    return Consumer<KhosraProvider>(
+      builder: (context, khosra, _) {
+        final pendingCount = khosra.pendingCount;
+        final olderCount = khosra.olderPendingEntries.length;
+        final totalSellText = KhosraMoney.formatPaisa(khosra.totalSellPaisa);
+
+        return InkWell(
+          onTap: () => _navigateAndRefresh(AppRoutes.khosra),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.teal.shade700, Colors.teal.shade900],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.teal.withValues(alpha: 0.22),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'খসড়া খাতা (Khosra Quick Log)',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        pendingCount > 0
+                            ? 'আজকের খসড়া বিক্রি: $totalSellText • $pendingCount টি বাকি'
+                            : '১-ট্যাপে দ্রুত বিক্রি, বকেয়া, আদায় ও খরচ লিখে রাখুন',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (olderCount > 0) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade300,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'পুরনো দিনের $olderCount টি খসড়া বাকি আছে',
+                            style: TextStyle(
+                              color: Colors.brown.shade900,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (pendingCount > 0)
+                  FilledButton(
+                    onPressed: () =>
+                        _navigateAndRefresh(AppRoutes.khosraReview),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.teal.shade900,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      minimumSize: Size.zero,
+                    ),
+                    child: const Text(
+                      'Review',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMobileStatsGrid() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _CompactStatTile(
+                title: 'আজকের বিক্রি (Sales)',
+                value: _isLoadingStats ? '...' : _formatCurrency(_todaySales),
+                icon: Icons.point_of_sale_rounded,
+                color: Colors.green.shade700,
+                onTap: () => _navigateAndRefresh(AppRoutes.salesHistory),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _CompactStatTile(
+                title: 'নতুন বাকি (Due)',
+                value: _isLoadingStats
+                    ? '...'
+                    : _formatCurrency(_todayDuesAdded),
+                icon: Icons.person_add_alt_1_rounded,
+                color: Colors.deepOrange.shade700,
+                onTap: () => _navigateAndRefresh(AppRoutes.customerDueTracker),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _CompactStatTile(
+                title: 'বাকি আদায় (Aday)',
+                value: _isLoadingStats
+                    ? '...'
+                    : _formatCurrency(_todayCollections),
+                icon: Icons.payments_rounded,
+                color: Colors.blue.shade700,
+                onTap: () => _navigateAndRefresh(AppRoutes.customerDueTracker),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _CompactStatTile(
+                title: 'আজকের খরচ (Expense)',
+                value: _isLoadingStats
+                    ? '...'
+                    : _formatCurrency(_todayExpenses),
+                icon: Icons.receipt_long_rounded,
+                color: Colors.red.shade700,
+                onTap: () => _navigateAndRefresh(AppRoutes.expenses),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsStrip(BuildContext context, dynamic user) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _QuickShortcutButton(
+            icon: Icons.add_shopping_cart_rounded,
+            label: '+ বিক্রি',
+            color: Colors.purple.shade700,
+            onTap: () => _navigateAndRefresh(AppRoutes.saleAdd),
+          ),
+          _QuickShortcutButton(
+            icon: Icons.edit_note_rounded,
+            label: 'খসড়া খাতা',
+            color: Colors.teal.shade700,
+            onTap: () => _navigateAndRefresh(AppRoutes.khosra),
+          ),
+          _QuickShortcutButton(
+            icon: Icons.account_balance_rounded,
+            label: 'বাকি আদায়',
+            color: Colors.blue.shade700,
+            onTap: () => _navigateAndRefresh(AppRoutes.customerDueTracker),
+          ),
+          _QuickShortcutButton(
+            icon: Icons.post_add_rounded,
+            label: '+ খরচ',
+            color: Colors.red.shade700,
+            onTap: () => _navigateAndRefresh(AppRoutes.expenseAdd),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildWebLayout(BuildContext context) {
     return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
+      builder: (context, authProvider, _) {
         final user = authProvider.currentUser;
         if (user == null) return const SizedBox();
 
@@ -130,21 +572,23 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildSidebar(context, authProvider),
             Expanded(
               child: Container(
-                color: Colors.grey.shade50,
+                color: const Color(0xFFF4F6FA),
                 child: Column(
                   children: [
                     _buildWebTopBar(context, user),
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(28),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildStatsRow(context),
-                            const SizedBox(height: 32),
+                            _buildKhosraHeroCard(context),
+                            const SizedBox(height: 20),
+                            _buildWebStatsRow(),
+                            const SizedBox(height: 28),
                             Text(
-                              'Quick Access',
-                              style: Theme.of(context).textTheme.headlineSmall
+                              'Quick Access Modules',
+                              style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 16),
@@ -159,15 +603,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                       tablet: 3,
                                       desktop: 4,
                                     ),
-                                    crossAxisSpacing: 20,
-                                    mainAxisSpacing: 20,
-                                    childAspectRatio: 1.3,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 1.45,
                                   ),
                               itemCount: moduleCards.length,
                               itemBuilder: (context, index) {
                                 final card = moduleCards[index];
                                 return _WebModuleCard(
                                   title: card.title,
+                                  subtitle: card.subtitle,
                                   icon: card.icon,
                                   color: card.color,
                                   onTap: card.onTap,
@@ -185,6 +630,48 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildWebStatsRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            title: "Today's Sales",
+            value: _isLoadingStats ? '...' : _formatCurrency(_todaySales),
+            icon: Icons.point_of_sale,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _StatCard(
+            title: 'Due Added',
+            value: _isLoadingStats ? '...' : _formatCurrency(_todayDuesAdded),
+            icon: Icons.add_circle_outline,
+            color: Colors.deepOrange,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _StatCard(
+            title: 'Due Collection',
+            value: _isLoadingStats ? '...' : _formatCurrency(_todayCollections),
+            icon: Icons.payments_outlined,
+            color: Colors.blue,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _StatCard(
+            title: 'Expenses',
+            value: _isLoadingStats ? '...' : _formatCurrency(_todayExpenses),
+            icon: Icons.receipt_long,
+            color: Colors.red,
+          ),
+        ),
+      ],
     );
   }
 
@@ -206,12 +693,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 33),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Colors.blue.shade600, Colors.blue.shade800],
+                colors: [Colors.blue.shade700, Colors.indigo.shade800],
               ),
             ),
             child: Row(
@@ -219,10 +706,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.store, color: Colors.white, size: 32),
+                  child: const Icon(Icons.store, color: Colors.white, size: 28),
                 ),
                 const SizedBox(width: 14),
                 const Expanded(
@@ -230,7 +717,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     'MCS Management',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -240,10 +727,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               children: [
                 _buildNavSection('MAIN', [
                   _NavItem(Icons.home, 'Dashboard', true, () {}),
+                  _NavItem(
+                    Icons.edit_note_rounded,
+                    'Khosra (খসড়া খাতা)',
+                    false,
+                    () => _navigateAndRefresh(AppRoutes.khosra),
+                  ),
                 ]),
                 if (user?.hasPermission(Permission.customers) ?? false)
                   _buildNavSection('MANAGEMENT', [
@@ -251,7 +744,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icons.people,
                       'Customers',
                       false,
-                      () => Navigator.pushNamed(context, AppRoutes.customers),
+                      () => _navigateAndRefresh(AppRoutes.customers),
+                    ),
+                    _NavItem(
+                      Icons.account_balance_rounded,
+                      'Due Tracker',
+                      false,
+                      () => _navigateAndRefresh(AppRoutes.customerDueTracker),
                     ),
                     if (user?.hasPermission(Permission.msfTransactions) ??
                         false)
@@ -259,52 +758,48 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.account_balance_wallet,
                         'Wallets',
                         false,
-                        () => Navigator.pushNamed(context, AppRoutes.wallets),
+                        () => _navigateAndRefresh(AppRoutes.wallets),
                       ),
                     if (user?.hasPermission(Permission.products) ?? false)
                       _NavItem(
                         Icons.inventory_2,
                         'Inventory',
                         false,
-                        () => Navigator.pushNamed(context, AppRoutes.inventory),
+                        () => _navigateAndRefresh(AppRoutes.inventory),
                       ),
                     if (user?.hasPermission(Permission.products) ?? false)
                       _NavItem(
                         Icons.point_of_sale,
                         'Sales',
                         false,
-                        () => Navigator.pushNamed(context, AppRoutes.sales),
+                        () => _navigateAndRefresh(AppRoutes.sales),
                       ),
                   ]),
                 if (user?.hasPermission(Permission.reports) ?? false)
-                  _buildNavSection('REPORTS', [
+                  _buildNavSection('REPORTS & FINANCE', [
                     _NavItem(
                       Icons.summarize,
                       'Daily Closing',
                       false,
-                      () =>
-                          Navigator.pushNamed(context, AppRoutes.dailyClosing),
+                      () => _navigateAndRefresh(AppRoutes.dailyClosing),
                     ),
                     _NavItem(
                       Icons.receipt_long,
                       'Expenses',
                       false,
-                      () => Navigator.pushNamed(context, AppRoutes.expenses),
+                      () => _navigateAndRefresh(AppRoutes.expenses),
                     ),
                     _NavItem(
                       Icons.analytics,
                       'Reports',
                       false,
-                      () => Navigator.pushNamed(context, AppRoutes.reports),
+                      () => _navigateAndRefresh(AppRoutes.reports),
                     ),
                     _NavItem(
                       Icons.trending_down,
                       'Profit Deduction',
                       false,
-                      () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.profitDeduction,
-                      ),
+                      () => _navigateAndRefresh(AppRoutes.profitDeduction),
                     ),
                   ]),
                 if (user?.hasPermission(Permission.userManagement) ?? false)
@@ -313,27 +808,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icons.admin_panel_settings,
                       'User Management',
                       false,
-                      () => Navigator.pushNamed(context, AppRoutes.users),
+                      () => _navigateAndRefresh(AppRoutes.users),
                     ),
                     if (user?.isMasterAdmin ?? false)
                       _NavItem(
                         Icons.build,
                         'Admin Tools',
                         false,
-                        () =>
-                            Navigator.pushNamed(context, AppRoutes.adminTools),
+                        () => _navigateAndRefresh(AppRoutes.adminTools),
                       ),
                   ]),
               ],
             ),
           ),
-          Container(
+          Padding(
             padding: const EdgeInsets.all(16),
             child: InkWell(
-              onTap: () async => await authProvider.signOut(),
+              onTap: () => authProvider.signOut(),
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   borderRadius: BorderRadius.circular(10),
@@ -342,7 +836,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.logout, color: Colors.red.shade600, size: 20),
+                    Icon(Icons.logout, color: Colors.red.shade600, size: 18),
                     const SizedBox(width: 8),
                     Text(
                       'Logout',
@@ -363,7 +857,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNavSection(String title, List<_NavItem> items) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -373,11 +867,11 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.grey.shade500,
-              letterSpacing: 1.2,
+              letterSpacing: 1.1,
             ),
           ),
-          const SizedBox(height: 8),
-          ...items.map((item) => _buildNavTile(item)),
+          const SizedBox(height: 6),
+          ...items.map(_buildNavTile),
         ],
       ),
     );
@@ -425,7 +919,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWebTopBar(BuildContext context, dynamic user) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -443,175 +937,26 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 'Welcome back,',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
               Text(
                 user.name,
                 style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.verified_user,
-                      size: 14,
-                      color: Colors.blue.shade700,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getRoleDisplayName(user.role),
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
           ),
           const Spacer(),
-          // Real-time Clock
+          IconButton(
+            onPressed: _loadTodayStats,
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh Stats',
+          ),
+          const SizedBox(width: 8),
           const _RealtimeClock(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStatsRow(BuildContext context) {
-    return _TodayStatsRow(formatCurrency: _formatCurrency);
-  }
-
-  Widget _buildMobileLayout(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.grey.shade50, Colors.white],
-        ),
-      ),
-      child: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          final user = authProvider.currentUser;
-          if (user == null) return const SizedBox();
-
-          final moduleCards = _buildModuleCards(context, user);
-
-          return ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.blue.shade600, Colors.blue.shade800],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      'Welcome Back',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.name,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _getRoleDisplayName(user.role),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.9,
-                          ),
-                      itemCount: moduleCards.length.isOdd
-                          ? moduleCards.length - 1
-                          : moduleCards.length,
-                      itemBuilder: (context, index) {
-                        final card = moduleCards[index];
-                        return _ModuleCard(
-                          title: card.title,
-                          icon: card.icon,
-                          color: card.color,
-                          onTap: card.onTap,
-                        );
-                      },
-                    ),
-                    if (moduleCards.length.isOdd) ...[
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: MediaQuery.of(context).size.width / 2 * 0.9,
-                        child: _ModuleCard(
-                          title: moduleCards.last.title,
-                          icon: moduleCards.last.icon,
-                          color: moduleCards.last.color,
-                          onTap: moduleCards.last.onTap,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }
@@ -619,33 +964,34 @@ class _HomeScreenState extends State<HomeScreen> {
   List<_ModuleCardData> _buildModuleCards(BuildContext context, dynamic user) {
     final moduleCards = <_ModuleCardData>[];
 
+    if (user.hasPermission(Permission.products)) {
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Sales',
+          subtitle: 'বিক্রি ও ইনভয়েস',
+          icon: Icons.point_of_sale_rounded,
+          color: Colors.purple.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.sales),
+        ),
+      );
+    }
     if (user.hasPermission(Permission.customers)) {
       moduleCards.add(
         _ModuleCardData(
           title: 'Customers',
-          icon: Icons.people,
-          color: Colors.blue,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.customers),
+          subtitle: 'গ্রাহক তালিকা',
+          icon: Icons.people_alt_rounded,
+          color: Colors.blue.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.customers),
         ),
       );
-    }
-    if (user.hasPermission(Permission.msfTransactions)) {
       moduleCards.add(
         _ModuleCardData(
-          title: 'Wallets',
-          icon: Icons.account_balance_wallet,
-          color: Colors.green,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.wallets),
-        ),
-      );
-    }
-    if (user.hasPermission(Permission.reports)) {
-      moduleCards.add(
-        _ModuleCardData(
-          title: 'Daily Closing',
-          icon: Icons.summarize,
-          color: Colors.deepOrange,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.dailyClosing),
+          title: 'Due Tracker',
+          subtitle: 'বকেয়া ও আদায়',
+          icon: Icons.account_balance_rounded,
+          color: Colors.indigo.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.customerDueTracker),
         ),
       );
     }
@@ -654,19 +1000,21 @@ class _HomeScreenState extends State<HomeScreen> {
       moduleCards.add(
         _ModuleCardData(
           title: 'Inventory',
-          icon: Icons.inventory_2,
-          color: Colors.teal,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.inventory),
+          subtitle: 'পণ্য ও সার্ভিস স্টক',
+          icon: Icons.inventory_2_rounded,
+          color: Colors.teal.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.inventory),
         ),
       );
     }
-    if (user.hasPermission(Permission.products)) {
+    if (user.hasPermission(Permission.msfTransactions)) {
       moduleCards.add(
         _ModuleCardData(
-          title: 'Sales',
-          icon: Icons.point_of_sale,
-          color: Colors.purple,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.sales),
+          title: 'Wallets',
+          subtitle: 'বিকাশ / নগদ / ক্যাশ',
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.green.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.wallets),
         ),
       );
     }
@@ -674,39 +1022,48 @@ class _HomeScreenState extends State<HomeScreen> {
       moduleCards.add(
         _ModuleCardData(
           title: 'Expenses',
-          icon: Icons.receipt_long,
-          color: Colors.red,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.expenses),
+          subtitle: 'দোকান ও অন্যান্য খরচ',
+          icon: Icons.receipt_long_rounded,
+          color: Colors.red.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.expenses),
         ),
       );
-    }
-    if (user.hasPermission(Permission.reports)) {
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Daily Closing',
+          subtitle: 'দৈনিক ক্যাশ ক্লোজিং',
+          icon: Icons.summarize_rounded,
+          color: Colors.deepOrange.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.dailyClosing),
+        ),
+      );
       moduleCards.add(
         _ModuleCardData(
           title: 'Reports',
-          icon: Icons.analytics,
-          color: Colors.orange,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.reports),
+          subtitle: 'লাভ ও হিসাব রিপোর্ট',
+          icon: Icons.analytics_rounded,
+          color: Colors.orange.shade800,
+          onTap: () => _navigateAndRefresh(AppRoutes.reports),
+        ),
+      );
+      moduleCards.add(
+        _ModuleCardData(
+          title: 'Profit Deduction',
+          subtitle: 'লাভ সমন্বয়',
+          icon: Icons.trending_down_rounded,
+          color: Colors.amber.shade800,
+          onTap: () => _navigateAndRefresh(AppRoutes.profitDeduction),
         ),
       );
     }
     if (user.hasPermission(Permission.userManagement)) {
       moduleCards.add(
         _ModuleCardData(
-          title: 'User Management',
-          icon: Icons.admin_panel_settings,
-          color: Colors.indigo,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.users),
-        ),
-      );
-    }
-    if (user.hasPermission(Permission.reports)) {
-      moduleCards.add(
-        _ModuleCardData(
-          title: 'Profit Deduction',
-          icon: Icons.trending_down,
-          color: Colors.amber,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.profitDeduction),
+          title: 'Users',
+          subtitle: 'অ্যাডমিন ও পারমিশন',
+          icon: Icons.admin_panel_settings_rounded,
+          color: Colors.blueGrey.shade700,
+          onTap: () => _navigateAndRefresh(AppRoutes.users),
         ),
       );
     }
@@ -714,9 +1071,10 @@ class _HomeScreenState extends State<HomeScreen> {
       moduleCards.add(
         _ModuleCardData(
           title: 'Admin Tools',
-          icon: Icons.build,
-          color: Colors.red.shade700,
-          onTap: () => Navigator.pushNamed(context, AppRoutes.adminTools),
+          subtitle: 'ডাটাবেস ও টুলস',
+          icon: Icons.build_circle_rounded,
+          color: Colors.red.shade800,
+          onTap: () => _navigateAndRefresh(AppRoutes.adminTools),
         ),
       );
     }
@@ -735,89 +1093,216 @@ class _NavItem {
 
 class _ModuleCardData {
   final String title;
+  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   _ModuleCardData({
     required this.title,
+    required this.subtitle,
     required this.icon,
     required this.color,
     required this.onTap,
   });
 }
 
-class _ModuleCard extends StatefulWidget {
+class _CompactStatTile extends StatelessWidget {
   final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CompactStatTile({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickShortcutButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickShortcutButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   const _ModuleCard({
     required this.title,
+    required this.subtitle,
     required this.icon,
     required this.color,
     required this.onTap,
   });
 
   @override
-  State<_ModuleCard> createState() => _ModuleCardState();
-}
-
-class _ModuleCardState extends State<_ModuleCard> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: widget.onTap,
-      onHover: (hovered) => setState(() => _isHovered = hovered),
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedScale(
-        scale: _isHovered ? 1.02 : 1.0,
-        duration: const Duration(milliseconds: 200),
-        child: Card(
-          elevation: _isHovered ? 6 : 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Colors.white, Colors.grey.shade50],
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        widget.color.withOpacity(0.3),
-                        widget.color.withOpacity(0.1),
-                      ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    shape: BoxShape.circle,
+                    child: Icon(icon, size: 24, color: color),
                   ),
-                  child: Icon(widget.icon, size: 40, color: widget.color),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  widget.title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 13,
+                    color: Colors.grey.shade400,
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -827,12 +1312,14 @@ class _ModuleCardState extends State<_ModuleCard> {
 
 class _WebModuleCard extends StatefulWidget {
   final String title;
+  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   const _WebModuleCard({
     required this.title,
+    required this.subtitle,
     required this.icon,
     required this.color,
     required this.onTap,
@@ -852,58 +1339,62 @@ class _WebModuleCardState extends State<_WebModuleCard> {
       onHover: (hovered) => setState(() => _isHovered = hovered),
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? widget.color.withOpacity(0.3)
+                  ? widget.color.withValues(alpha: 0.22)
                   : Colors.grey.shade200,
-              blurRadius: _isHovered ? 16 : 8,
-              offset: const Offset(0, 4),
+              blurRadius: _isHovered ? 14 : 6,
+              offset: const Offset(0, 3),
             ),
           ],
           border: Border.all(
             color: _isHovered
-                ? widget.color.withOpacity(0.5)
-                : Colors.transparent,
-            width: 2,
+                ? widget.color.withValues(alpha: 0.45)
+                : Colors.grey.shade200,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(widget.icon, size: 32, color: widget.color),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: widget.color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(height: 14),
-              Text(
-                widget.title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+              child: Icon(widget.icon, size: 28, color: widget.color),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(height: 2),
+                Text(
+                  widget.subtitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Real-time Clock Widget
 class _RealtimeClock extends StatefulWidget {
   const _RealtimeClock();
 
@@ -918,13 +1409,10 @@ class _RealtimeClockState extends State<_RealtimeClock> {
   @override
   void initState() {
     super.initState();
-    _currentTime = DateTime.now();
-    // Update every second
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _currentTime = AppTime.businessNow();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        setState(() {
-          _currentTime = DateTime.now();
-        });
+        setState(() => _currentTime = AppTime.businessNow());
       }
     });
   }
@@ -937,16 +1425,14 @@ class _RealtimeClockState extends State<_RealtimeClock> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('EEEE, MMMM d, yyyy');
+    final dateFormat = DateFormat('EEE, MMM d, yyyy');
     final timeFormat = DateFormat('hh:mm:ss a');
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.indigo.shade50, Colors.purple.shade50],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.indigo.shade50,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.indigo.shade100),
       ),
       child: Row(
@@ -955,153 +1441,29 @@ class _RealtimeClockState extends State<_RealtimeClock> {
           Icon(
             Icons.access_time_rounded,
             color: Colors.indigo.shade600,
-            size: 24,
+            size: 20,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 dateFormat.format(_currentTime),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
               ),
-              const SizedBox(height: 2),
               Text(
                 timeFormat.format(_currentTime),
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.indigo.shade700,
-                  fontFamily: 'monospace',
-                  letterSpacing: 1,
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Today's Stats Row - Uses ReportsService (same as Reports screen)
-class _TodayStatsRow extends StatefulWidget {
-  final String Function(double) formatCurrency;
-
-  const _TodayStatsRow({required this.formatCurrency});
-
-  @override
-  State<_TodayStatsRow> createState() => _TodayStatsRowState();
-}
-
-class _TodayStatsRowState extends State<_TodayStatsRow> {
-  final ReportsService _reportsService = ReportsService();
-
-  double _todaySales = 0;
-  double _todayDuesAdded = 0;
-  double _todayCollections = 0;
-  double _todayExpenses = 0;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTodayStats();
-  }
-
-  Future<void> _loadTodayStats() async {
-    try {
-      // Use the EXACT same service and method as Reports screen
-      final summary = await _reportsService.getSummary(DateFilter.today);
-
-      // Get today's sales separately
-      final now = DateTime.now();
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
-
-      final salesSnapshot = await FirebaseFirestore.instance
-          .collection('sales')
-          .where(
-            'saleDate',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart),
-          )
-          .where('saleDate', isLessThanOrEqualTo: Timestamp.fromDate(todayEnd))
-          .get();
-
-      double totalSales = 0;
-      for (var doc in salesSnapshot.docs) {
-        final data = doc.data();
-        final totalSelling = (data['totalSelling'] as num?)?.toDouble() ?? 0;
-        final discountAmount =
-            (data['discountAmount'] as num?)?.toDouble() ?? 0;
-        totalSales += (totalSelling - discountAmount);
-      }
-
-      if (mounted) {
-        setState(() {
-          _todaySales = totalSales;
-          _todayDuesAdded = summary.totalDuesAdded;
-          _todayCollections = summary.totalCollections;
-          _todayExpenses =
-              (summary.expenseStats?['totalExpenses'] as num?)?.toDouble() ?? 0;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading today stats: $e');
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            title: 'Today\'s Sales',
-            value: _isLoading ? '...' : widget.formatCurrency(_todaySales),
-            icon: Icons.point_of_sale,
-            color: Colors.green,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Due Added',
-            value: _isLoading ? '...' : widget.formatCurrency(_todayDuesAdded),
-            icon: Icons.add_circle_outline,
-            color: Colors.red,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Due Collection',
-            value: _isLoading
-                ? '...'
-                : widget.formatCurrency(_todayCollections),
-            icon: Icons.payments_outlined,
-            color: Colors.blue,
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: _StatCard(
-            title: 'Expenses',
-            value: _isLoading ? '...' : widget.formatCurrency(_todayExpenses),
-            icon: Icons.receipt_long,
-            color: Colors.orange,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1122,42 +1484,36 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: 26),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
                   ),

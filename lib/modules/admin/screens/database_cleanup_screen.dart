@@ -143,7 +143,7 @@ class _DatabaseCleanupScreenState extends State<DatabaseCleanupScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Confirm Deletion'),
         content: Text(
-          'Are you sure you want to delete ${selected.length} ${_activeModule} record(s)?\n\nThis action cannot be undone!',
+          'Are you sure you want to delete ${selected.length} $_activeModule record(s)?\n\nThis action cannot be undone!',
           style: const TextStyle(
             color: Colors.red,
             fontWeight: FontWeight.bold,
@@ -221,7 +221,7 @@ class _DatabaseCleanupScreenState extends State<DatabaseCleanupScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Confirm Date Range Deletion'),
         content: Text(
-          'Delete ${dateRangeRecords.length} ${_activeModule} record(s) from ${_selectedStartDate?.toString().split(' ')[0] ?? 'start'} to ${_selectedEndDate?.toString().split(' ')[0] ?? 'end'}?\n\nThis action cannot be undone!',
+          'Delete ${dateRangeRecords.length} $_activeModule record(s) from ${_selectedStartDate?.toString().split(' ')[0] ?? 'start'} to ${_selectedEndDate?.toString().split(' ')[0] ?? 'end'}?\n\nThis action cannot be undone!',
           style: const TextStyle(
             color: Colors.red,
             fontWeight: FontWeight.bold,
@@ -283,7 +283,7 @@ class _DatabaseCleanupScreenState extends State<DatabaseCleanupScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Confirm Delete All'),
         content: Text(
-          'Delete ALL ${_allRecords[_activeModule]?.length ?? 0} ${_activeModule} record(s)?\n\nThis action CANNOT be undone!',
+          'Delete ALL ${_allRecords[_activeModule]?.length ?? 0} $_activeModule record(s)?\n\nThis action CANNOT be undone!',
           style: const TextStyle(
             color: Colors.red,
             fontWeight: FontWeight.bold,
@@ -322,7 +322,7 @@ class _DatabaseCleanupScreenState extends State<DatabaseCleanupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('All ${_activeModule} records deleted'),
+            content: Text('All $_activeModule records deleted'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -697,7 +697,7 @@ class _DatabaseCleanupScreenState extends State<DatabaseCleanupScreen> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

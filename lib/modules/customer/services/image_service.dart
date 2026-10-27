@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -71,7 +72,7 @@ class ImageService {
       await ref.delete();
     } catch (e) {
       // Image might not exist or already deleted
-      print('Failed to delete image: $e');
+      debugPrint('Failed to delete image: $e');
     }
   }
 

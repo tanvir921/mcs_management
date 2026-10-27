@@ -6,20 +6,29 @@ import '../../wallet/models/wallet_type.dart';
 import '../../wallet/models/wallet_transaction.dart';
 import '../../sales/services/sales_service.dart';
 import '../../../core/errors/app_exceptions.dart';
+import '../../../core/utils/app_time.dart';
 
 class DailyClosingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final SalesService _salesService = SalesService();
   static const String _closingCollection = 'daily_closing';
 
+  Map<String, DateTime> _getTodayRangeUtc() {
+    final now = AppTime.businessNow();
+    return {
+      'start': AppTime.startOfBusinessDayUtc(now),
+      'end': AppTime.endOfBusinessDayUtc(now),
+    };
+  }
+
   /// Calculate today's sales total and profit
   Future<(double total, double profit)> calculateTodaysSalesSummary(
     String userId,
   ) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       final sales = await _salesService.getAllSales(
         startDate: startOfDay,
@@ -43,17 +52,9 @@ class DailyClosingService {
   /// Calculate today's MSF recharge from due_transactions
   Future<double> calculateTodaysMSFRecharge(String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(
-        today.year,
-        today.month,
-        today.day,
-        23,
-        59,
-        59,
-        999,
-      );
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       debugPrint('🔍 MSF: Querying from $startOfDay to $endOfDay');
 
@@ -76,6 +77,7 @@ class DailyClosingService {
         // Safe access with null checks
         final dueType = data['dueType'];
         final amount = data['amount'];
+        // ignore: unused_local_variable
         final isAddition = data['isAddition'];
 
         debugPrint(
@@ -103,17 +105,9 @@ class DailyClosingService {
   /// Calculate today's cash borrow due from due_transactions
   Future<double> calculateTodaysCashBorrowDue(String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(
-        today.year,
-        today.month,
-        today.day,
-        23,
-        59,
-        59,
-        999,
-      );
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       debugPrint('🔍 CashBorrow: Querying from $startOfDay to $endOfDay');
 
@@ -135,6 +129,7 @@ class DailyClosingService {
         // Safe access with null checks
         final dueType = data['dueType'];
         final amount = data['amount'];
+        // ignore: unused_local_variable
         final isAddition = data['isAddition'];
 
         if (dueType is String && amount is num) {
@@ -160,17 +155,9 @@ class DailyClosingService {
   /// Calculate today's expenses
   Future<double> calculateTodaysExpenses(String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(
-        today.year,
-        today.month,
-        today.day,
-        23,
-        59,
-        59,
-        999,
-      );
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       Query query = _firestore
           .collection('expenses')
@@ -195,17 +182,9 @@ class DailyClosingService {
   /// Calculate today's total due collections (payments received from customers)
   Future<double> calculateTotalDueCollections(String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(
-        today.year,
-        today.month,
-        today.day,
-        23,
-        59,
-        59,
-        999,
-      );
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       final snapshot = await _firestore
           .collection('due_transactions')
@@ -220,6 +199,7 @@ class DailyClosingService {
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final amount = data['amount'];
+        // ignore: unused_local_variable
         final isAddition = data['isAddition'];
 
         // Collections: payments received (isAddition=false)
@@ -240,17 +220,9 @@ class DailyClosingService {
   /// Calculate today's profit from due clear
   Future<double> calculateTodaysDueClearProfit(String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(
-        today.year,
-        today.month,
-        today.day,
-        23,
-        59,
-        59,
-        999,
-      );
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       final snapshot = await _firestore
           .collection('due_transactions')
@@ -770,7 +742,7 @@ class DailyClosingService {
       // Calculate total profit (includes sales profit, optional profit entries, and due clear profit)
       final optionalProfit = profitEntries.fold<double>(
         0,
-        (sum, entry) => sum + entry.amount,
+        (acc, entry) => acc + entry.amount,
       );
       final totalProfit = todaysSalesProfit + optionalProfit + dueClearProfit;
 
@@ -1033,14 +1005,26 @@ class DailyClosingService {
     int limit = 30,
   }) async {
     try {
-      final snapshot = await _firestore
+      final primarySnapshot = await _firestore
           .collection(_closingCollection)
           .where('isUploaded', isEqualTo: true)
           .orderBy('closingDate', descending: true)
           .limit(limit)
           .get();
 
-      return snapshot.docs
+      if (primarySnapshot.docs.isNotEmpty) {
+        return primarySnapshot.docs
+            .map((doc) => DailyClosing.fromJson(doc.data()))
+            .toList();
+      }
+
+      final fallbackSnapshot = await _firestore
+          .collection(_closingCollection)
+          .orderBy('closingDate', descending: true)
+          .limit(limit)
+          .get();
+
+      return fallbackSnapshot.docs
           .map((doc) => DailyClosing.fromJson(doc.data()))
           .toList();
     } catch (e) {
@@ -1051,9 +1035,9 @@ class DailyClosingService {
   /// Check if closing already exists for today (shared across all users)
   Future<DailyClosing?> getTodaysClosing(String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day);
-      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+      final range = _getTodayRangeUtc();
+      final startOfDay = range['start']!;
+      final endOfDay = range['end']!;
 
       final snapshot = await _firestore
           .collection(_closingCollection)

@@ -6,6 +6,7 @@ import 'dart:io';
 import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/app_time.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -21,10 +22,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _notesController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
 
-  DateTime _expenseDate = DateTime.now();
+  DateTime _expenseDate = AppTime.businessNow();
   String _category = 'personal';
   String _paymentMethod = 'cash';
-  List<File> _selectedPhotos = [];
+  final List<File> _selectedPhotos = [];
   bool _isSubmitting = false;
 
   final List<Map<String, dynamic>> categories = [
@@ -63,11 +64,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _selectDate() async {
+    final now = AppTime.businessNow();
+    final pickerDate = DateTime(
+      _expenseDate.year,
+      _expenseDate.month,
+      _expenseDate.day,
+    );
     final picked = await showDatePicker(
       context: context,
-      initialDate: _expenseDate,
+      initialDate: pickerDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: DateTime(now.year, now.month, now.day),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -78,7 +85,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       },
     );
     if (picked != null) {
-      setState(() => _expenseDate = picked);
+      setState(() => _expenseDate = DateTime.utc(
+            picked.year,
+            picked.month,
+            picked.day,
+          ));
     }
   }
 
@@ -135,7 +146,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         receiptPhotos: [],
         createdBy: currentUser.id,
         createdByName: currentUser.name,
-        createdAt: DateTime.now(),
+        createdAt: AppTime.utcNow(),
       );
 
       final expenseProvider = context.read<ExpenseProvider>();
@@ -376,8 +387,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           gradient: isSelected
               ? LinearGradient(
                   colors: [
-                    category['color'].withOpacity(0.1),
-                    category['color'].withOpacity(0.05),
+                    category['color'].withValues(alpha: 0.1),
+                    category['color'].withValues(alpha: 0.05),
                   ],
                 )
               : null,
@@ -389,7 +400,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: category['color'].withOpacity(0.15),
+                color: category['color'].withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(category['icon'], color: category['color'], size: 28),
@@ -578,8 +589,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
-          color: color.withOpacity(0.08),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+          color: color.withValues(alpha: 0.08),
         ),
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(

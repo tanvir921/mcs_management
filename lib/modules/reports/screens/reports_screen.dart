@@ -7,6 +7,7 @@ import '../services/reports_service.dart';
 import '../../sales/providers/sales_provider.dart';
 import '../../customer/providers/customer_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/app_time.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -23,34 +24,45 @@ class _ReportsScreenState extends State<ReportsScreen>
   late TabController _tabController;
 
   Future<double> _getOptionalProfits() async {
-    final now = DateTime.now();
+    final now = AppTime.businessNow();
     late DateTime startDate;
     late DateTime endDate;
 
     switch (_filter) {
       case DateFilter.today:
-        startDate = DateTime(now.year, now.month, now.day);
-        endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day),
+        );
+        endDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day, 23, 59, 59, 999),
+        );
         break;
       case DateFilter.yesterday:
         final yesterday = now.subtract(const Duration(days: 1));
-        startDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
-        endDate = DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          23,
-          59,
-          59,
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(yesterday.year, yesterday.month, yesterday.day),
+        );
+        endDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(
+            yesterday.year,
+            yesterday.month,
+            yesterday.day,
+            23,
+            59,
+            59,
+            999,
+          ),
         );
         break;
       case DateFilter.thisMonth:
-        startDate = DateTime(now.year, now.month, 1);
-        endDate = now;
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, 1),
+        );
+        endDate = AppTime.toUtcFromBusiness(now);
         break;
       case DateFilter.thisYear:
-        startDate = DateTime(now.year, 1, 1);
-        endDate = now;
+        startDate = AppTime.toUtcFromBusiness(DateTime.utc(now.year, 1, 1));
+        endDate = AppTime.toUtcFromBusiness(now);
         break;
     }
 
@@ -84,34 +96,45 @@ class _ReportsScreenState extends State<ReportsScreen>
   }
 
   (DateTime, DateTime) _getDateRange() {
-    final now = DateTime.now();
+    final now = AppTime.businessNow();
     late DateTime startDate;
     late DateTime endDate;
 
     switch (_filter) {
       case DateFilter.today:
-        startDate = DateTime(now.year, now.month, now.day);
-        endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day),
+        );
+        endDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day, 23, 59, 59, 999),
+        );
         break;
       case DateFilter.yesterday:
         final yesterday = now.subtract(const Duration(days: 1));
-        startDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
-        endDate = DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          23,
-          59,
-          59,
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(yesterday.year, yesterday.month, yesterday.day),
+        );
+        endDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(
+            yesterday.year,
+            yesterday.month,
+            yesterday.day,
+            23,
+            59,
+            59,
+            999,
+          ),
         );
         break;
       case DateFilter.thisMonth:
-        startDate = DateTime(now.year, now.month, 1);
-        endDate = now;
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, 1),
+        );
+        endDate = AppTime.toUtcFromBusiness(now);
         break;
       case DateFilter.thisYear:
-        startDate = DateTime(now.year, 1, 1);
-        endDate = now;
+        startDate = AppTime.toUtcFromBusiness(DateTime.utc(now.year, 1, 1));
+        endDate = AppTime.toUtcFromBusiness(now);
         break;
     }
     return (startDate, endDate);
@@ -148,34 +171,45 @@ class _ReportsScreenState extends State<ReportsScreen>
     context.read<CustomerProvider>().loadCustomers();
 
     final salesProvider = context.read<SalesProvider>();
-    final now = DateTime.now();
+    final now = AppTime.businessNow();
     DateTime? startDate;
     DateTime? endDate;
 
     switch (_filter) {
       case DateFilter.today:
-        startDate = DateTime(now.year, now.month, now.day);
-        endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day),
+        );
+        endDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, now.day, 23, 59, 59, 999),
+        );
         break;
       case DateFilter.yesterday:
         final yesterday = now.subtract(const Duration(days: 1));
-        startDate = DateTime(yesterday.year, yesterday.month, yesterday.day);
-        endDate = DateTime(
-          yesterday.year,
-          yesterday.month,
-          yesterday.day,
-          23,
-          59,
-          59,
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(yesterday.year, yesterday.month, yesterday.day),
+        );
+        endDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(
+            yesterday.year,
+            yesterday.month,
+            yesterday.day,
+            23,
+            59,
+            59,
+            999,
+          ),
         );
         break;
       case DateFilter.thisMonth:
-        startDate = DateTime(now.year, now.month, 1);
-        endDate = now;
+        startDate = AppTime.toUtcFromBusiness(
+          DateTime.utc(now.year, now.month, 1),
+        );
+        endDate = AppTime.toUtcFromBusiness(now);
         break;
       case DateFilter.thisYear:
-        startDate = DateTime(now.year, 1, 1);
-        endDate = now;
+        startDate = AppTime.toUtcFromBusiness(DateTime.utc(now.year, 1, 1));
+        endDate = AppTime.toUtcFromBusiness(now);
         break;
     }
 
@@ -190,15 +224,16 @@ class _ReportsScreenState extends State<ReportsScreen>
   }
 
   String _getFilterLabel() {
+    final now = AppTime.businessNow();
     switch (_filter) {
       case DateFilter.today:
-        return 'Today - ${DateFormat('MMM d, yyyy').format(DateTime.now())}';
+        return 'Today - ${DateFormat('MMM d, yyyy').format(now)}';
       case DateFilter.yesterday:
-        return 'Yesterday - ${DateFormat('MMM d, yyyy').format(DateTime.now().subtract(const Duration(days: 1)))}';
+        return 'Yesterday - ${DateFormat('MMM d, yyyy').format(now.subtract(const Duration(days: 1)))}';
       case DateFilter.thisMonth:
-        return DateFormat('MMMM yyyy').format(DateTime.now());
+        return DateFormat('MMMM yyyy').format(now);
       case DateFilter.thisYear:
-        return 'Year ${DateTime.now().year}';
+        return 'Year ${now.year}';
     }
   }
 
@@ -266,7 +301,7 @@ class _ReportsScreenState extends State<ReportsScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -282,7 +317,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                   gradient: LinearGradient(
                     colors: [
                       colorScheme.primary,
-                      colorScheme.primary.withOpacity(0.8),
+                      colorScheme.primary.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -504,7 +539,7 @@ class _ReportsScreenState extends State<ReportsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: (isPositive ? Colors.green : Colors.red).withOpacity(0.3),
+            color: (isPositive ? Colors.green : Colors.red).withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -519,14 +554,14 @@ class _ReportsScreenState extends State<ReportsScreen>
                 isPositive
                     ? Icons.trending_up_rounded
                     : Icons.trending_down_rounded,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 'Net Cash Flow',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -546,7 +581,7 @@ class _ReportsScreenState extends State<ReportsScreen>
           Text(
             isPositive ? 'Positive cash position' : 'Negative cash position',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 12,
             ),
           ),
@@ -889,7 +924,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withOpacity(0.3),
+                            color: Colors.red.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -909,7 +944,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                               Text(
                                 'Grand Total Outstanding',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 14,
                                 ),
                               ),
@@ -927,7 +962,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                           Text(
                             '${customerProvider.customers.where((c) => c.totalDue > 0).length} customers',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 14,
                             ),
                           ),
@@ -1117,7 +1152,7 @@ class _ReportsScreenState extends State<ReportsScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.3),
+                  color: Colors.red.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -1128,7 +1163,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(
@@ -1144,7 +1179,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                     Text(
                       'Total Expenses',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 16,
                       ),
                     ),
@@ -1165,7 +1200,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                     Text(
                       '${expenseStats['totalCount'] ?? 0} transactions',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                       ),
                     ),
@@ -1173,7 +1208,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                     Text(
                       _getFilterLabel(),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
                       ),
                     ),
@@ -1293,7 +1328,7 @@ class _ReportsScreenState extends State<ReportsScreen>
               color: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -1316,10 +1351,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.2),
+                      color: colorScheme.primary.withValues(alpha: 0.2),
                     ),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -1373,8 +1408,9 @@ class _ReportsScreenState extends State<ReportsScreen>
     return FutureBuilder<ReportsSummary>(
       future: _future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
+        }
         if (snapshot.hasError) return _buildErrorState(snapshot.error);
         final summary = snapshot.data;
         if (summary == null) return const Center(child: Text('No data'));
@@ -1703,7 +1739,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onPressed,
@@ -1755,7 +1791,7 @@ class _QuickStatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -1814,7 +1850,7 @@ class _WebStatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1825,7 +1861,7 @@ class _WebStatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -1879,7 +1915,7 @@ class _WebDetailCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1895,7 +1931,7 @@ class _WebDetailCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (headerColor ?? Colors.grey).withOpacity(0.1),
+                    color: (headerColor ?? Colors.grey).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -1954,7 +1990,7 @@ class _WebDetailRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 18),
@@ -2031,7 +2067,7 @@ class _SectionHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -2073,7 +2109,7 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -2085,12 +2121,12 @@ class _StatCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: Colors.white.withOpacity(0.9), size: 28),
+            Icon(icon, color: Colors.white.withValues(alpha: 0.9), size: 28),
             const Spacer(),
             Text(
               title,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -2128,7 +2164,7 @@ class _DetailCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -2164,7 +2200,7 @@ class _DetailRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 20),

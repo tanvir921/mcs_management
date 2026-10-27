@@ -16,10 +16,16 @@ class SalesProvider extends ChangeNotifier {
   Map<String, dynamic>? get stats => _stats;
 
   // Create sale
-  Future<String> createSale(Sale sale) async {
+  Future<String> createSale(
+    Sale sale, {
+    bool preserveCreatedAt = false,
+  }) async {
     try {
       _error = null;
-      final saleId = await _service.createSale(sale);
+      final saleId = await _service.createSale(
+        sale,
+        preserveCreatedAt: preserveCreatedAt,
+      );
       return saleId;
     } catch (e) {
       _error = e.toString();

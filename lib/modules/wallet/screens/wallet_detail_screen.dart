@@ -299,7 +299,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: balanceColor.withOpacity(0.2),
+                            color: balanceColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

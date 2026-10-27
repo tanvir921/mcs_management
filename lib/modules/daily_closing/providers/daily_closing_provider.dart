@@ -162,13 +162,18 @@ class DailyClosingProvider extends ChangeNotifier {
     _isLoadingHistory = true;
     _isLoading = true;
     _error = null;
+    debugPrint('[DailyClosing] loadClosingHistory start userId=$userId');
     _safeNotifyListeners();
 
     try {
       _closingHistory = await _service.getUserClosingHistory(userId);
       _error = null;
+      debugPrint(
+        '[DailyClosing] loadClosingHistory success count=${_closingHistory.length}',
+      );
     } catch (e) {
       _error = e.toString();
+      debugPrint('[DailyClosing] loadClosingHistory error=$e');
     } finally {
       _isLoading = false;
       _isLoadingHistory = false;

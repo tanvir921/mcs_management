@@ -4,9 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../services/daily_closing_service.dart';
+import '../../../core/utils/app_time.dart';
 
 class ProfitDeductionScreen extends StatefulWidget {
-  const ProfitDeductionScreen({Key? key}) : super(key: key);
+  const ProfitDeductionScreen({super.key});
 
   @override
   State<ProfitDeductionScreen> createState() => _ProfitDeductionScreenState();
@@ -23,7 +24,8 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    final now = AppTime.businessNow();
+    _selectedMonth = DateTime.utc(now.year, now.month, 1);
   }
 
   @override
@@ -72,15 +74,19 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
           (walletData['permanentBalance'] as num?)?.toDouble() ?? 0.0;
 
       // Get balance history records for this month
-      final startOfMonth = DateTime(
-        _selectedMonth.year,
-        _selectedMonth.month,
-        1,
+      final startOfMonth = AppTime.toUtcFromBusiness(
+        DateTime.utc(
+          _selectedMonth.year,
+          _selectedMonth.month,
+          1,
+        ),
       );
-      final endOfMonth = DateTime(
-        _selectedMonth.year,
-        _selectedMonth.month + 1,
-        0,
+      final endOfMonth = AppTime.toUtcFromBusiness(
+        DateTime.utc(
+          _selectedMonth.year,
+          _selectedMonth.month + 1,
+          1,
+        ).subtract(const Duration(milliseconds: 1)),
       );
 
       final historySnapshot = await FirebaseFirestore.instance
@@ -117,7 +123,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
 
         records.add({
           'id': doc.id,
-          'date': (data['changedAt'] as Timestamp).toDate(),
+          'date': AppTime.toBusiness((data['changedAt'] as Timestamp).toDate()),
           'amount': amount,
           'note': data['note'] ?? 'No note',
           'changedByName': data['changedByName'] ?? 'System',
@@ -182,7 +188,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
               'type': 'profitDeduction',
               'permanentBalance': amount,
               'temporaryBalance': 0,
-              'createdAt': Timestamp.now(),
+              'createdAt': Timestamp.fromDate(AppTime.utcNow()),
             });
         walletId = newWallet.id;
       } else {
@@ -202,7 +208,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
           .add({
             'balanceType': 'permanent',
             'change': amount,
-            'changedAt': Timestamp.now(),
+            'changedAt': Timestamp.fromDate(AppTime.utcNow()),
             'note': _noteController.text.isEmpty
                 ? 'Manual deduction'
                 : _noteController.text,
@@ -450,7 +456,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                   icon: const Icon(Icons.chevron_left),
                   onPressed: () {
                     setState(() {
-                      _selectedMonth = DateTime(
+                      _selectedMonth = DateTime.utc(
                         _selectedMonth.year,
                         _selectedMonth.month - 1,
                         1,
@@ -460,15 +466,20 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                 ),
                 GestureDetector(
                   onTap: () async {
+                    final now = AppTime.businessNow();
                     final pickedDate = await showDatePicker(
                       context: context,
-                      initialDate: _selectedMonth,
+                      initialDate: DateTime(
+                        _selectedMonth.year,
+                        _selectedMonth.month,
+                        1,
+                      ),
                       firstDate: DateTime(2020),
-                      lastDate: DateTime.now(),
+                      lastDate: DateTime(now.year, now.month, now.day),
                     );
                     if (pickedDate != null) {
                       setState(() {
-                        _selectedMonth = DateTime(
+                        _selectedMonth = DateTime.utc(
                           pickedDate.year,
                           pickedDate.month,
                           1,
@@ -485,10 +496,10 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right),
-                  onPressed: _selectedMonth.month < DateTime.now().month
+                  onPressed: _selectedMonth.month < AppTime.businessNow().month
                       ? () {
                           setState(() {
-                            _selectedMonth = DateTime(
+                            _selectedMonth = DateTime.utc(
                               _selectedMonth.year,
                               _selectedMonth.month + 1,
                               1,
@@ -715,7 +726,7 @@ class _ProfitDeductionScreenState extends State<ProfitDeductionScreen> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                     const SizedBox(height: 16),
                   ],
                 );

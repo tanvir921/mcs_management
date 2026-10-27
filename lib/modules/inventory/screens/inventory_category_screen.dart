@@ -168,7 +168,7 @@ class _InventoryCategoryScreenState extends State<InventoryCategoryScreen>
                   if (isEditing) {
                     await inventory.updateCategory(
                       auth.currentUser!.id,
-                      category!.id,
+                      category.id,
                       nameController.text.trim(),
                       descriptionController.text.trim(),
                     );
@@ -542,7 +542,7 @@ class _CategoryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.teal.withOpacity(0.3),
+                      color: Colors.teal.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
