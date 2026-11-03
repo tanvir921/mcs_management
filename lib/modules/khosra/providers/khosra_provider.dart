@@ -220,8 +220,8 @@ class KhosraProvider extends ChangeNotifier {
 
   Future<KhosraEntry> addAday({
     required String customerName,
-    required String customerId,
-    required String dueRecordId,
+    String? customerId,
+    String? dueRecordId,
     required String dueCategory, // 'product' | 'cash_balance'
     required String rawDueType,
     required int amountPaisa,

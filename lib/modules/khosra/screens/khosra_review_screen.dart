@@ -105,6 +105,103 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
     return warnings;
   }
 
+  Future<void> _promptAndConfirmSelected(
+    BuildContext context,
+    KhosraProvider provider,
+    int selectedCount,
+    int totalSellPaisa,
+    int newBakiPaisa,
+    int collectedPaisa,
+    int expensePaisa,
+  ) async {
+    if (selectedCount == 0) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.indigo.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.verified_outlined, color: Colors.indigo.shade800, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Text('হিসাব কনফার্মেশন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'নির্বাচিত $selectedCount টি খসড়া এন্ট্রি মূল সেলস, কাস্টমার বাকি, আদায় ও খরচে যুক্ত করা হবে।',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F8FA),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  _confirmRow('মোট বিক্রি:', KhosraMoney.formatPaisa(totalSellPaisa), Colors.teal.shade800),
+                  const SizedBox(height: 5),
+                  _confirmRow('নতুন বাকি:', KhosraMoney.formatPaisa(newBakiPaisa), Colors.deepOrange.shade800),
+                  const SizedBox(height: 5),
+                  _confirmRow('বাকি আদায়:', KhosraMoney.formatPaisa(collectedPaisa), Colors.blue.shade800),
+                  const SizedBox(height: 5),
+                  _confirmRow('মোট খরচ:', KhosraMoney.formatPaisa(expensePaisa), Colors.red.shade800),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'কনফার্ম করার পর এগুলো মূল লেজারে হিসাবভুক্ত হবে। আপনি কি নিশ্চিত?',
+              style: TextStyle(fontSize: 12.5, color: Colors.black54),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('ফিরে যান'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.indigo.shade800,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.check, size: 18),
+            label: const Text('হ্যাঁ, কনফার্ম করুন'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _confirmSelected(provider);
+    }
+  }
+
+  static Widget _confirmRow(String label, String value, Color color) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12.5, color: Colors.black87)),
+        Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
+      ],
+    );
+  }
+
   Future<void> _confirmSelected(KhosraProvider provider) async {
     final auth = context.read<AuthProvider>();
     final user = auth.currentUser;
@@ -199,7 +296,7 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
         backgroundColor: Colors.indigo.shade800,
         foregroundColor: Colors.white,
         actions: [
-          if (pending.isNotEmpty)
+          if (pending.isNotEmpty) ...[
             TextButton(
               onPressed: () => setState(() {
                 if (_selectedIds.length == pending.length) {
@@ -213,89 +310,207 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: FilledButton.tonal(
+                onPressed: (selectedEntries.isEmpty || provider.isCommitting || !canConfirm)
+                    ? null
+                    : () => _promptAndConfirmSelected(
+                          context,
+                          provider,
+                          selectedEntries.length,
+                          totalSellPaisa,
+                          newBakiPaisa,
+                          collectedPaisa,
+                          expensePaisa,
+                        ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.green.shade600,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                ),
+                child: provider.isCommitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text(
+                        'Confirm (${selectedEntries.length})',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
+          ],
         ],
       ),
-      body: pending.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: pending.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.verified_rounded, size: 56, color: Colors.green.shade600),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'সব খসড়া এন্ট্রি মূল হিসাবে যোগ করা হয়েছে!',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 6),
+                      TextButton.icon(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('খসড়া খাতায় ফিরে যান'),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(14),
+                  children: [
+                    // Top Action & Summary Banner (Replaces bottom confirm button)
+                    _buildTopConfirmHeader(
+                      context,
+                      provider: provider,
+                      canConfirm: canConfirm,
+                      selectedCount: selectedEntries.length,
+                      totalCount: pending.length,
+                      totalSellPaisa: totalSellPaisa,
+                      cashReceivedPaisa: cashReceivedPaisa,
+                      newBakiPaisa: newBakiPaisa,
+                      collectedPaisa: collectedPaisa,
+                      expensePaisa: expensePaisa,
+                    ),
+                    const SizedBox(height: 14),
+
+                    if (_lastCommitSummary != null && _lastCommitSummary!.hasFailures)
+                      _buildRetryBanner(provider, _lastCommitSummary!),
+                    if (warnings.isNotEmpty) _buildWarningsBox(warnings),
+
+                    for (final type in KhosraEntryType.values)
+                      _buildTypeGroupSection(
+                        context,
+                        type: type,
+                        entries: pending.where((e) => e.type == type).toList(),
+                        allPending: pending,
+                      ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopConfirmHeader(
+    BuildContext context, {
+    required KhosraProvider provider,
+    required bool canConfirm,
+    required int selectedCount,
+    required int totalCount,
+    required int totalSellPaisa,
+    required int cashReceivedPaisa,
+    required int newBakiPaisa,
+    required int collectedPaisa,
+    required int expensePaisa,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.indigo.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.indigo.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Icon(Icons.verified_rounded, size: 56, color: Colors.green.shade600),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'সব খসড়া এন্ট্রি মূল হিসাবে যোগ করা হয়েছে!',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.summarize_rounded, color: Colors.indigo.shade800, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'নির্বাচিত: $selectedCount / $totalCount টি এন্ট্রি',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                if (_lastCommitSummary != null && _lastCommitSummary!.hasFailures)
-                  _buildRetryBanner(provider, _lastCommitSummary!),
-                if (warnings.isNotEmpty) _buildWarningsBox(warnings),
-                for (final type in KhosraEntryType.values)
-                  _buildTypeGroupSection(
-                    context,
-                    type: type,
-                    entries: pending.where((e) => e.type == type).toList(),
-                    allPending: pending,
-                  ),
-              ],
-            ),
-      bottomNavigationBar: pending.isEmpty
-          ? null
-          : SafeArea(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              FilledButton.icon(
+                onPressed: (provider.isCommitting || selectedCount == 0 || !canConfirm)
+                    ? null
+                    : () => _promptAndConfirmSelected(
+                          context,
+                          provider,
+                          selectedCount,
+                          totalSellPaisa,
+                          newBakiPaisa,
+                          collectedPaisa,
+                          expensePaisa,
+                        ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        Text('বিক্রি: ${KhosraMoney.formatPaisa(totalSellPaisa)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        Text('নগদ: ${KhosraMoney.formatPaisa(cashReceivedPaisa)}', style: TextStyle(fontSize: 12, color: Colors.teal.shade800, fontWeight: FontWeight.bold)),
-                        Text('বকেয়া: ${KhosraMoney.formatPaisa(newBakiPaisa)}', style: TextStyle(fontSize: 12, color: Colors.deepOrange.shade800, fontWeight: FontWeight.bold)),
-                        Text('আদায়: ${KhosraMoney.formatPaisa(collectedPaisa)}', style: TextStyle(fontSize: 12, color: Colors.blue.shade800, fontWeight: FontWeight.bold)),
-                        Text('খরচ: ${KhosraMoney.formatPaisa(expensePaisa)}', style: TextStyle(fontSize: 12, color: Colors.red.shade800, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton.icon(
-                      onPressed: (provider.isCommitting || _selectedIds.isEmpty || !canConfirm)
-                          ? null
-                          : () => _confirmSelected(provider),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      icon: provider.isCommitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.done_all_rounded, size: 18),
-                      label: Text(
-                        !canConfirm
-                            ? 'Confirm করার অনুমতি নেই'
-                            : 'Confirm & Add (${_selectedIds.length} টি)',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
+                icon: provider.isCommitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.done_all_rounded, size: 18),
+                label: Text(
+                  !canConfirm
+                      ? 'অনুমতি নেই'
+                      : 'Confirm & Add ($selectedCount)',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              _metricChip('বিক্রি', KhosraMoney.formatPaisa(totalSellPaisa), Colors.teal.shade800),
+              _metricChip('নগদ জমা', KhosraMoney.formatPaisa(cashReceivedPaisa), Colors.green.shade800),
+              _metricChip('নতুন বাকি', KhosraMoney.formatPaisa(newBakiPaisa), Colors.deepOrange.shade800),
+              _metricChip('বাকি আদায়', KhosraMoney.formatPaisa(collectedPaisa), Colors.blue.shade800),
+              _metricChip('খরচ', KhosraMoney.formatPaisa(expensePaisa), Colors.red.shade800),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricChip(String label, String value, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$label: ', style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700)),
+        Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
+      ],
     );
   }
 
@@ -368,54 +583,65 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
     required List<KhosraEntry> allPending,
   }) {
     if (entries.isEmpty) return const SizedBox.shrink();
-    final subtotalPaisa = entries.fold<int>(0, (s, e) => s + e.amountPaisa);
+
+    final subtotal = entries.fold<int>(0, (s, e) => s + e.amountPaisa);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${type.shortLabel} (${entries.length})',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              Text(
-                KhosraMoney.formatPaisa(subtotalPaisa),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-            ],
-          ),
-          const Divider(height: 10),
-          ...entries.map((entry) {
-            final isChecked = _selectedIds.contains(entry.id);
-            final needsCustomerLink =
-                (entry.customerId == null || entry.customerId!.isEmpty) &&
-                (entry.type == KhosraEntryType.baki ||
-                    entry.type == KhosraEntryType.aday ||
-                    (entry.type == KhosraEntryType.sale && entry.duePaisa > 0) ||
-                    (entry.type == KhosraEntryType.sale &&
-                        entry.name != 'Walk-in' &&
-                        entry.name != 'Sale' &&
-                        entry.name != 'Photocopy'));
-            final bTime = AppTime.toBusiness(entry.createdAt);
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
+                    Text(
+                      type.labelBn,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('${entries.length}', style: const TextStyle(fontSize: 11)),
+                    ),
+                  ],
+                ),
+                Text(
+                  KhosraMoney.formatPaisa(subtotal),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          ...entries.map((entry) {
+            final isSelected = _selectedIds.contains(entry.id);
+            final needsCustomerLink =
+                (entry.type == KhosraEntryType.baki || entry.type == KhosraEntryType.aday) &&
+                (entry.customerId == null || entry.customerId!.isEmpty);
+
+            return Column(
+              children: [
+                const Divider(height: 1),
+                Row(
+                  children: [
                     Checkbox(
-                      visualDensity: VisualDensity.compact,
-                      value: isChecked,
+                      value: isSelected,
                       onChanged: (_) => _toggleEntrySelection(entry, allPending),
                     ),
                     Expanded(
@@ -430,11 +656,29 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              if (entry.quantity > 1)
+                                Text(' ×${entry.quantity}', style: const TextStyle(fontSize: 11.5)),
+                              if (entry.linkedEntryId != null) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.link, size: 14, color: Colors.deepOrange),
+                              ],
+                            ],
+                          ),
+                          Row(
+                            children: [
                               Text(
-                                DateFormat('hh:mm a').format(bTime),
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                DateFormat('hh:mm a').format(AppTime.toBusiness(entry.createdAt)),
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                               ),
+                              if (entry.note != null && entry.note!.isNotEmpty)
+                                Flexible(
+                                  child: Text(
+                                    ' • ${entry.note!}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                  ),
+                                ),
                             ],
                           ),
                           if (entry.type == KhosraEntryType.sale && entry.costPaisa != null)
@@ -463,7 +707,7 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
                 ),
                 if (needsCustomerLink || entry.type == KhosraEntryType.other)
                   Padding(
-                    padding: const EdgeInsets.only(left: 36, bottom: 4),
+                    padding: const EdgeInsets.only(left: 36, bottom: 6),
                     child: Wrap(
                       spacing: 6,
                       runSpacing: 4,
@@ -488,14 +732,33 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
                             ActionChip(
                               visualDensity: VisualDensity.compact,
                               label: Text('→ ${targetType.shortLabel}', style: const TextStyle(fontSize: 11)),
-                              onPressed: () => context.read<KhosraProvider>().updateEntry(
-                                entry.copyWith(
-                                  type: targetType,
-                                  paidPaisa: targetType == KhosraEntryType.sale ? entry.amountPaisa : 0,
-                                  dueType: targetType == KhosraEntryType.baki ? 'product' : entry.dueType,
-                                  expenseCategory: targetType == KhosraEntryType.khoroch ? 'other' : entry.expenseCategory,
-                                ),
-                              ),
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    title: Text('ধরন পরিবর্তন: ${targetType.shortLabel}'),
+                                    content: Text('"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) এন্ট্রিটিকে "${targetType.shortLabel}" হিসেবে রূপান্তর করতে চান?'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('বাতিল')),
+                                      FilledButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        child: const Text('হ্যাঁ, রূপান্তর করুন'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed == true && context.mounted) {
+                                  context.read<KhosraProvider>().updateEntry(
+                                    entry.copyWith(
+                                      type: targetType,
+                                      paidPaisa: targetType == KhosraEntryType.sale ? entry.amountPaisa : 0,
+                                      dueType: targetType == KhosraEntryType.baki ? 'product' : entry.dueType,
+                                      expenseCategory: targetType == KhosraEntryType.khoroch ? 'other' : entry.expenseCategory,
+                                    ),
+                                  );
+                                }
+                              },
                             ),
                       ],
                     ),

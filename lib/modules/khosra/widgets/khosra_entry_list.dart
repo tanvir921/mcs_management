@@ -53,7 +53,7 @@ class KhosraEntryList extends StatelessWidget {
               await showKhosraEditSheet(context, entry);
               return false;
             }
-            return true;
+            return await confirmDeleteDialog(context, entry);
           },
           onDismissed: (_) => _deleteWithUndo(context, entry),
           background: Container(
@@ -77,11 +77,65 @@ class KhosraEntryList extends StatelessWidget {
           child: _KhosraEntryRow(
             entry: entry,
             onEdit: isEditable ? () => showKhosraEditSheet(context, entry) : null,
-            onDelete: isEditable ? () => _deleteWithUndo(context, entry) : null,
+            onDelete: isEditable
+                ? () async {
+                    final ok = await confirmDeleteDialog(context, entry);
+                    if (ok && context.mounted) {
+                      await _deleteWithUndo(context, entry);
+                    }
+                  }
+                : null,
           ),
         );
       },
     );
+  }
+
+  static Future<bool> confirmDeleteDialog(BuildContext context, KhosraEntry entry) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.delete_outline_rounded, color: Colors.red.shade700, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'এন্ট্রি মুছবেন?',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          entry.linkedEntryId != null
+              ? '"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) এবং এর সাথে সংযুক্ত এন্ট্রি মুছে ফেলতে চান?'
+              : '"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) খসড়া এন্ট্রিটি মুছে ফেলতে চান?',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('মুছে ফেলুন'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   Future<void> _deleteWithUndo(BuildContext context, KhosraEntry entry) async {
@@ -253,6 +307,10 @@ class _KhosraEntryRow extends StatelessWidget {
 /// Modal bottom sheet for editing an existing KhosraEntry.
 Future<void> showKhosraEditSheet(BuildContext context, KhosraEntry entry) async {
   final nameCtrl = TextEditingController(text: entry.name);
+  final productNameCtrl = TextEditingController(text: entry.name);
+  final customerCtrl = TextEditingController(
+    text: entry.details?['customerName']?.toString() ?? '',
+  );
   final amountCtrl = TextEditingController(text: KhosraMoney.paisaToInputString(entry.amountPaisa));
   final paidCtrl = TextEditingController(text: KhosraMoney.paisaToInputString(entry.paidPaisa));
   final costCtrl = TextEditingController(
@@ -315,11 +373,48 @@ Future<void> showKhosraEditSheet(BuildContext context, KhosraEntry entry) async 
                     ),
                     const SizedBox(height: 8),
                   ],
-                  CustomerAutocompleteField(
-                    controller: nameCtrl,
-                    selectedCustomerId: selectedCustomerId,
-                    onCustomerSelected: (Customer? c) => setSheetState(() => selectedCustomerId = c?.id),
-                  ),
+                  if (selectedType == KhosraEntryType.sale) ...[
+                    TextFormField(
+                      controller: productNameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'পণ্যের নাম / বিবরণ *',
+                        hintText: 'উদা: খাতা, কলম, তেল...',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomerAutocompleteField(
+                      controller: customerCtrl,
+                      selectedCustomerId: selectedCustomerId,
+                      labelText: 'ক্রেতার নাম (বাকি থাকলে আবশ্যক)',
+                      hintText: 'ক্রেতার নাম বা ফোন লিখুন...',
+                      onCustomerSelected: (Customer? c) => setSheetState(() {
+                        selectedCustomerId = c?.id;
+                        if (c != null) customerCtrl.text = c.name;
+                      }),
+                    ),
+                  ] else if (selectedType == KhosraEntryType.baki || selectedType == KhosraEntryType.aday) ...[
+                    CustomerAutocompleteField(
+                      controller: nameCtrl,
+                      selectedCustomerId: selectedCustomerId,
+                      labelText: 'কাস্টমার / গ্রাহকের নাম *',
+                      hintText: 'নাম বা মোবাইল নম্বর লিখুন...',
+                      onCustomerSelected: (Customer? c) => setSheetState(() {
+                        selectedCustomerId = c?.id;
+                        if (c != null) nameCtrl.text = c.name;
+                      }),
+                    ),
+                  ] else ...[
+                    TextFormField(
+                      controller: nameCtrl,
+                      decoration: InputDecoration(
+                        labelText: selectedType == KhosraEntryType.khoroch ? 'খরচের বিবরণ *' : 'বিবরণ / শিরোনাম *',
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -401,43 +496,115 @@ Future<void> showKhosraEditSheet(BuildContext context, KhosraEntry entry) async 
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () async {
-                      final newAmount = KhosraMoney.parseToPaisa(amountCtrl.text);
-                      if (newAmount <= 0) return;
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red.shade700,
+                          side: BorderSide(color: Colors.red.shade300),
+                        ),
+                        onPressed: () async {
+                          final ok = await KhosraEntryList.confirmDeleteDialog(sheetCtx, entry);
+                          if (ok && sheetCtx.mounted) {
+                            await sheetCtx.read<KhosraProvider>().deleteEntry(entry.id);
+                            if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                          }
+                        },
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text('মুছে ফেলুন'),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () async {
+                            final newAmount = KhosraMoney.parseToPaisa(amountCtrl.text);
+                            if (newAmount <= 0) return;
 
-                      int paidPaisa = newAmount;
-                      int duePaisa = 0;
-                      if (selectedType == KhosraEntryType.sale) {
-                        final rawPaid = paidCtrl.text.trim().isEmpty
-                            ? newAmount
-                            : KhosraMoney.parseToPaisa(paidCtrl.text);
-                        paidPaisa = rawPaid.clamp(0, newAmount);
-                        duePaisa = newAmount - paidPaisa;
-                      }
-                      final costPaisa = costCtrl.text.trim().isEmpty
-                          ? null
-                          : KhosraMoney.parseToPaisa(costCtrl.text);
+                            final resolvedName = selectedType == KhosraEntryType.sale
+                                ? (productNameCtrl.text.trim().isEmpty ? entry.name : productNameCtrl.text.trim())
+                                : (nameCtrl.text.trim().isEmpty ? entry.name : nameCtrl.text.trim());
 
-                      final updated = entry.copyWith(
-                        type: selectedType,
-                        name: nameCtrl.text.trim().isEmpty ? entry.name : nameCtrl.text.trim(),
-                        customerId: selectedCustomerId,
-                        clearCustomerId: selectedCustomerId == null,
-                        amountPaisa: newAmount,
-                        paidPaisa: paidPaisa,
-                        duePaisa: duePaisa,
-                        costPaisa: costPaisa,
-                        clearCostPaisa: costPaisa == null,
-                        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
-                        clearNote: noteCtrl.text.trim().isEmpty,
-                        createdAt: selectedTime,
-                      );
-                      await sheetCtx.read<KhosraProvider>().updateEntry(updated);
-                      if (sheetCtx.mounted) Navigator.pop(sheetCtx);
-                    },
-                    child: const Text('সেভ করুন'),
+                            final confirmSave = await showDialog<bool>(
+                              context: sheetCtx,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.teal.shade50,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(Icons.edit_note_rounded, color: Colors.teal.shade700, size: 22),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Text('সংশোধন নিশ্চিতকরণ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                content: Text('"$resolvedName" (${KhosraMoney.formatPaisa(newAmount)}) এন্ট্রির পরিবর্তন সংরক্ষণ করতে চান?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('বাতিল')),
+                                  FilledButton(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.teal.shade700,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('হ্যাঁ, সংরক্ষণ করুন'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmSave != true) return;
+
+                            int paidPaisa = newAmount;
+                            int duePaisa = 0;
+                            if (selectedType == KhosraEntryType.sale) {
+                              final rawPaid = paidCtrl.text.trim().isEmpty
+                                  ? newAmount
+                                  : KhosraMoney.parseToPaisa(paidCtrl.text);
+                              paidPaisa = rawPaid.clamp(0, newAmount);
+                              duePaisa = newAmount - paidPaisa;
+                            }
+                            final costPaisa = costCtrl.text.trim().isEmpty
+                                ? null
+                                : KhosraMoney.parseToPaisa(costCtrl.text);
+
+                            final details = Map<String, dynamic>.from(entry.details ?? {});
+                            if (selectedType == KhosraEntryType.sale) {
+                              final cName = customerCtrl.text.trim();
+                              if (cName.isNotEmpty) {
+                                details['customerName'] = cName;
+                              } else {
+                                details.remove('customerName');
+                              }
+                            }
+
+                            final updated = entry.copyWith(
+                              type: selectedType,
+                              name: resolvedName,
+                              customerId: selectedCustomerId,
+                              clearCustomerId: selectedCustomerId == null,
+                              amountPaisa: newAmount,
+                              paidPaisa: paidPaisa,
+                              duePaisa: duePaisa,
+                              costPaisa: costPaisa,
+                              clearCostPaisa: costPaisa == null,
+                              note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                              clearNote: noteCtrl.text.trim().isEmpty,
+                              details: details,
+                              createdAt: selectedTime,
+                            );
+                            await sheetCtx.read<KhosraProvider>().updateEntry(updated);
+                            if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                          },
+                          child: const Text('সেভ করুন'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

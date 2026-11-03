@@ -50,6 +50,68 @@ class _KhosraKhorochTabState extends State<KhosraKhorochTab> {
     final desc = _descCtrl.text.trim().isNotEmpty
         ? _descCtrl.text.trim()
         : (catLabel ?? 'দোকান খরচ');
+    final noteText = _noteCtrl.text.trim();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.receipt_long_rounded, color: Colors.red.shade700, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'খরচ নিশ্চিতকরণ',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('বিবরণ: $desc', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            const SizedBox(height: 6),
+            Text(
+              'খরচের টাকা: ${KhosraMoney.formatPaisa(amountPaisa)}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red.shade800),
+            ),
+            const SizedBox(height: 6),
+            Text('ক্যাটাগরি: ${catLabel ?? _selectedCategory}', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+            if (noteText.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text('নোট: $noteText', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            ],
+            const SizedBox(height: 10),
+            const Text('এই খরচ এন্ট্রিটি খসড়া খাতায় যুক্ত করতে চান?', style: TextStyle(fontSize: 12.5, color: Colors.black87)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.check, size: 18),
+            label: const Text('হ্যাঁ, খরচ যোগ করুন'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
 
     HapticFeedback.mediumImpact();
     final provider = context.read<KhosraProvider>();
@@ -278,6 +340,67 @@ class _KhosraOtherTabState extends State<KhosraOtherTab> {
       );
       return;
     }
+
+    final noteText = _noteCtrl.text.trim();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.note_alt_rounded, color: Colors.purple.shade700, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'অন্যান্য খসড়া নিশ্চিতকরণ',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('বিবরণ: $name', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            const SizedBox(height: 6),
+            Text(
+              'টাকার পরিমাণ: ${KhosraMoney.formatPaisa(amountPaisa)}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple.shade800),
+            ),
+            if (noteText.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text('নোট: $noteText', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            ],
+            const SizedBox(height: 10),
+            const Text('এই এন্ট্রিটি খসড়া খাতায় যুক্ত করতে চান?', style: TextStyle(fontSize: 12.5, color: Colors.black87)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.purple.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.check, size: 18),
+            label: const Text('হ্যাঁ, যোগ করুন'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
 
     HapticFeedback.mediumImpact();
     final provider = context.read<KhosraProvider>();

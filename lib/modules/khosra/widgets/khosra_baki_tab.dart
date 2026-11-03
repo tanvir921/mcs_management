@@ -48,11 +48,75 @@ class _KhosraBakiTabState extends State<KhosraBakiTab> {
       return;
     }
 
+    final rawDueType = _dueType == 'product' ? 'product' : 'cashBorrow';
+    final dueTypeLabel = _dueType == 'product' ? 'পণ্য বাকি' : 'নগদ/ব্যালেন্স বাকি';
+    final noteText = _noteCtrl.text.trim();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.person_add_alt_1_rounded, color: Colors.deepOrange.shade700, size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'বকেয়া নিশ্চিতকরণ',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('গ্রাহকের নাম: $name', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            const SizedBox(height: 6),
+            Text(
+              'বকেয়ার টাকা: ${KhosraMoney.formatPaisa(amountPaisa)}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepOrange.shade800),
+            ),
+            const SizedBox(height: 6),
+            Text('ধরন: $dueTypeLabel', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+            if (noteText.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text('নোট: $noteText', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            ],
+            const SizedBox(height: 10),
+            const Text('এই বকেয়া এন্ট্রিটি খসড়া খাতায় যুক্ত করতে চান?', style: TextStyle(fontSize: 12.5, color: Colors.black87)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.deepOrange.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.check, size: 18),
+            label: const Text('হ্যাঁ, বকেয়া যোগ করুন'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     HapticFeedback.mediumImpact();
     final provider = context.read<KhosraProvider>();
     final messenger = ScaffoldMessenger.of(context);
 
-    final rawDueType = _dueType == 'product' ? 'product' : 'cashBorrow';
     final created = await provider.addBaki(
       name: name,
       customerId: _selectedCustomerId,

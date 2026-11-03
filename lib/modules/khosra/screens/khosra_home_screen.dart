@@ -58,17 +58,31 @@ class _KhosraHomeScreenState extends State<KhosraHomeScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'পুরনো দিনের খসড়া',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const Row(
+                  children: [
+                    Icon(Icons.history_rounded, color: Colors.deepOrange),
+                    SizedBox(width: 8),
+                    Text(
+                      'পুরনো দিনের খসড়া',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 ...dates.map(
                   (d) => ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: const Icon(
-                      Icons.calendar_today_rounded,
-                      color: Colors.deepOrange,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.deepOrange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today_rounded,
+                        color: Colors.deepOrange,
+                        size: 20,
+                      ),
                     ),
                     title: Text(
                       d,
@@ -107,6 +121,119 @@ class _KhosraHomeScreenState extends State<KhosraHomeScreen> {
     }
   }
 
+  Widget _buildTabPills() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          _TabPill(
+            label: 'বিক্রি',
+            icon: Icons.point_of_sale_rounded,
+            color: Colors.teal.shade700,
+            isSelected: _activeSection == KhosraEntryType.sale,
+            onTap: () => setState(() => _activeSection = KhosraEntryType.sale),
+          ),
+          const SizedBox(width: 4),
+          _TabPill(
+            label: 'বকেয়া',
+            icon: Icons.person_add_alt_1_rounded,
+            color: Colors.deepOrange.shade700,
+            isSelected: _activeSection == KhosraEntryType.baki,
+            onTap: () => setState(() => _activeSection = KhosraEntryType.baki),
+          ),
+          const SizedBox(width: 4),
+          _TabPill(
+            label: 'খরচ',
+            icon: Icons.receipt_long_rounded,
+            color: Colors.red.shade700,
+            isSelected: _activeSection == KhosraEntryType.khoroch,
+            onTap: () => setState(() => _activeSection = KhosraEntryType.khoroch),
+          ),
+          const SizedBox(width: 4),
+          _TabPill(
+            label: 'আদায়',
+            icon: Icons.payments_rounded,
+            color: Colors.blue.shade700,
+            isSelected: _activeSection == KhosraEntryType.aday,
+            onTap: () => setState(() => _activeSection = KhosraEntryType.aday),
+          ),
+          const SizedBox(width: 4),
+          _TabPill(
+            label: 'অন্যান্য',
+            icon: Icons.edit_note_rounded,
+            color: Colors.purple.shade700,
+            isSelected: _activeSection == KhosraEntryType.other,
+            onTap: () => setState(() => _activeSection = KhosraEntryType.other),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEntriesHeader(
+    KhosraProvider provider,
+    List<KhosraEntry> visibleEntries,
+    bool showOnlyTab,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(Icons.list_alt_rounded, size: 16, color: Colors.black87),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              showOnlyTab
+                  ? 'আজকের ${_activeSection.shortLabel} (${visibleEntries.length})'
+                  : 'আজকের এন্ট্রি তালিকা (${visibleEntries.length})',
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade900,
+              ),
+            ),
+          ],
+        ),
+        if (_activeSection != KhosraEntryType.baki &&
+            provider.entries.isNotEmpty)
+          InkWell(
+            onTap: () => setState(
+              () => _filterByActiveTab = !_filterByActiveTab,
+            ),
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
+              child: Text(
+                _filterByActiveTab
+                    ? 'সব দেখুন (${provider.entries.length})'
+                    : 'শুধু ${_activeSection.shortLabel}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.teal.shade800,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<KhosraProvider>(
@@ -119,13 +246,23 @@ class _KhosraHomeScreenState extends State<KhosraHomeScreen> {
                   .toList()
             : provider.entries;
 
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isDesktop = screenWidth >= 960;
+
         return Scaffold(
-          backgroundColor: const Color(0xFFF5F7FA),
+          backgroundColor: const Color(0xFFF6F8FA),
           appBar: AppBar(
-            title: Text(
-              provider.isTodaySelected
-                  ? 'খসড়া খাতা'
-                  : 'খসড়া (${provider.selectedBusinessDate})',
+            title: Row(
+              children: [
+                const Icon(Icons.edit_note_rounded, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  provider.isTodaySelected
+                      ? 'খসড়া খাতা'
+                      : 'খসড়া (${provider.selectedBusinessDate})',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ],
             ),
             backgroundColor: Colors.teal.shade700,
             foregroundColor: Colors.white,
@@ -135,172 +272,154 @@ class _KhosraHomeScreenState extends State<KhosraHomeScreen> {
                 const Padding(
                   padding: EdgeInsets.only(right: 8),
                   child: Tooltip(
-                    message: 'অফলাইন — ইন্টারনেট এলে সিঙ্ক হবে',
+                    message: 'অফলাইন ক্যাশ সক্রিয় — ইন্টারনেট এলে স্বয়ংক্রিয় সিঙ্ক হবে',
                     child: Icon(Icons.cloud_upload_outlined, size: 20),
                   ),
                 ),
-              IconButton(
-                tooltip: 'Review & Confirm',
-                icon: Badge(
-                  isLabelVisible: provider.pendingCount > 0,
-                  label: Text('${provider.pendingCount}'),
-                  child: const Icon(Icons.fact_check_outlined),
-                ),
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.khosraReview),
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              KhosraSummaryBar(
-                provider: provider,
-                onOpenOlderPending: () => _openOlderPendingSheet(provider),
-              ),
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                child: Row(
-                  children: [
-                    _TabPill(
-                      label: 'বিক্রি',
-                      color: Colors.teal.shade700,
-                      isSelected: _activeSection == KhosraEntryType.sale,
-                      onTap: () => setState(
-                        () => _activeSection = KhosraEntryType.sale,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    _TabPill(
-                      label: 'বকেয়া',
-                      color: Colors.deepOrange.shade700,
-                      isSelected: _activeSection == KhosraEntryType.baki,
-                      onTap: () => setState(
-                        () => _activeSection = KhosraEntryType.baki,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    _TabPill(
-                      label: 'খরচ',
-                      color: Colors.red.shade700,
-                      isSelected: _activeSection == KhosraEntryType.khoroch,
-                      onTap: () => setState(
-                        () => _activeSection = KhosraEntryType.khoroch,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    _TabPill(
-                      label: 'আদায়',
-                      color: Colors.blue.shade700,
-                      isSelected: _activeSection == KhosraEntryType.aday,
-                      onTap: () => setState(
-                        () => _activeSection = KhosraEntryType.aday,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    _TabPill(
-                      label: 'অন্যান্য',
-                      color: Colors.purple.shade700,
-                      isSelected: _activeSection == KhosraEntryType.other,
-                      onTap: () => setState(
-                        () => _activeSection = KhosraEntryType.other,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
-                  children: [
-                    _buildActiveSectionForm(),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          showOnlyTab
-                              ? 'আজকের ${_activeSection.shortLabel} (${visibleEntries.length})'
-                              : 'আজকের এন্ট্রি (${visibleEntries.length})',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        if (_activeSection != KhosraEntryType.baki &&
-                            provider.entries.isNotEmpty)
-                          InkWell(
-                            onTap: () => setState(
-                              () => _filterByActiveTab = !_filterByActiveTab,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              child: Text(
-                                _filterByActiveTab
-                                    ? 'সব দেখুন (${provider.entries.length})'
-                                    : 'শুধু ${_activeSection.shortLabel}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.teal.shade700,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    KhosraEntryList(entries: visibleEntries),
-                  ],
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: FilledButton.tonalIcon(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.khosraReview),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.teal.shade900,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: Badge(
+                    isLabelVisible: provider.pendingCount > 0,
+                    label: Text('${provider.pendingCount}'),
+                    child: const Icon(Icons.fact_check_rounded, size: 18),
+                  ),
+                  label: const Text(
+                    'Review & Confirm',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                 ),
               ),
             ],
           ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
-              child: FilledButton.icon(
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.khosraReview),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.indigo.shade800,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                icon: const Icon(Icons.task_alt_rounded, size: 20),
-                label: Text(
-                  'দিন শেষ — Review & Confirm (${provider.pendingCount})',
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          body: isDesktop
+              ? _buildDesktopLayout(provider, visibleEntries, showOnlyTab)
+              : _buildMobileLayout(provider, visibleEntries, showOnlyTab),
         );
       },
+    );
+  }
+
+  Widget _buildDesktopLayout(
+    KhosraProvider provider,
+    List<KhosraEntry> visibleEntries,
+    bool showOnlyTab,
+  ) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1280),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left Column: Entry Form & Summary
+              SizedBox(
+                width: 500,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      KhosraSummaryBar(
+                        provider: provider,
+                        onOpenOlderPending: () => _openOlderPendingSheet(provider),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTabPills(),
+                      const SizedBox(height: 14),
+                      _buildActiveSectionForm(),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 24),
+              // Right Column: Live Entries List
+              Expanded(
+                child: Container(
+                  height: MediaQuery.of(context).size.height - 110,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildEntriesHeader(provider, visibleEntries, showOnlyTab),
+                      const Divider(height: 20),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: KhosraEntryList(entries: visibleEntries),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(
+    KhosraProvider provider,
+    List<KhosraEntry> visibleEntries,
+    bool showOnlyTab,
+  ) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 24),
+          children: [
+            KhosraSummaryBar(
+              provider: provider,
+              onOpenOlderPending: () => _openOlderPendingSheet(provider),
+            ),
+            const SizedBox(height: 10),
+            _buildTabPills(),
+            const SizedBox(height: 12),
+            _buildActiveSectionForm(),
+            const SizedBox(height: 16),
+            _buildEntriesHeader(provider, visibleEntries, showOnlyTab),
+            const SizedBox(height: 8),
+            KhosraEntryList(entries: visibleEntries),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _TabPill extends StatelessWidget {
   final String label;
+  final IconData icon;
   final Color color;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _TabPill({
     required this.label,
+    required this.icon,
     required this.color,
     required this.isSelected,
     required this.onTap,
@@ -310,29 +429,34 @@ class _TabPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Material(
-        color: isSelected ? color : Colors.white,
-        borderRadius: BorderRadius.circular(9),
+        color: isSelected ? color : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 9),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(
-                color: isSelected ? color : Colors.grey.shade300,
-              ),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             alignment: Alignment.center,
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.grey.shade800,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 17,
+                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                    color: isSelected ? Colors.white : Colors.grey.shade800,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

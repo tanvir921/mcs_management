@@ -113,12 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLargeScreen = Responsive.isLargeScreen(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 960;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-      appBar: isLargeScreen ? null : _buildMobileAppBar(context),
-      body: isLargeScreen
+      appBar: isDesktop ? null : _buildMobileAppBar(context),
+      body: isDesktop
           ? _buildWebLayout(context)
           : _buildMobileLayout(context),
     );
@@ -207,68 +208,73 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final moduleCards = _buildModuleCards(context, user);
 
-        return RefreshIndicator(
-          onRefresh: _loadTodayStats,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
-            children: [
-              // Compact greeting + live date/time bar
-              _buildCompactWelcomeHeader(user),
-              const SizedBox(height: 12),
-
-              // Prominent Khosra (খসড়া খাতা) live card
-              _buildKhosraHeroCard(context),
-              const SizedBox(height: 12),
-
-              // Today's 4 live stats in a compact 2x2 grid
-              _buildMobileStatsGrid(),
-              const SizedBox(height: 14),
-
-              // 1-Tap Quick Actions row
-              _buildQuickActionsStrip(context, user),
-              const SizedBox(height: 16),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 820),
+            child: RefreshIndicator(
+              onRefresh: _loadTodayStats,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
                 children: [
-                  Text(
-                    'সকল মডিউল (Modules)',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
-                    ),
+                  // Compact greeting + live date/time bar
+                  _buildCompactWelcomeHeader(user),
+                  const SizedBox(height: 12),
+
+                  // Prominent Khosra (খসড়া খাতা) live card
+                  _buildKhosraHeroCard(context),
+                  const SizedBox(height: 12),
+
+                  // Today's 4 live stats in a compact 2x2 grid
+                  _buildMobileStatsGrid(),
+                  const SizedBox(height: 14),
+
+                  // 1-Tap Quick Actions row
+                  _buildQuickActionsStrip(context, user),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'সকল মডিউল (Modules)',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      Text(
+                        '${moduleCards.length} items',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '${moduleCards.length} items',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  const SizedBox(height: 10),
+
+                  GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 1.45,
+                    ),
+                    itemCount: moduleCards.length,
+                    itemBuilder: (context, index) {
+                      final card = moduleCards[index];
+                      return _ModuleCard(
+                        title: card.title,
+                        subtitle: card.subtitle,
+                        icon: card.icon,
+                        color: card.color,
+                        onTap: card.onTap,
+                      );
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.45,
-                ),
-                itemCount: moduleCards.length,
-                itemBuilder: (context, index) {
-                  final card = moduleCards[index];
-                  return _ModuleCard(
-                    title: card.title,
-                    subtitle: card.subtitle,
-                    icon: card.icon,
-                    color: card.color,
-                    onTap: card.onTap,
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -634,44 +640,98 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWebStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            title: "Today's Sales",
-            value: _isLoadingStats ? '...' : _formatCurrency(_todaySales),
-            icon: Icons.point_of_sale,
-            color: Colors.green,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(
-            title: 'Due Added',
-            value: _isLoadingStats ? '...' : _formatCurrency(_todayDuesAdded),
-            icon: Icons.add_circle_outline,
-            color: Colors.deepOrange,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(
-            title: 'Due Collection',
-            value: _isLoadingStats ? '...' : _formatCurrency(_todayCollections),
-            icon: Icons.payments_outlined,
-            color: Colors.blue,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(
-            title: 'Expenses',
-            value: _isLoadingStats ? '...' : _formatCurrency(_todayExpenses),
-            icon: Icons.receipt_long,
-            color: Colors.red,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 850;
+        if (isWide) {
+          return Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  title: "Today's Sales",
+                  value: _isLoadingStats ? '...' : _formatCurrency(_todaySales),
+                  icon: Icons.point_of_sale,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: _StatCard(
+                  title: 'Due Added',
+                  value: _isLoadingStats ? '...' : _formatCurrency(_todayDuesAdded),
+                  icon: Icons.add_circle_outline,
+                  color: Colors.deepOrange,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: _StatCard(
+                  title: 'Due Collection',
+                  value: _isLoadingStats ? '...' : _formatCurrency(_todayCollections),
+                  icon: Icons.payments_outlined,
+                  color: Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: _StatCard(
+                  title: 'Expenses',
+                  value: _isLoadingStats ? '...' : _formatCurrency(_todayExpenses),
+                  icon: Icons.receipt_long,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: "Today's Sales",
+                    value: _isLoadingStats ? '...' : _formatCurrency(_todaySales),
+                    icon: Icons.point_of_sale,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    title: 'Due Added',
+                    value: _isLoadingStats ? '...' : _formatCurrency(_todayDuesAdded),
+                    icon: Icons.add_circle_outline,
+                    color: Colors.deepOrange,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: 'Due Collection',
+                    value: _isLoadingStats ? '...' : _formatCurrency(_todayCollections),
+                    icon: Icons.payments_outlined,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    title: 'Expenses',
+                    value: _isLoadingStats ? '...' : _formatCurrency(_todayExpenses),
+                    icon: Icons.receipt_long,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -963,6 +1023,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<_ModuleCardData> _buildModuleCards(BuildContext context, dynamic user) {
     final moduleCards = <_ModuleCardData>[];
+
+    moduleCards.add(
+      _ModuleCardData(
+        title: 'Khosra',
+        subtitle: 'খসড়া খাতা ও কুইক এন্ট্রি',
+        icon: Icons.edit_note_rounded,
+        color: Colors.teal.shade700,
+        onTap: () => _navigateAndRefresh(AppRoutes.khosra),
+      ),
+    );
 
     if (user.hasPermission(Permission.products)) {
       moduleCards.add(
