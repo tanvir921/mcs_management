@@ -600,8 +600,8 @@ class _KhosraSellTabState extends State<KhosraSellTab> {
                       Icon(Icons.bolt_rounded, size: 18, color: Colors.amber.shade800),
                       const SizedBox(width: 4),
                       Text(
-                        '১-ট্যাপ দ্রুত এন্ট্রি (Quick Cards)',
-                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+                        'Quick Sell (দ্রুত বিক্রি)',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey.shade900),
                       ),
                     ],
                   ),
@@ -622,9 +622,9 @@ class _KhosraSellTabState extends State<KhosraSellTab> {
                 ],
               ),
               const SizedBox(height: 10),
-              _buildQuickRow('বিক্রি:', KhosraConstants.generalSaleActions, Colors.teal.shade700, Colors.teal.shade50),
-              const SizedBox(height: 8),
-              _buildQuickRow('ফটোকপি:', KhosraConstants.photocopyActions, Colors.indigo.shade700, Colors.indigo.shade50),
+              _buildQuickRow('Telecom Card:', KhosraConstants.telecomCardActions, Colors.blue.shade800, Colors.blue.shade50),
+              _buildQuickRow('Photocopy:', KhosraConstants.photocopyActions, Colors.purple.shade800, Colors.purple.shade50),
+              _buildQuickRow('Photo:', KhosraConstants.photoActions, Colors.amber.shade900, Colors.amber.shade50),
             ],
           ),
         ),
@@ -649,38 +649,44 @@ class _KhosraSellTabState extends State<KhosraSellTab> {
   }
 
   Widget _buildQuickRow(String label, List<KhosraQuickAction> actions, Color color, Color bg) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 58,
-          child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
-        ),
-        ...actions.map((action) {
-          final totalPaisa = action.unitPricePaisa * _quickQty;
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 5),
-              child: InkWell(
-                onTap: () => _onQuickActionTap(action),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: bg,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: color.withValues(alpha: 0.25)),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    KhosraMoney.formatPaisa(totalPaisa),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 86,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: color),
+            ),
+          ),
+          ...actions.map((action) {
+            final totalPaisa = action.unitPricePaisa * _quickQty;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 5),
+                child: InkWell(
+                  onTap: () => _onQuickActionTap(action),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: bg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: color.withValues(alpha: 0.25)),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      KhosraMoney.formatPaisa(totalPaisa),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }),
-      ],
+            );
+          }),
+        ],
+      ),
     );
   }
 

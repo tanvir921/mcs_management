@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/app_time.dart';
 import '../../customer/models/customer_model.dart';
@@ -121,36 +122,39 @@ class KhosraQuickAction {
 class KhosraConstants {
   KhosraConstants._();
 
-  static const List<KhosraQuickAction> generalSaleActions = [
+  static const List<KhosraQuickAction> telecomCardActions = [
     KhosraQuickAction(
-      key: 'sale_20',
-      defaultName: 'Sale',
-      labelBn: 'বিক্রি ৳২০',
+      key: 'telecom_20',
+      defaultName: 'Telecom',
+      labelBn: 'কার্ড ৳২০',
       unitPricePaisa: 2000,
       isService: false,
     ),
     KhosraQuickAction(
-      key: 'sale_30',
-      defaultName: 'Sale',
-      labelBn: 'বিক্রি ৳৩০',
+      key: 'telecom_30',
+      defaultName: 'Telecom',
+      labelBn: 'কার্ড ৳৩০',
       unitPricePaisa: 3000,
       isService: false,
     ),
     KhosraQuickAction(
-      key: 'sale_40',
-      defaultName: 'Sale',
-      labelBn: 'বিক্রি ৳৪০',
+      key: 'telecom_40',
+      defaultName: 'Telecom',
+      labelBn: 'কার্ড ৳৪০',
       unitPricePaisa: 4000,
       isService: false,
     ),
     KhosraQuickAction(
-      key: 'sale_50',
-      defaultName: 'Sale',
-      labelBn: 'বিক্রি ৳৫০',
+      key: 'telecom_50',
+      defaultName: 'Telecom',
+      labelBn: 'কার্ড ৳৫০',
       unitPricePaisa: 5000,
       isService: false,
     ),
   ];
+
+  /// Backward-compatible alias
+  static const List<KhosraQuickAction> generalSaleActions = telecomCardActions;
 
   static const List<KhosraQuickAction> photocopyActions = [
     KhosraQuickAction(
@@ -180,6 +184,71 @@ class KhosraConstants {
       labelBn: 'ফটোকপি ৳২০',
       unitPricePaisa: 2000,
       isService: true,
+    ),
+  ];
+
+  static const List<KhosraQuickAction> photoActions = [
+    KhosraQuickAction(
+      key: 'photo_20',
+      defaultName: 'Photo',
+      labelBn: 'ছবি ৳২০',
+      unitPricePaisa: 2000,
+      isService: true,
+    ),
+    KhosraQuickAction(
+      key: 'photo_25',
+      defaultName: 'Photo',
+      labelBn: 'ছবি ৳২৫',
+      unitPricePaisa: 2500,
+      isService: true,
+    ),
+    KhosraQuickAction(
+      key: 'photo_30',
+      defaultName: 'Photo',
+      labelBn: 'ছবি ৳৩০',
+      unitPricePaisa: 3000,
+      isService: true,
+    ),
+    KhosraQuickAction(
+      key: 'photo_40',
+      defaultName: 'Photo',
+      labelBn: 'ছবি ৳৪০',
+      unitPricePaisa: 4000,
+      isService: true,
+    ),
+  ];
+
+  static const List<({String key, String labelBn, String labelEn, IconData icon})>
+  dueCategories = [
+    (
+      key: 'product',
+      labelBn: 'পণ্য বাকি',
+      labelEn: 'Product Due',
+      icon: Icons.shopping_bag_outlined,
+    ),
+    (
+      key: 'service',
+      labelBn: 'সার্ভিস বাকি',
+      labelEn: 'Service Due',
+      icon: Icons.build_outlined,
+    ),
+    (
+      key: 'msfRecharge',
+      labelBn: 'MSF / রিচার্জ',
+      labelEn: 'MSF/Recharge',
+      icon: Icons.phone_android_outlined,
+    ),
+    (
+      key: 'cashBorrow',
+      labelBn: 'নগদ ঋণ / ধার',
+      labelEn: 'Cash Borrow',
+      icon: Icons.payments_outlined,
+    ),
+    (
+      key: 'previousDue',
+      labelBn: 'পূর্ববর্তী বাকি',
+      labelEn: 'Previous Due',
+      icon: Icons.history_outlined,
     ),
   ];
 
@@ -536,6 +605,7 @@ class KhosraEntry {
 
   bool get isServiceSale =>
       (quickActionKey?.startsWith('photocopy_') ?? false) ||
+      (quickActionKey?.startsWith('photo_') ?? false) ||
       details?['itemType'] == 'service';
 
   static String formatBusinessDate(DateTime businessDateTime) {

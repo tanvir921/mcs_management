@@ -470,6 +470,7 @@ abstract class KhosraCommitGateway {
     required double amount,
     required String dueType,
     double realizedProfit = 0,
+    double discount = 0,
     String? note,
     required String userId,
     required String userName,
@@ -486,6 +487,11 @@ abstract class KhosraCommitGateway {
     required DateTime createdAt,
   });
   Future<Customer?> getCustomerById(String customerId);
+  Future<Customer> getOrCreateCustomerByName(
+    String name, {
+    String? phone,
+    DateTime? createdAt,
+  });
   Future<String> commitExpense(Expense expense);
   Future<void> logAction({
     required String action,
@@ -578,6 +584,7 @@ class DefaultKhosraCommitGateway implements KhosraCommitGateway {
     required double amount,
     required String dueType,
     double realizedProfit = 0,
+    double discount = 0,
     String? note,
     required String userId,
     required String userName,
@@ -590,6 +597,7 @@ class DefaultKhosraCommitGateway implements KhosraCommitGateway {
       dueType: dueType,
       isAddition: false,
       realizedProfit: realizedProfit,
+      discount: discount,
       note: note,
       userId: userId,
       userName: userName,
@@ -622,6 +630,36 @@ class DefaultKhosraCommitGateway implements KhosraCommitGateway {
   @override
   Future<Customer?> getCustomerById(String customerId) {
     return _customerService.getCustomerById(customerId);
+  }
+
+  @override
+  Future<Customer> getOrCreateCustomerByName(
+    String name, {
+    String? phone,
+    DateTime? createdAt,
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      throw Exception('গ্রাহকের নাম খালি হতে পারে না।');
+    }
+    final all = await _customerService.getAllCustomers();
+    final existing = all
+        .where((c) => c.name.toLowerCase() == trimmed.toLowerCase())
+        .firstOrNull;
+    if (existing != null) return existing;
+
+    final newId = FirebaseFirestore.instance.collection('customers').doc().id;
+    final now = AppTime.utcNow();
+    final newCustomer = Customer(
+      id: newId,
+      name: trimmed,
+      phone: phone,
+      createdAt: createdAt ?? now,
+      updatedAt: now,
+      isActive: true,
+    );
+    await _customerService.createCustomer(newCustomer);
+    return newCustomer;
   }
 
   @override
@@ -1052,13 +1090,11 @@ class KhosraService {
     })?
     logActionOverride,
   }) async {
-    if (entry.duePaisa > 0 &&
-        (entry.customerId == null ||
-            entry.customerId!.isEmpty ||
-            entry.customerId == 'guest_customer')) {
-      throw Exception(
-        'বকেয়া বিক্রির জন্য একজন নির্দিষ্ট গ্রাহক (Customer) যুক্ত করা আবশ্যক।',
-      );
+    String resolvedCustomerId = entry.customerId ?? '';
+    String resolvedCustomerName =
+        (entry.details?['customerName'] as String?)?.trim() ?? '';
+    if (resolvedCustomerName.isEmpty && entry.customerId != null) {
+      resolvedCustomerName = entry.name;
     }
 
     final totalSelling = entry.amountTaka;
@@ -1066,6 +1102,23 @@ class KhosraService {
     final dueAmount = entry.dueTaka;
     final discountPaisa = (entry.details?['discountPaisa'] as num?)?.round() ?? 0;
     final discountAmount = KhosraMoney.paisaToTaka(discountPaisa);
+
+    if (dueAmount > 0) {
+      if (resolvedCustomerId.isEmpty ||
+          resolvedCustomerId == 'guest_customer' ||
+          resolvedCustomerId.startsWith('intraday_')) {
+        final custName = resolvedCustomerName.isNotEmpty
+            ? resolvedCustomerName
+            : (entry.name.isNotEmpty ? entry.name : 'Customer');
+        final cust = await gateway.getOrCreateCustomerByName(
+          custName,
+          phone: entry.details?['phone'] as String?,
+          createdAt: entry.createdAt,
+        );
+        resolvedCustomerId = cust.id;
+        resolvedCustomerName = cust.name;
+      }
+    }
 
     // Determine cost: for service/photocopy default is 0 (profit = full amount) unless costPaisa provided
     final totalCost = entry.costTaka ?? 0.0;
@@ -1109,9 +1162,9 @@ class KhosraService {
       );
     }
 
-    final customerName =
-        (entry.details?['customerName'] as String?) ??
-        (entry.customerId != null ? entry.name : 'Walk-in');
+    final customerName = resolvedCustomerName.isNotEmpty
+        ? resolvedCustomerName
+        : (resolvedCustomerId.isNotEmpty ? entry.name : 'Walk-in');
 
     final sale = Sale(
       id: '',
@@ -1130,7 +1183,7 @@ class KhosraService {
       dueAmount: dueAmount,
       realizedProfit: profitSplit.realizedProfit,
       potentialProfit: profitSplit.potentialProfit,
-      customerId: entry.customerId ?? 'guest_customer',
+      customerId: resolvedCustomerId.isNotEmpty ? resolvedCustomerId : 'guest_customer',
       customerName: customerName,
       notes: entry.note,
       createdBy: entry.createdBy.isNotEmpty ? entry.createdBy : userId,
@@ -1154,10 +1207,10 @@ class KhosraService {
 
     String? dueTxId;
     if (dueAmount > 0 &&
-        entry.customerId != null &&
-        entry.customerId != 'guest_customer') {
+        resolvedCustomerId.isNotEmpty &&
+        resolvedCustomerId != 'guest_customer') {
       dueTxId = await gateway.addCustomerDue(
-        customerId: entry.customerId!,
+        customerId: resolvedCustomerId,
         dueType: 'product',
         amount: dueAmount,
         isAddition: true,
@@ -1172,7 +1225,7 @@ class KhosraService {
       );
     }
 
-    if (entry.customerId != null && entry.customerId!.isNotEmpty) {
+    if (resolvedCustomerId.isNotEmpty && resolvedCustomerId != 'guest_customer') {
       final itemsList = saleItems.map((i) => i.itemName).join(', ');
       await gateway.addCustomerPurchase(
         customerId: entry.customerId!,
@@ -1264,10 +1317,16 @@ class KhosraService {
       }
     }
 
-    if (entry.customerId == null ||
-        entry.customerId!.isEmpty ||
-        entry.customerId == 'guest_customer') {
-      throw Exception('বকেয়া এন্ট্রির জন্য একজন গ্রাহক (Customer) নির্বাচন করুন।');
+    String customerId = entry.customerId ?? '';
+    if (customerId.isEmpty ||
+        customerId == 'guest_customer' ||
+        customerId.startsWith('intraday_')) {
+      final cust = await gateway.getOrCreateCustomerByName(
+        entry.name,
+        phone: entry.details?['phone'] as String?,
+        createdAt: entry.createdAt,
+      );
+      customerId = cust.id;
     }
 
     final rawDueType =
@@ -1275,7 +1334,7 @@ class KhosraService {
         (entry.dueType == 'cash_balance' ? 'cashBorrow' : 'product');
 
     final txId = await gateway.addCustomerDue(
-      customerId: entry.customerId!,
+      customerId: customerId,
       dueType: rawDueType,
       amount: entry.amountTaka,
       isAddition: true,
@@ -1319,11 +1378,19 @@ class KhosraService {
     })?
     logActionOverride,
   }) async {
-    if (entry.customerId == null || entry.customerId!.isEmpty) {
-      throw Exception('আদায় এন্ট্রির জন্য গ্রাহক নির্বাচন করা আবশ্যক।');
+    String customerId = entry.customerId ?? '';
+    if (customerId.isEmpty ||
+        customerId == 'guest_customer' ||
+        customerId.startsWith('intraday_')) {
+      final cust = await gateway.getOrCreateCustomerByName(
+        entry.name,
+        phone: entry.details?['phone'] as String?,
+        createdAt: entry.createdAt,
+      );
+      customerId = cust.id;
     }
 
-    final customer = await gateway.getCustomerById(entry.customerId!);
+    final customer = await gateway.getCustomerById(customerId);
     if (customer == null) {
       throw Exception('গ্রাহক খুঁজে পাওয়া যায়নি (${entry.name})।');
     }
@@ -1354,9 +1421,13 @@ class KhosraService {
     }
 
     final currentDuePaisa = KhosraMoney.takaToPaisa(currentCategoryDue);
-    if (entry.amountPaisa > currentDuePaisa) {
+    final discountPaisa = (entry.details?['discountPaisa'] as num?)?.round() ?? 0;
+    final discountTaka = KhosraMoney.paisaToTaka(discountPaisa);
+    final totalClearPaisa = entry.amountPaisa + discountPaisa;
+
+    if (totalClearPaisa > currentDuePaisa) {
       throw Exception(
-        'আদায়ের পরিমাণ (${KhosraMoney.formatPaisa(entry.amountPaisa)}) বর্তমান বকেয়ার (${KhosraMoney.formatPaisa(currentDuePaisa)}) চেয়ে বেশি।',
+        'আদায় ও ছাড়ের মোট পরিমাণ (${KhosraMoney.formatPaisa(totalClearPaisa)}) বর্তমান বকেয়ার (${KhosraMoney.formatPaisa(currentDuePaisa)}) চেয়ে বেশি।',
       );
     }
 
@@ -1371,10 +1442,11 @@ class KhosraService {
     }
 
     final txId = await gateway.collectCustomerDue(
-      customerId: entry.customerId!,
+      customerId: customerId,
       amount: entry.amountTaka,
       dueType: rawDueType,
       realizedProfit: realizedProfit,
+      discount: discountTaka,
       note: entry.note?.isNotEmpty == true
           ? entry.note
           : 'খসড়া বকেয়া আদায় (${entry.name})',

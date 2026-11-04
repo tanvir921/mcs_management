@@ -11,6 +11,7 @@ class DueTransaction {
   final double potentialProfit; // Profit pending in this due
   final bool profitRealized; // Whether profit was added when due cleared
   final double realizedProfitAmount; // Actual profit realized when clearing due
+  final double discount; // Discount/waiver given when clearing due
   final String? note;
   final DateTime?
   createdAt; // Nullable - will be set by server timestamp on create
@@ -27,6 +28,7 @@ class DueTransaction {
     this.potentialProfit = 0,
     this.profitRealized = false,
     this.realizedProfitAmount = 0,
+    this.discount = 0,
     this.note,
     this.createdAt, // Optional - server timestamp used on create
     required this.createdBy,
@@ -45,6 +47,7 @@ class DueTransaction {
       profitRealized: json['profitRealized'] as bool? ?? false,
       realizedProfitAmount:
           (json['realizedProfitAmount'] as num?)?.toDouble() ?? 0,
+      discount: (json['discount'] as num?)?.toDouble() ?? 0,
       note: json['note'] as String?,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate(),
       createdBy: json['createdBy'] as String,
@@ -64,6 +67,7 @@ class DueTransaction {
       'potentialProfit': potentialProfit,
       'profitRealized': profitRealized,
       'realizedProfitAmount': realizedProfitAmount,
+      'discount': discount,
       'note': note,
       'createdAt':
           FieldValue.serverTimestamp(), // Server timestamp for accuracy
@@ -84,6 +88,7 @@ class DueTransaction {
       'potentialProfit': potentialProfit,
       'profitRealized': profitRealized,
       'realizedProfitAmount': realizedProfitAmount,
+      'discount': discount,
       'note': note,
       'createdAt': createdAt != null
           ? Timestamp.fromDate(createdAt!)
@@ -96,15 +101,15 @@ class DueTransaction {
   String get dueTypeLabel {
     switch (dueType) {
       case 'product':
-        return 'Product Due';
+        return 'পণ্য বকেয়া (Product Due)';
       case 'service':
-        return 'Service Due';
+        return 'সার্ভিস বকেয়া (Service Due)';
       case 'msfRecharge':
-        return 'MSF/Recharge Due';
+        return 'MSF/রিচার্জ (MSF / Recharge)';
       case 'cashBorrow':
-        return 'Cash Borrow';
+        return 'নগদ ঋণ (Cash Borrow)';
       case 'previousDue':
-        return 'Previous Due';
+        return 'পূর্ববর্তী বকেয়া (Previous Due)';
       default:
         return dueType;
     }

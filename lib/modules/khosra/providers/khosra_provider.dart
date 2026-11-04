@@ -225,6 +225,7 @@ class KhosraProvider extends ChangeNotifier {
     required String dueCategory, // 'product' | 'cash_balance'
     required String rawDueType,
     required int amountPaisa,
+    int discountPaisa = 0,
     int? originalDuePaisa,
     int? potentialProfitPaisa,
     String? saleId,
@@ -237,6 +238,11 @@ class KhosraProvider extends ChangeNotifier {
     final bDate = KhosraEntry.formatBusinessDate(
       AppTime.toBusiness(entryTime),
     );
+    final discountNote = discountPaisa > 0 ? '[ছাড়: ${KhosraMoney.formatPaisa(discountPaisa)}]' : null;
+    final finalNote = note != null && note.isNotEmpty
+        ? (discountNote != null ? '$note • $discountNote' : note)
+        : discountNote;
+
     final entry = KhosraEntry(
       id: '',
       businessDate: bDate,
@@ -249,9 +255,10 @@ class KhosraProvider extends ChangeNotifier {
       dueType: dueCategory,
       dueRecordId: dueRecordId,
       dueTransactionId: dueRecordId,
-      note: note,
+      note: finalNote,
       details: {
         'rawDueType': rawDueType,
+        if (discountPaisa > 0) 'discountPaisa': discountPaisa,
         if (originalDuePaisa != null) 'originalDuePaisa': originalDuePaisa,
         if (potentialProfitPaisa != null)
           'potentialProfitPaisa': potentialProfitPaisa,

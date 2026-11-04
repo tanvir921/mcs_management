@@ -66,6 +66,7 @@ class FakeKhosraCommitGateway implements KhosraCommitGateway {
     required double amount,
     required String dueType,
     double realizedProfit = 0,
+    double discount = 0,
     String? note,
     required String userId,
     required String userName,
@@ -79,6 +80,7 @@ class FakeKhosraCommitGateway implements KhosraCommitGateway {
       'customerId': customerId,
       'dueType': dueType,
       'amount': amount,
+      'discount': discount,
       'realizedProfit': realizedProfit,
       'createdAt': createdAt,
     });
@@ -99,6 +101,32 @@ class FakeKhosraCommitGateway implements KhosraCommitGateway {
   @override
   Future<Customer?> getCustomerById(String customerId) async {
     return customers[customerId];
+  }
+
+  @override
+  Future<Customer> getOrCreateCustomerByName(
+    String name, {
+    String? phone,
+    DateTime? createdAt,
+  }) async {
+    final existing = customers.values
+        .where((c) => c.name.toLowerCase() == name.trim().toLowerCase())
+        .firstOrNull;
+    if (existing != null) return existing;
+
+    _seq++;
+    final newId = 'cust_$_seq';
+    final now = DateTime.now();
+    final newCust = Customer(
+      id: newId,
+      name: name.trim(),
+      phone: phone,
+      createdAt: createdAt ?? now,
+      updatedAt: now,
+      isActive: true,
+    );
+    customers[newId] = newCust;
+    return newCust;
   }
 
   @override
@@ -423,6 +451,50 @@ void main() {
       // Cash record has no pending aday -> full ৳300 (30000 poisha) remaining
       expect(cashRecord.committedRemainingPaisa, 30000);
       expect(cashRecord.effectiveRemainingPaisa, 30000);
+    });
+  });
+
+  group('6. Aday with discount & new categories', () {
+    test('commitSingleAday applies discount without inflating cash collected', () async {
+      final store = FakeKhosraStore();
+      final gateway = FakeKhosraCommitGateway();
+      final service = KhosraService(store: store, gateway: gateway);
+
+      final now = DateTime.utc(2026, 10, 24, 10, 0);
+      gateway.customers['cust_20'] = Customer(
+        id: 'cust_20',
+        name: 'Rahim',
+        createdAt: now,
+        updatedAt: now,
+        isActive: true,
+        productDue: 500.0,
+      );
+
+      final adayEntry = KhosraEntry(
+        id: 'aday_1',
+        businessDate: '2026-10-24',
+        createdAt: now,
+        updatedAt: now,
+        type: KhosraEntryType.aday,
+        name: 'Rahim',
+        customerId: 'cust_20',
+        amountPaisa: 45000, // ৳450 cash collected
+        details: {
+          'discountPaisa': 5000, // ৳50 discount
+          'rawDueType': 'product',
+        },
+        status: KhosraEntryStatus.pending,
+        createdBy: 'u1',
+        createdByName: 'Admin',
+      );
+      await store.saveEntry(adayEntry);
+
+      final summary = await service.commitBusinessDay('2026-10-24', userId: 'u1', userName: 'Admin');
+      expect(summary.isFullSuccess, isTrue);
+      expect(gateway.collectedDues.length, 1);
+      final tx = gateway.collectedDues.first;
+      expect(tx['amount'], 450.0); // Only cash collected
+      expect(tx['discount'], 50.0); // Discount recorded
     });
   });
 }

@@ -251,6 +251,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
 
   void _showDueDialog(String dueType, String title, double currentAmount) {
     final amountController = TextEditingController();
+    final discountController = TextEditingController();
     final noteController = TextEditingController();
     final profitController = TextEditingController();
     bool isAddition = true;
@@ -298,18 +299,57 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: amountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Amount',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: isAddition ? 'Amount' : 'Cash Collected / আদায় (টাকা)',
+                    border: const OutlineInputBorder(),
                     prefixText: '৳ ',
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                   autofocus: true,
+                  onChanged: (_) => setDialogState(() {}),
                 ),
-                // Show profit field only when clearing due (not adding)
+                // Show discount and profit fields only when clearing due (not adding)
                 if (!isAddition) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: discountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Discount / Waiver (ছাড়)',
+                      hintText: 'ঐচ্ছিক ছাড় (বকেয়া থেকে বাদ যাবে, আদায়ে যোগ হবে না)',
+                      border: OutlineInputBorder(),
+                      prefixText: '৳ ',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  if ((double.tryParse(discountController.text) ?? 0) > 0 || (double.tryParse(amountController.text) ?? 0) > 0) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'মোট বকেয়া কমবে:',
+                            style: TextStyle(fontSize: 13, color: Colors.blue.shade900, fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '৳${((double.tryParse(amountController.text) ?? 0) + (double.tryParse(discountController.text) ?? 0)).toStringAsFixed(2)}',
+                            style: TextStyle(fontSize: 13, color: Colors.blue.shade900, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -380,9 +420,20 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
             FilledButton(
               onPressed: () async {
                 final amount = double.tryParse(amountController.text);
-                if (amount == null || amount <= 0) {
+                final discount = !isAddition
+                    ? (double.tryParse(discountController.text) ?? 0.0)
+                    : 0.0;
+
+                if (amount == null || amount < 0 || (isAddition && amount <= 0)) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please enter valid amount')),
+                  );
+                  return;
+                }
+
+                if (!isAddition && (amount + discount) <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter collection amount or discount')),
                   );
                   return;
                 }
@@ -400,6 +451,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                 final profit = double.tryParse(profitController.text) ?? 0;
                 final noteText = note.isNotEmpty ? ' - Note: $note' : '';
                 final profitText = profit > 0 ? ' (Profit: ৳$profit)' : '';
+                final discountText = discount > 0 ? ' (Discount: ৳$discount)' : '';
                 final customerId = widget.customer.id;
                 final customerName = widget.customer.name;
                 final finalAmount = amount;
@@ -417,6 +469,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     dueType: dueType,
                     isAddition: finalIsAddition,
                     realizedProfit: finalProfit,
+                    discount: discount,
                     note: note.isEmpty ? null : note,
                     userId: currentUser.id,
                     userName: currentUser.name,
@@ -426,7 +479,7 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                     action: 'UPDATE_DUE',
                     module: 'Customer',
                     details:
-                        '${finalIsAddition ? "Added" : "Cleared"} ৳$finalAmount ${finalIsAddition ? "to" : "from"} $title for $customerName$profitText$noteText',
+                        '${finalIsAddition ? "Added" : "Cleared"} ৳$finalAmount ${finalIsAddition ? "to" : "from"} $title for $customerName$profitText$discountText$noteText',
                   );
 
                   final updatedCustomer = await parentContext
@@ -1091,6 +1144,25 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
+                                  if (tx.discount > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2, bottom: 2),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.shade100,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          'ছাড় (Discount): ৳${tx.discount.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.amber.shade900,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   if (tx.note != null && tx.note!.isNotEmpty)
                                     Text(tx.note!),
                                   Text(

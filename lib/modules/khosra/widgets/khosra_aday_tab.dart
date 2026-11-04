@@ -21,6 +21,7 @@ class KhosraAdayTab extends StatefulWidget {
 class _KhosraAdayTabState extends State<KhosraAdayTab> {
   final TextEditingController _customerSearchCtrl = TextEditingController();
   final TextEditingController _amountCtrl = TextEditingController();
+  final TextEditingController _discountCtrl = TextEditingController();
   final TextEditingController _noteCtrl = TextEditingController();
 
   Customer? _selectedCustomer;
@@ -35,6 +36,7 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
   void dispose() {
     _customerSearchCtrl.dispose();
     _amountCtrl.dispose();
+    _discountCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -78,9 +80,12 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
     }
 
     final amountPaisa = KhosraMoney.parseToPaisa(_amountCtrl.text);
-    if (amountPaisa <= 0) {
+    final discountPaisa = KhosraMoney.parseToPaisa(_discountCtrl.text);
+    final totalClearPaisa = amountPaisa + discountPaisa;
+
+    if (amountPaisa <= 0 && discountPaisa <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('আদায়ের সঠিক টাকার পরিমাণ লিখুন')),
+        const SnackBar(content: Text('আদায়ের টাকা বা ছাড়ের সঠিক পরিমাণ লিখুন')),
       );
       return;
     }
@@ -89,12 +94,12 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
         .where((r) => r.id == _selectedDueRecordId)
         .firstOrNull;
 
-    if (record != null && amountPaisa > record.effectiveRemainingPaisa) {
+    if (record != null && totalClearPaisa > record.effectiveRemainingPaisa) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red.shade700,
           content: Text(
-            'নির্বাচিত রেকর্ডের অবশিষ্ট বকেয়ার (${KhosraMoney.formatPaisa(record.effectiveRemainingPaisa)}) চেয়ে বেশি হতে পারবে না',
+            'আদায় ও ছাড়ের মোট (${KhosraMoney.formatPaisa(totalClearPaisa)}) নির্বাচিত রেকর্ডের অবশিষ্ট বকেয়ার (${KhosraMoney.formatPaisa(record.effectiveRemainingPaisa)}) চেয়ে বেশি হতে পারবে না',
           ),
         ),
       );
@@ -138,13 +143,36 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
             ),
             const SizedBox(height: 6),
             Text(
-              'আদায়ের টাকা: ${KhosraMoney.formatPaisa(amountPaisa)}',
+              'আদায়ের নগদ টাকা: ${KhosraMoney.formatPaisa(amountPaisa)}',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue.shade800,
               ),
             ),
+            if (discountPaisa > 0) ...[
+              const SizedBox(height: 4),
+              Text(
+                'ছাড় / ডিসকাউন্ট: ${KhosraMoney.formatPaisa(discountPaisa)}',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber.shade900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'মোট বকেয়া কমবে: ${KhosraMoney.formatPaisa(totalClearPaisa)}',
+                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                ),
+              ),
+            ],
             const SizedBox(height: 6),
             Text(
               'খাত: ${targetDueCategory == "cash_balance" ? "নগদ/ব্যালেন্স বাকি আদায়" : "পণ্য বাকি আদায়"}',
@@ -202,6 +230,7 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
       dueCategory: targetDueCategory,
       rawDueType: targetRawDueType,
       amountPaisa: amountPaisa,
+      discountPaisa: discountPaisa,
       originalDuePaisa: record?.originalPaisa,
       potentialProfitPaisa: record?.potentialProfitPaisa,
       saleId: record?.saleId,
@@ -214,6 +243,7 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
     setState(() {
       _customerSearchCtrl.clear();
       _amountCtrl.clear();
+      _discountCtrl.clear();
       _noteCtrl.clear();
       _selectedCustomer = null;
       _selectedDueRecordId = null;
@@ -496,7 +526,7 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
 
           const SizedBox(height: 12),
 
-          // 3. Amount Field & Due Category Chips (Always Prominently Visible)
+          // 3. Amount Field & Discount Field (Side-by-side)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -506,54 +536,114 @@ class _KhosraAdayTabState extends State<KhosraAdayTab> {
                   controller: _amountCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1E3A8A),
                   ),
                   decoration: InputDecoration(
-                    labelText: 'আদায়ের টাকা (৳) *',
+                    labelText: 'আদায় নগদ (৳) *',
                     hintText: '0',
                     prefixText: '৳ ',
-                    prefixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    prefixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                   ),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
               const SizedBox(width: 8),
-              if (selectedRecord != null && selectedRecord.effectiveRemainingPaisa > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: ActionChip(
+              Expanded(
+                flex: 5,
+                child: TextFormField(
+                  controller: _discountCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade900,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'ছাড় / ডিসকাউন্ট (৳)',
+                    hintText: '0 (ঐচ্ছিক)',
+                    prefixText: '৳ ',
+                    prefixStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.amber.shade900),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ],
+          ),
+
+          // Quick auto-fill buttons
+          if ((selectedRecord != null && selectedRecord.effectiveRemainingPaisa > 0) || (liveCustomer != null && customerTotalDuePaisa > 0)) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                if (selectedRecord != null && selectedRecord.effectiveRemainingPaisa > 0)
+                  ActionChip(
                     visualDensity: VisualDensity.compact,
                     backgroundColor: Colors.blue.shade50,
-                    label: const Text('রেকর্ড পূর্ণ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text('রেকর্ড পূর্ণ আদায়', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                     onPressed: () {
                       setState(() {
                         _amountCtrl.text = KhosraMoney.paisaToInputString(
                           selectedRecord.effectiveRemainingPaisa,
                         );
+                        _discountCtrl.clear();
                       });
                     },
-                  ),
-                )
-              else if (liveCustomer != null && customerTotalDuePaisa > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: ActionChip(
+                  )
+                else if (liveCustomer != null && customerTotalDuePaisa > 0)
+                  ActionChip(
                     visualDensity: VisualDensity.compact,
                     backgroundColor: Colors.green.shade50,
-                    label: const Text('সম্পূর্ণ বাকি', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text('সম্পূর্ণ বাকি আদায়', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
                     onPressed: () {
                       setState(() {
                         _amountCtrl.text = KhosraMoney.paisaToInputString(customerTotalDuePaisa);
+                        _discountCtrl.clear();
                       });
                     },
                   ),
+              ],
+            ),
+          ],
+
+          // Live clearance calculation summary
+          Builder(builder: (ctx) {
+            final amtP = KhosraMoney.parseToPaisa(_amountCtrl.text);
+            final discP = KhosraMoney.parseToPaisa(_discountCtrl.text);
+            final totP = amtP + discP;
+            if (totP > 0) {
+              return Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
                 ),
-            ],
-          ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'মোট বকেয়া কমবে:',
+                      style: TextStyle(fontSize: 12, color: Colors.blue.shade900, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      '${KhosraMoney.formatPaisa(totP)} (নগদ: ${KhosraMoney.formatPaisa(amtP)}${discP > 0 ? " + ছাড়: ${KhosraMoney.formatPaisa(discP)}" : ""})',
+                      style: TextStyle(fontSize: 12, color: Colors.blue.shade900, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
 
           const SizedBox(height: 10),
 

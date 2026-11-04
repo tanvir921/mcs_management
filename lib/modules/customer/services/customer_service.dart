@@ -96,6 +96,7 @@ class CustomerService {
     required String dueType,
     required bool isAddition,
     double realizedProfit = 0,
+    double discount = 0,
     String? note,
     required String userId,
     required String userName,
@@ -114,27 +115,33 @@ class CustomerService {
       double cashBorrowDue = customer.cashBorrowDue;
       double previousDue = customer.previousDue;
 
+      final totalDeduction = isAddition ? amount : (amount + discount);
+
       switch (dueType) {
         case 'product':
-          productDue = isAddition ? productDue + amount : productDue - amount;
+          productDue = isAddition
+              ? productDue + amount
+              : (productDue - totalDeduction).clamp(0.0, double.infinity);
           break;
         case 'service':
-          serviceDue = isAddition ? serviceDue + amount : serviceDue - amount;
+          serviceDue = isAddition
+              ? serviceDue + amount
+              : (serviceDue - totalDeduction).clamp(0.0, double.infinity);
           break;
         case 'msfRecharge':
           msfRechargeDue = isAddition
               ? msfRechargeDue + amount
-              : msfRechargeDue - amount;
+              : (msfRechargeDue - totalDeduction).clamp(0.0, double.infinity);
           break;
         case 'cashBorrow':
           cashBorrowDue = isAddition
               ? cashBorrowDue + amount
-              : cashBorrowDue - amount;
+              : (cashBorrowDue - totalDeduction).clamp(0.0, double.infinity);
           break;
         case 'previousDue':
           previousDue = isAddition
               ? previousDue + amount
-              : previousDue - amount;
+              : (previousDue - totalDeduction).clamp(0.0, double.infinity);
           break;
       }
 
@@ -161,6 +168,7 @@ class CustomerService {
         saleId: saleId,
         realizedProfitAmount: realizedProfit,
         profitRealized: realizedProfit > 0,
+        discount: discount,
         note: note,
         createdAt: createdAt,
         createdBy: userId,
