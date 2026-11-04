@@ -652,7 +652,7 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  entry.name,
+                                  entry.displayName,
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
                                 ),
                               ),
@@ -738,7 +738,7 @@ class _KhosraReviewScreenState extends State<KhosraReviewScreen> {
                                   builder: (ctx) => AlertDialog(
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                     title: Text('ধরন পরিবর্তন: ${targetType.shortLabel}'),
-                                    content: Text('"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) এন্ট্রিটিকে "${targetType.shortLabel}" হিসেবে রূপান্তর করতে চান?'),
+                                    content: Text('"${entry.displayName}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) এন্ট্রিটিকে "${targetType.shortLabel}" হিসেবে রূপান্তর করতে চান?'),
                                     actions: [
                                       TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('বাতিল')),
                                       FilledButton(

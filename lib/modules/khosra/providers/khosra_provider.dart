@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../../core/utils/app_time.dart';
 import '../models/khosra_entry.dart';
+import '../models/khosra_metrics.dart';
 import '../services/khosra_service.dart';
 
 class KhosraProvider extends ChangeNotifier {
@@ -77,6 +78,9 @@ class KhosraProvider extends ChangeNotifier {
             e.status != KhosraEntryStatus.discarded,
       )
       .fold<int>(0, (sum, e) => sum + e.amountPaisa);
+
+  /// Comprehensive ledger metrics and chart aggregations for the selected business date.
+  KhosraMetrics get metrics => KhosraMetrics.fromEntries(_entries);
 
   void init({String? businessDate}) {
     final targetDate = businessDate ?? KhosraEntry.todayBusinessDate();

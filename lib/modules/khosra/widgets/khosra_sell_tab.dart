@@ -138,7 +138,7 @@ class _KhosraSellTabState extends State<KhosraSellTab> {
       SnackBar(
         duration: const Duration(seconds: 3),
         content: Text(
-          'যোগ হয়েছে: ${created.name} ${qty > 1 ? "×$qty " : ""}— ${KhosraMoney.formatPaisa(created.amountPaisa)}',
+          'যোগ হয়েছে: ${created.displayName} ${qty > 1 ? "×$qty " : ""}— ${KhosraMoney.formatPaisa(created.amountPaisa)}',
         ),
         action: SnackBarAction(
           label: 'UNDO',

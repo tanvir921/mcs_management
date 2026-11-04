@@ -125,28 +125,28 @@ class KhosraConstants {
   static const List<KhosraQuickAction> telecomCardActions = [
     KhosraQuickAction(
       key: 'telecom_20',
-      defaultName: 'Telecom',
+      defaultName: 'Telecom Card',
       labelBn: 'কার্ড ৳২০',
       unitPricePaisa: 2000,
       isService: false,
     ),
     KhosraQuickAction(
       key: 'telecom_30',
-      defaultName: 'Telecom',
+      defaultName: 'Telecom Card',
       labelBn: 'কার্ড ৳৩০',
       unitPricePaisa: 3000,
       isService: false,
     ),
     KhosraQuickAction(
       key: 'telecom_40',
-      defaultName: 'Telecom',
+      defaultName: 'Telecom Card',
       labelBn: 'কার্ড ৳৪০',
       unitPricePaisa: 4000,
       isService: false,
     ),
     KhosraQuickAction(
       key: 'telecom_50',
-      defaultName: 'Telecom',
+      defaultName: 'Telecom Card',
       labelBn: 'কার্ড ৳৫০',
       unitPricePaisa: 5000,
       isService: false,
@@ -602,6 +602,24 @@ class KhosraEntry {
   double get dueTaka => KhosraMoney.paisaToTaka(duePaisa);
   double? get costTaka =>
       costPaisa != null ? KhosraMoney.paisaToTaka(costPaisa!) : null;
+
+  /// User-friendly display name ensuring "Telecom Card" formatting.
+  String get displayName {
+    if (quickActionKey?.startsWith('telecom_') ?? false) {
+      if (name.trim().toLowerCase() == 'telecom') {
+        return 'Telecom Card';
+      }
+      if (name.toLowerCase().startsWith('telecom ×') ||
+          name.toLowerCase().startsWith('telecom x') ||
+          name.toLowerCase().startsWith('telecom *')) {
+        return name.replaceFirst(RegExp(r'^[Tt]elecom\b'), 'Telecom Card');
+      }
+    }
+    if (name.trim().toLowerCase() == 'telecom') {
+      return 'Telecom Card';
+    }
+    return name;
+  }
 
   bool get isServiceSale =>
       (quickActionKey?.startsWith('photocopy_') ?? false) ||

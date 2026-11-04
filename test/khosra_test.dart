@@ -456,7 +456,7 @@ void main() {
 
   group('6. Aday with discount & new categories', () {
     test('commitSingleAday applies discount without inflating cash collected', () async {
-      final store = FakeKhosraStore();
+      final store = InMemoryKhosraStore();
       final gateway = FakeKhosraCommitGateway();
       final service = KhosraService(store: store, gateway: gateway);
 
@@ -489,8 +489,12 @@ void main() {
       );
       await store.saveEntry(adayEntry);
 
-      final summary = await service.commitBusinessDay('2026-10-24', userId: 'u1', userName: 'Admin');
-      expect(summary.isFullSuccess, isTrue);
+      final summary = await service.commitEntries(
+        entryIds: [adayEntry.id],
+        userId: 'u1',
+        userName: 'Admin',
+      );
+      expect(summary.hasFailures, isFalse);
       expect(gateway.collectedDues.length, 1);
       final tx = gateway.collectedDues.first;
       expect(tx['amount'], 450.0); // Only cash collected

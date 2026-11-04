@@ -115,8 +115,8 @@ class KhosraEntryList extends StatelessWidget {
         ),
         content: Text(
           entry.linkedEntryId != null
-              ? '"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) এবং এর সাথে সংযুক্ত এন্ট্রি মুছে ফেলতে চান?'
-              : '"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) খসড়া এন্ট্রিটি মুছে ফেলতে চান?',
+              ? '"${entry.displayName}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) এবং এর সাথে সংযুক্ত এন্ট্রি মুছে ফেলতে চান?'
+              : '"${entry.displayName}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) খসড়া এন্ট্রিটি মুছে ফেলতে চান?',
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
@@ -150,8 +150,8 @@ class KhosraEntryList extends StatelessWidget {
         duration: const Duration(seconds: 4),
         content: Text(
           originals.length > 1
-              ? '"${entry.name}" এবং সংযুক্ত এন্ট্রি মুছে ফেলা হয়েছে'
-              : '"${entry.name}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) মুছে ফেলা হয়েছে',
+              ? '"${entry.displayName}" এবং সংযুক্ত এন্ট্রি মুছে ফেলা হয়েছে'
+              : '"${entry.displayName}" (${KhosraMoney.formatPaisa(entry.amountPaisa)}) মুছে ফেলা হয়েছে',
         ),
         action: SnackBarAction(
           label: 'UNDO',
@@ -172,15 +172,30 @@ class _KhosraEntryRow extends StatelessWidget {
   Color _typeColor(KhosraEntryType t) {
     switch (t) {
       case KhosraEntryType.sale:
-        return Colors.teal.shade700;
+        return const Color(0xFF0F766E);
       case KhosraEntryType.baki:
-        return Colors.deepOrange.shade700;
+        return const Color(0xFFC2410C);
       case KhosraEntryType.khoroch:
-        return Colors.red.shade700;
+        return const Color(0xFFBE123C);
       case KhosraEntryType.aday:
-        return Colors.blue.shade700;
+        return const Color(0xFF1D4ED8);
       case KhosraEntryType.other:
-        return Colors.purple.shade700;
+        return const Color(0xFF7C3AED);
+    }
+  }
+
+  IconData _typeIcon(KhosraEntryType t) {
+    switch (t) {
+      case KhosraEntryType.sale:
+        return Icons.point_of_sale_rounded;
+      case KhosraEntryType.baki:
+        return Icons.person_add_alt_1_rounded;
+      case KhosraEntryType.khoroch:
+        return Icons.receipt_long_rounded;
+      case KhosraEntryType.aday:
+        return Icons.payments_rounded;
+      case KhosraEntryType.other:
+        return Icons.edit_note_rounded;
     }
   }
 
@@ -191,38 +206,48 @@ class _KhosraEntryRow extends StatelessWidget {
     final color = _typeColor(entry.type);
     final isCommitted = entry.status == KhosraEntryStatus.committed;
     final isFailed = entry.status == KhosraEntryStatus.failed;
+    final customerName = entry.details?['customerName']?.toString();
+    final discountPaisa = entry.details?['discountPaisa'];
 
     return InkWell(
       onTap: onEdit,
       onLongPress: onDelete,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isCommitted
-              ? Colors.green.shade50.withValues(alpha: 0.45)
+              ? Colors.green.shade50.withValues(alpha: 0.4)
               : (isFailed ? Colors.red.shade50 : Colors.white),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isFailed
                 ? Colors.red.shade300
                 : (isCommitted ? Colors.green.shade200 : Colors.grey.shade200),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.015),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           children: [
+            // Modern Type Icon
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                entry.type.shortLabel,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
-              ),
+              child: Icon(_typeIcon(entry.type), size: 18, color: color),
             ),
             const SizedBox(width: 10),
+
+            // Item / Customer info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,16 +256,20 @@ class _KhosraEntryRow extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          entry.name,
+                          entry.displayName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ),
                       if (entry.quantity > 1)
                         Text(
                           ' ×${entry.quantity}',
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       if (entry.linkedEntryId != null) ...[
                         const SizedBox(width: 4),
@@ -248,33 +277,72 @@ class _KhosraEntryRow extends StatelessWidget {
                       ],
                     ],
                   ),
-                  Row(
+                  const SizedBox(height: 2),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 4,
+                    runSpacing: 2,
                     children: [
                       Text(
                         timeStr,
                         style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                       ),
-                      if (entry.type == KhosraEntryType.sale && entry.duePaisa > 0)
-                        Flexible(
+                      if (customerName != null &&
+                          customerName.isNotEmpty &&
+                          customerName != entry.displayName)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           child: Text(
-                            ' • বাকি: ${KhosraMoney.formatPaisa(entry.duePaisa)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            '👤 $customerName',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.deepOrange.shade800,
+                              fontSize: 10.5,
+                              color: Colors.blue.shade900,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        )
-                      else if (entry.note != null && entry.note!.isNotEmpty)
-                        Flexible(
-                          child: Text(
-                            ' • ${entry.note!}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        ),
+                      if (entry.type == KhosraEntryType.sale && entry.duePaisa > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.deepOrange.shade50,
+                            borderRadius: BorderRadius.circular(4),
                           ),
+                          child: Text(
+                            'বাকি: ${KhosraMoney.formatPaisa(entry.duePaisa)}',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: Colors.deepOrange.shade800,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (discountPaisa is int && discountPaisa > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'ছাড়: ৳${discountPaisa ~/ 100}',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: Colors.purple.shade800,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (entry.note != null && entry.note!.isNotEmpty)
+                        Text(
+                          '• ${entry.note!}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                         ),
                     ],
                   ),
@@ -282,21 +350,64 @@ class _KhosraEntryRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              KhosraMoney.formatPaisa(entry.amountPaisa),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color),
-            ),
-            const SizedBox(width: 4),
-            if (isCommitted)
-              Icon(Icons.check_circle, size: 16, color: Colors.green.shade700)
-            else if (onDelete != null)
-              InkWell(
-                onTap: onDelete,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(Icons.close_rounded, size: 16, color: Colors.grey.shade500),
+
+            // Amount & Actions
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  KhosraMoney.formatPaisa(entry.amountPaisa),
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 2),
+                if (isCommitted)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check_circle_rounded, size: 14, color: Colors.green.shade700),
+                      const SizedBox(width: 2),
+                      Text(
+                        'Committed',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onEdit != null)
+                        InkWell(
+                          onTap: onEdit,
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: Icon(Icons.edit_outlined, size: 15, color: Colors.blue.shade700),
+                          ),
+                        ),
+                      if (onDelete != null) ...[
+                        const SizedBox(width: 4),
+                        InkWell(
+                          onTap: onDelete,
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
+                            child: Icon(Icons.delete_outline_rounded, size: 16, color: Colors.red.shade600),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -306,8 +417,8 @@ class _KhosraEntryRow extends StatelessWidget {
 
 /// Modal bottom sheet for editing an existing KhosraEntry.
 Future<void> showKhosraEditSheet(BuildContext context, KhosraEntry entry) async {
-  final nameCtrl = TextEditingController(text: entry.name);
-  final productNameCtrl = TextEditingController(text: entry.name);
+  final nameCtrl = TextEditingController(text: entry.displayName);
+  final productNameCtrl = TextEditingController(text: entry.displayName);
   final customerCtrl = TextEditingController(
     text: entry.details?['customerName']?.toString() ?? '',
   );

@@ -5,11 +5,13 @@ import '../providers/khosra_provider.dart';
 class KhosraSummaryBar extends StatelessWidget {
   final KhosraProvider provider;
   final VoidCallback onOpenOlderPending;
+  final bool showStats;
 
   const KhosraSummaryBar({
     super.key,
     required this.provider,
     required this.onOpenOlderPending,
+    this.showStats = false,
   });
 
   @override
@@ -110,45 +112,46 @@ class KhosraSummaryBar extends StatelessWidget {
               ],
             ),
           ),
-        Row(
-          children: [
-            Expanded(
-              child: _CompactStat(
-                label: 'বিক্রি',
-                icon: Icons.point_of_sale_rounded,
-                amountPaisa: provider.totalSellPaisa,
-                color: Colors.teal.shade700,
+        if (showStats)
+          Row(
+            children: [
+              Expanded(
+                child: _CompactStat(
+                  label: 'বিক্রি',
+                  icon: Icons.point_of_sale_rounded,
+                  amountPaisa: provider.totalSellPaisa,
+                  color: Colors.teal.shade700,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _CompactStat(
-                label: 'নতুন বাকি',
-                icon: Icons.person_add_alt_1_rounded,
-                amountPaisa: provider.totalNewBakiPaisa,
-                color: Colors.deepOrange.shade700,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _CompactStat(
+                  label: 'নতুন বাকি',
+                  icon: Icons.person_add_alt_1_rounded,
+                  amountPaisa: provider.totalNewBakiPaisa,
+                  color: Colors.deepOrange.shade700,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _CompactStat(
-                label: 'খরচ',
-                icon: Icons.receipt_long_rounded,
-                amountPaisa: provider.totalKhorochPaisa,
-                color: Colors.red.shade700,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _CompactStat(
+                  label: 'খরচ',
+                  icon: Icons.receipt_long_rounded,
+                  amountPaisa: provider.totalKhorochPaisa,
+                  color: Colors.red.shade700,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: _CompactStat(
-                label: 'আদায়',
-                icon: Icons.payments_rounded,
-                amountPaisa: provider.totalAdayPaisa,
-                color: Colors.blue.shade700,
+              const SizedBox(width: 6),
+              Expanded(
+                child: _CompactStat(
+                  label: 'আদায়',
+                  icon: Icons.payments_rounded,
+                  amountPaisa: provider.totalAdayPaisa,
+                  color: Colors.blue.shade700,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }
